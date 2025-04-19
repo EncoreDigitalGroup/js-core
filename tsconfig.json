@@ -24,8 +24,15 @@
         "strictBindCallApply": true,
         "strictPropertyInitialization": true,
         "target": "ES2020",
-        "types": ["node"]
+        "types": [
+            "node"
+        ]
     },
-    "exclude": ["node_modules", "**/*.test.ts"],
-    "include": ["src/**/*"]
+    "exclude": [
+        "node_modules",
+        "**/*.test.ts"
+    ],
+    "include": [
+        "src/**/*"
+    ]
 }
