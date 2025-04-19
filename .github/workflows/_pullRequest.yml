@@ -1,0 +1,68 @@
+name: Pull Request
+
+on:
+    pull_request_target:
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.repository }}-${{ github.event.pull_request.number }}-pullRequest
+    cancel-in-progress: true
+
+permissions:
+    contents: write
+    pull-requests: write
+
+jobs:
+    GitStatusCheck:
+        name: GitStatusCheck
+        runs-on: ubuntu-latest
+        outputs:
+            shouldRun: ${{ steps.GitStatusCheck.outputs.shouldRun }}
+        steps:
+            -   name: GitStatusCheck
+                id: GitStatusCheck
+                uses: EncoreDigitalGroup/ci-workflows/actions/ts/gitStatusCheck@v2
+
+    FormatTitle:
+        name: FormatTitle
+        runs-on: ubuntu-latest
+        steps:
+            -   name: FormatTitle
+                uses: EncoreDigitalGroup/ci-workflows/actions/github/formatPullRequestTitle@v2
+                with:
+                    branch: ${{ github.head_ref }}
+                    pullRequestNumber: ${{ github.event.number }}
+                    repository: ${{ github.repository }}
+                    token: ${{ secrets.GITHUB_TOKEN }}
+
+    BundleAsset:
+        needs: GitStatusCheck
+        name: BundleAsset
+        if: needs.GitStatusCheck.outputs.shouldRun == 'true'
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout Repository
+                uses: actions/checkout@v4
+                with:
+                    ref: ${{ github.head_ref }}
+
+            -   name: Set Up Node.js
+                uses: actions/setup-node@v4
+                with:
+                    node-version: "20"
+
+            -   name: Install Dependencies
+                run: npm install
+
+            -   name: Set execute permissions
+                shell: bash
+                run: chmod +x $GITHUB_WORKSPACE/bin/ci_build.sh
+
+            -   name: Bundle Assets
+                shell: bash
+                run: $GITHUB_WORKSPACE/bin/ci_build.sh
+
+    AutoMerge:
+        needs: [ BundleAsset ]
+        name: Auto-Merge
+        uses: EncoreDigitalGroup/ci-workflows/.github/workflows/github_dependabotAutoMerge.yml@v2

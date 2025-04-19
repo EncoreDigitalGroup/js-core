@@ -1,0 +1,68 @@
+/*
+ * Copyright (c) 2025. Encore Digital Group.
+ * All Rights Reserved.
+ */
+
+import {sortExportsKeys} from "./formatters/package";
+import {SortOptions} from "./shared/types";
+import fs from "fs";
+import path from "path";
+import {sortPackageJson as baseSortPackageJson} from "sort-package-json";
+
+const defaultSortOrder = [
+    "name",
+    "type",
+    "author",
+    "version",
+    "description",
+    "publishConfig",
+    "keywords",
+    "homepage",
+    "engines",
+    "dependencies",
+    "devDependencies",
+    "scripts",
+    "types",
+    "main",
+    "module",
+    "exports",
+    "files",
+    "repository",
+    "bugs",
+];
+
+export function sortPackageJson(packageObj: Record<string, any>, options: SortOptions = {}): Record<string, any> {
+    const sortOrder = options.customSortOrder || defaultSortOrder;
+
+    // Sort using the base library first
+    let sortedPackage = baseSortPackageJson(packageObj, {
+        sortOrder,
+    });
+
+    if (sortedPackage.exports) {
+        sortedPackage.exports = sortExportsKeys(sortedPackage.exports);
+    }
+
+    return sortedPackage;
+}
+
+export function sortPackageFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
+    const packagePath = filePath || path.join(process.cwd(), "package.json");
+    const indentation = options.indentation || 2;
+
+    try {
+        const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+
+        const sortedPackageJson = sortPackageJson(packageJson, options);
+
+        if (!options.dryRun) {
+            fs.writeFileSync(packagePath, JSON.stringify(sortedPackageJson, null, indentation) + "\n");
+            console.log(`✨ ${packagePath} has been sorted successfully!`);
+        }
+
+        return sortedPackageJson;
+    } catch (error) {
+        console.error(`Error processing ${packagePath}:`, error);
+        throw error;
+    }
+}

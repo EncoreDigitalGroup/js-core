@@ -1,0 +1,31 @@
+{
+    "clean": true,
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "allowUnreachableCode": false,
+        "alwaysStrict": true,
+        "baseUrl": ".",
+        "declaration": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "module": "CommonJS",
+        "moduleResolution": "Node",
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "outDir": "./dist",
+        "removeComments": true,
+        "resolveJsonModule": true,
+        "rootDir": "./src",
+        "skipLibCheck": true,
+        "strict": true,
+        "strictBindCallApply": true,
+        "strictPropertyInitialization": true,
+        "target": "ES2020",
+        "types": ["node"]
+    },
+    "exclude": ["node_modules", "**/*.test.ts"],
+    "include": ["src/**/*"]
+}
