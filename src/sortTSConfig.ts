@@ -2,7 +2,6 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
-
 import {SortOptions} from "./shared/types";
 import fs from "fs";
 import path from "path";
