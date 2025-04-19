@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sortTsConfig = sortTsConfig;
 exports.sortTsConfigFile = sortTsConfigFile;
+const types_1 = require("./shared/types");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 function sortObjectKeysAlphabetically(obj) {
@@ -23,7 +24,7 @@ function sortTsConfig(tsConfig) {
 }
 function sortTsConfigFile(filePath, options = {}) {
     const tsConfigPath = filePath || path_1.default.join(process.cwd(), "tsconfig.json");
-    const indentation = options.indentation || 2;
+    const indentation = options.indentation || types_1.DefaultSortOptions.indentation;
     try {
         const tsConfig = JSON.parse(fs_1.default.readFileSync(tsConfigPath, "utf8"));
         const sortedTsConfig = sortTsConfig(tsConfig);

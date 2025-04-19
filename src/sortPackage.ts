@@ -3,35 +3,13 @@
  * All Rights Reserved.
  */
 import {sortExportsKeys} from "./formatters/package";
-import {SortOptions} from "./shared/types";
+import {SortOptions, DefaultSortOptions} from "./shared/types";
 import fs from "fs";
 import path from "path";
 import {sortPackageJson as baseSortPackageJson} from "sort-package-json";
 
-const defaultSortOrder = [
-    "name",
-    "type",
-    "author",
-    "version",
-    "description",
-    "publishConfig",
-    "keywords",
-    "homepage",
-    "engines",
-    "dependencies",
-    "devDependencies",
-    "scripts",
-    "types",
-    "main",
-    "module",
-    "exports",
-    "files",
-    "repository",
-    "bugs",
-];
-
 export function sortPackageJson(packageObj: Record<string, any>, options: SortOptions = {}): Record<string, any> {
-    const sortOrder = options.customSortOrder || defaultSortOrder;
+    const sortOrder = options.customSortOrder || DefaultSortOptions.customSortOrder;
 
     // Sort using the base library first
     let sortedPackage = baseSortPackageJson(packageObj, {
@@ -47,7 +25,7 @@ export function sortPackageJson(packageObj: Record<string, any>, options: SortOp
 
 export function sortPackageFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
     const packagePath = filePath || path.join(process.cwd(), "package.json");
-    const indentation = options.indentation || 2;
+    const indentation = options.indentation || (DefaultSortOptions.indentation as number);
 
     try {
         const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
