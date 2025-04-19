@@ -6,32 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sortPackageJson = sortPackageJson;
 exports.sortPackageFile = sortPackageFile;
 const package_1 = require("./formatters/package");
+const types_1 = require("./shared/types");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const sort_package_json_1 = require("sort-package-json");
-const defaultSortOrder = [
-    "name",
-    "type",
-    "author",
-    "version",
-    "description",
-    "publishConfig",
-    "keywords",
-    "homepage",
-    "engines",
-    "dependencies",
-    "devDependencies",
-    "scripts",
-    "types",
-    "main",
-    "module",
-    "exports",
-    "files",
-    "repository",
-    "bugs",
-];
 function sortPackageJson(packageObj, options = {}) {
-    const sortOrder = options.customSortOrder || defaultSortOrder;
+    const sortOrder = options.customSortOrder || types_1.DefaultSortOptions.customSortOrder;
     let sortedPackage = (0, sort_package_json_1.sortPackageJson)(packageObj, {
         sortOrder,
     });
@@ -42,7 +22,7 @@ function sortPackageJson(packageObj, options = {}) {
 }
 function sortPackageFile(filePath, options = {}) {
     const packagePath = filePath || path_1.default.join(process.cwd(), "package.json");
-    const indentation = options.indentation || 2;
+    const indentation = options.indentation || types_1.DefaultSortOptions.indentation;
     try {
         const packageJson = JSON.parse(fs_1.default.readFileSync(packagePath, "utf8"));
         const sortedPackageJson = sortPackageJson(packageJson, options);

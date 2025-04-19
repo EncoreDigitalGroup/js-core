@@ -2,7 +2,7 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
-import {SortOptions} from "./shared/types";
+import {DefaultSortOptions, SortOptions} from "./shared/types";
 import fs from "fs";
 import path from "path";
 
@@ -28,7 +28,7 @@ export function sortTsConfig(tsConfig: Record<string, any>): Record<string, any>
 
 export function sortTsConfigFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
     const tsConfigPath = filePath || path.join(process.cwd(), "tsconfig.json");
-    const indentation = options.indentation || 2;
+    const indentation = options.indentation || (DefaultSortOptions.indentation as number);
 
     try {
         const tsConfig = JSON.parse(fs.readFileSync(tsConfigPath, "utf8"));

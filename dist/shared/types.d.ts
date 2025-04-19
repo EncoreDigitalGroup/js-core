@@ -4,3 +4,4 @@ export interface SortOptions {
     filePath?: string;
     dryRun?: boolean;
 }
+export declare const DefaultSortOptions: SortOptions;
