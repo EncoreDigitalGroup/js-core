@@ -46,10 +46,6 @@ async function runPrettier(targetDir, dryRun) {
             ignore: ["node_modules/**", "dist/**", "vendor/**"],
         });
 
-        files.push("package.json");
-        files.push("package-lock.json");
-        files.push("tsconfig.json");
-
         console.info(`Running Prettier on ${files.length} files...`);
 
         for (const file of files) {
