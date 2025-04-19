@@ -4,7 +4,6 @@
  * All Rights Reserved.
  */
 
-
 const {sortPackageFile, sortTsConfigFile} = require("../dist");
 const path = require("path");
 const prettier = require("prettier");
@@ -42,10 +41,14 @@ async function runPrettier(targetDir, dryRun) {
             prettierConfig = require(configPath);
         }
 
-        const files = glob.sync("**/*.{js,ts,jsx,tsx,json,md,yml,yaml,css,scss}", {
+        const files = glob.sync("**/*.{js,ts,jsx,tsx}", {
             cwd: targetDir,
-            ignore: ["node_modules/**", "dist/**"],
+            ignore: ["node_modules/**", "dist/**", "vendor/**"],
         });
+
+        files.push("package.json");
+        files.push("package-lock.json");
+        files.push("tsconfig.json");
 
         console.info(`Running Prettier on ${files.length} files...`);
 
