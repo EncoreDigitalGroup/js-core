@@ -1,8 +1,0 @@
-# Ignore everything
-*.*
-
-# Only format these file types
-!*.js
-!*.ts
-!*.mjs
-!*.cjs

@@ -16,6 +16,20 @@ const options = {
     dryRun: false,
 };
 
+const prettierConfig = {
+    plugins: [require.resolve("@trivago/prettier-plugin-sort-imports")],
+    bracketSpacing: false,
+    trailingComma: "all",
+    arrowParens: "avoid",
+    tabWidth: 4,
+    editorconfig: true,
+    useTabs: false,
+    printWidth: 120,
+    importOrderSeparation: true,
+    singleQuote: false,
+    semi: true,
+};
+
 let targetDir = process.cwd();
 
 for (let i = 0; i < args.length; i++) {
@@ -34,12 +48,6 @@ for (let i = 0; i < args.length; i++) {
 async function runPrettier(targetDir, dryRun) {
     try {
         // Get Prettier config from this package
-        const configPath = path.resolve(__dirname, "..", ".prettierrc.cjs");
-        let prettierConfig = {};
-
-        if (fs.existsSync(configPath)) {
-            prettierConfig = require(configPath);
-        }
 
         const files = glob.sync("**/*.{js,ts,jsx,tsx}", {
             cwd: targetDir,
