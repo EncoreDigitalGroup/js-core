@@ -45,6 +45,28 @@ for (let i = 0; i < args.length; i++) {
     }
 }
 
+function hasPrettierConfig(targetDir) {
+    const possibleConfigs = [
+        ".prettierrc",
+        ".prettierrc.json",
+        ".prettierrc.js",
+        ".prettierrc.yml",
+        ".prettierrc.yaml",
+        ".prettierrc.toml",
+        "prettier.config.js",
+        ".prettierrc.config.js",
+    ];
+
+    // Check for Prettier config files
+    for (const config of possibleConfigs) {
+        if (fs.existsSync(path.join(targetDir, config))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 async function runPrettier(targetDir, dryRun) {
     try {
         // Get Prettier config from this package
@@ -94,7 +116,9 @@ async function runPrettier(targetDir, dryRun) {
         sortTsConfigFile(tsconfigPath, options);
 
         // Run Prettier on all files
-        await runPrettier(targetDir, options.dryRun);
+        if (!hasPrettierConfig(targetDir)) {
+            await runPrettier(targetDir, options.dryRun);
+        }
 
         if (options.dryRun) {
             console.info("Dry run completed. No files were modified.");
