@@ -53,6 +53,7 @@ function hasPrettierConfig(targetDir) {
         ".prettierrc.yml",
         ".prettierrc.yaml",
         ".prettierrc.toml",
+        ".prettier.cjs",
         "prettier.config.js",
         ".prettierrc.config.js",
     ];
