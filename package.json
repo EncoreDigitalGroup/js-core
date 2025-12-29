@@ -15,14 +15,14 @@
         "glob": "^13.0.0",
         "json-sort-cli": "^4.0.9",
         "prettier": "^3.5.3",
-        "sort-package-json": "^3.0.0"
+        "sort-package-json": "^3.0.0",
+        "typescript": "^5.0.0"
     },
     "devDependencies": {
         "@types/jest": "^30.0.0",
         "@types/node": "^25.0.3",
         "jest": "^30.1.1",
-        "ts-jest": "^29.0.0",
-        "typescript": "^5.0.0"
+        "ts-jest": "^29.0.0"
     },
     "scripts": {
         "prebuild": "node bin/cli.js",
