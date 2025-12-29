@@ -4,12 +4,19 @@
  * All Rights Reserved.
  */
 const dist = require("../dist");
+
 const {sortPackageFile, sortTsConfigFile} = dist;
+
 const sortClassMembersInDirectory = dist.sortClassMembersInDirectory || null;
+
 const path = require("path");
+
 const prettier = require("prettier");
+
 const fs = require("fs");
+
 const glob = require("glob");
+
 const args = process.argv.slice(2);
 const options = {
     indentation: 4,
@@ -28,6 +35,7 @@ const prettierConfig = {
     singleQuote: false,
     semi: true,
 };
+
 let targetDir = process.cwd();
 for (let i = 0; i < args.length; i++) {
     const arg = args[i];

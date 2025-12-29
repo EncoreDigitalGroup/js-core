@@ -3,8 +3,11 @@
  * All Rights Reserved.
  */
 export {sortPackageFile, sortPackageJson} from "./sortPackage";
+
 export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig";
+
 export {sortClassMembersInFile, sortClassMembersInDirectory} from "./sortClassMembers";
+
 export {
     MemberType,
     type ClassMember,
@@ -12,7 +15,9 @@ export {
     DEFAULT_CLASS_ORDER,
     compareMembers,
 } from "./shared/classMemberTypes";
+
 export {sortClassMembers, transformClass} from "./formatters/class";
+
 export {
     sortReactMembers,
     transformReactComponent,

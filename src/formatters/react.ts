@@ -28,6 +28,7 @@ export enum ReactMemberType {
     GetAccessor = "get_accessor",
     SetAccessor = "set_accessor",
 }
+
 export const DEFAULT_REACT_ORDER: ReactMemberType[] = [
     ReactMemberType.StaticProperty,
     ReactMemberType.State,

@@ -29,6 +29,7 @@ export interface SortConfig {
     groupByVisibility?: boolean;
     dryRun?: boolean;
 }
+
 export const DEFAULT_CLASS_ORDER: MemberType[] = [
     MemberType.StaticProperty,
     MemberType.InstanceProperty,
