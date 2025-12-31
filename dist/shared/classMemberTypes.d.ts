@@ -1,13 +1,4 @@
 import * as ts from "typescript";
-export declare enum MemberType {
-    StaticProperty = "static_property",
-    InstanceProperty = "instance_property",
-    Constructor = "constructor",
-    StaticMethod = "static_method",
-    InstanceMethod = "instance_method",
-    GetAccessor = "get_accessor",
-    SetAccessor = "set_accessor"
-}
 export interface ClassMember {
     node: ts.ClassElement;
     type: MemberType;
@@ -24,5 +15,14 @@ export interface SortConfig {
     groupByVisibility?: boolean;
     dryRun?: boolean;
 }
-export declare const DEFAULT_CLASS_ORDER: MemberType[];
+export declare enum MemberType {
+    StaticProperty = "static_property",
+    InstanceProperty = "instance_property",
+    Constructor = "constructor",
+    StaticMethod = "static_method",
+    InstanceMethod = "instance_method",
+    GetAccessor = "get_accessor",
+    SetAccessor = "set_accessor"
+}
 export declare function compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: number, bTypeIndex: number, config: SortConfig): number;
+export declare const DEFAULT_CLASS_ORDER: MemberType[];

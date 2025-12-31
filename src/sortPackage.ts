@@ -8,17 +8,6 @@ import fs from "fs";
 import path from "path";
 import {sortPackageJson as baseSortPackageJson} from "sort-package-json";
 
-export function sortPackageJson(packageObj: Record<string, any>, options: SortOptions = {}): Record<string, any> {
-    const sortOrder = options.customSortOrder || DefaultSortOptions.customSortOrder;
-    // Sort using the base library first
-    let sortedPackage = baseSortPackageJson(packageObj, {
-        sortOrder,
-    });
-    if (sortedPackage.exports) {
-        sortedPackage.exports = sortExportsKeys(sortedPackage.exports);
-    }
-    return sortedPackage;
-}
 export function sortPackageFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
     const packagePath = filePath || path.join(process.cwd(), "package.json");
     const indentation = options.indentation || (DefaultSortOptions.indentation as number);
@@ -29,9 +18,23 @@ export function sortPackageFile(filePath?: string, options: SortOptions = {}): R
             fs.writeFileSync(packagePath, JSON.stringify(sortedPackageJson, null, indentation) + "\n");
             console.log(`✨ ${packagePath} has been sorted successfully!`);
         }
+
         return sortedPackageJson;
     } catch (error) {
         console.error(`Error processing ${packagePath}:`, error);
         throw error;
     }
+}
+
+export function sortPackageJson(packageObj: Record<string, any>, options: SortOptions = {}): Record<string, any> {
+    const sortOrder = options.customSortOrder || DefaultSortOptions.customSortOrder;
+    // Sort using the base library first
+    let sortedPackage = baseSortPackageJson(packageObj, {
+        sortOrder,
+    });
+    if (sortedPackage.exports) {
+        sortedPackage.exports = sortExportsKeys(sortedPackage.exports);
+    }
+
+    return sortedPackage;
 }

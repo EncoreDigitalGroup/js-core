@@ -25,3 +25,12 @@ export {
     ReactMemberType,
     DEFAULT_REACT_ORDER,
 } from "./formatters/react";
+
+export {
+    transformFile,
+    sortFileDeclarations,
+    DeclarationType,
+    DEFAULT_FILE_ORDER,
+    type FileDeclaration,
+    type FileSortConfig,
+} from "./formatters/file";

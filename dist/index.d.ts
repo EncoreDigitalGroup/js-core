@@ -4,3 +4,4 @@ export { sortClassMembersInFile, sortClassMembersInDirectory } from "./sortClass
 export { MemberType, type ClassMember, type SortConfig, DEFAULT_CLASS_ORDER, compareMembers, } from "./shared/classMemberTypes";
 export { sortClassMembers, transformClass } from "./formatters/class";
 export { sortReactMembers, transformReactComponent, isReactComponent, ReactMemberType, DEFAULT_REACT_ORDER, } from "./formatters/react";
+export { transformFile, sortFileDeclarations, DeclarationType, DEFAULT_FILE_ORDER, type FileDeclaration, type FileSortConfig, } from "./formatters/file";

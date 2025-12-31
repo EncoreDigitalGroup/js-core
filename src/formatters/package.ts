@@ -26,5 +26,6 @@ export function sortExportsKeys(exports: Record<string, any>): Record<string, an
             sortedExports[key] = value;
         }
     }
+
     return sortedExports;
 }

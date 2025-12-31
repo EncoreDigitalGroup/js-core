@@ -38,25 +38,6 @@ exports.transformClass = transformClass;
 const classMemberTypes_1 = require("../shared/classMemberTypes");
 const classMemberUtils_1 = require("../shared/classMemberUtils");
 const ts = __importStar(require("typescript"));
-function getMemberType(member) {
-    if (ts.isConstructorDeclaration(member)) {
-        return classMemberTypes_1.MemberType.Constructor;
-    }
-    const isStatic = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.StaticKeyword);
-    if (ts.isPropertyDeclaration(member)) {
-        return isStatic ? classMemberTypes_1.MemberType.StaticProperty : classMemberTypes_1.MemberType.InstanceProperty;
-    }
-    if (ts.isGetAccessorDeclaration(member)) {
-        return classMemberTypes_1.MemberType.GetAccessor;
-    }
-    if (ts.isSetAccessorDeclaration(member)) {
-        return classMemberTypes_1.MemberType.SetAccessor;
-    }
-    if (ts.isMethodDeclaration(member)) {
-        return isStatic ? classMemberTypes_1.MemberType.StaticMethod : classMemberTypes_1.MemberType.InstanceMethod;
-    }
-    return classMemberTypes_1.MemberType.InstanceMethod;
-}
 function analyzeClassMember(member, sourceFile) {
     const type = getMemberType(member);
     const name = (0, classMemberUtils_1.getMemberName)(member);
@@ -79,6 +60,25 @@ function analyzeClassMember(member, sourceFile) {
         hasDecorator,
         text,
     };
+}
+function getMemberType(member) {
+    if (ts.isConstructorDeclaration(member)) {
+        return classMemberTypes_1.MemberType.Constructor;
+    }
+    const isStatic = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.StaticKeyword);
+    if (ts.isPropertyDeclaration(member)) {
+        return isStatic ? classMemberTypes_1.MemberType.StaticProperty : classMemberTypes_1.MemberType.InstanceProperty;
+    }
+    if (ts.isGetAccessorDeclaration(member)) {
+        return classMemberTypes_1.MemberType.GetAccessor;
+    }
+    if (ts.isSetAccessorDeclaration(member)) {
+        return classMemberTypes_1.MemberType.SetAccessor;
+    }
+    if (ts.isMethodDeclaration(member)) {
+        return isStatic ? classMemberTypes_1.MemberType.StaticMethod : classMemberTypes_1.MemberType.InstanceMethod;
+    }
+    return classMemberTypes_1.MemberType.InstanceMethod;
 }
 function sortClassMembers(members, config = {}) {
     const order = config.order || classMemberTypes_1.DEFAULT_CLASS_ORDER;

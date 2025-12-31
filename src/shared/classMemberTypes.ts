@@ -4,15 +4,6 @@
  */
 import * as ts from "typescript";
 
-export enum MemberType {
-    StaticProperty = "static_property",
-    InstanceProperty = "instance_property",
-    Constructor = "constructor",
-    StaticMethod = "static_method",
-    InstanceMethod = "instance_method",
-    GetAccessor = "get_accessor",
-    SetAccessor = "set_accessor",
-}
 export interface ClassMember {
     node: ts.ClassElement;
     type: MemberType;
@@ -24,22 +15,25 @@ export interface ClassMember {
     hasDecorator: boolean;
     text: string;
 }
+
 export interface SortConfig {
     order?: MemberType[];
     groupByVisibility?: boolean;
     dryRun?: boolean;
 }
 
-export const DEFAULT_CLASS_ORDER: MemberType[] = [
-    MemberType.StaticProperty,
-    MemberType.InstanceProperty,
-    MemberType.Constructor,
-    MemberType.GetAccessor,
-    MemberType.SetAccessor,
-    MemberType.StaticMethod,
-    MemberType.InstanceMethod,
-];
+export enum MemberType {
+    StaticProperty = "static_property",
+    InstanceProperty = "instance_property",
+    Constructor = "constructor",
+    StaticMethod = "static_method",
+    InstanceMethod = "instance_method",
+    GetAccessor = "get_accessor",
+    SetAccessor = "set_accessor",
+}
+
 /**
+
  * Compares two class members for sorting based on type index, visibility, and name
  */
 export function compareMembers(
@@ -62,3 +56,13 @@ export function compareMembers(
     // Finally, maintain alphabetical order by name
     return a.name.localeCompare(b.name);
 }
+
+export const DEFAULT_CLASS_ORDER: MemberType[] = [
+    MemberType.StaticProperty,
+    MemberType.InstanceProperty,
+    MemberType.Constructor,
+    MemberType.GetAccessor,
+    MemberType.SetAccessor,
+    MemberType.StaticMethod,
+    MemberType.InstanceMethod,
+];

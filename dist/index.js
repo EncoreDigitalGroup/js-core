@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_REACT_ORDER = exports.ReactMemberType = exports.isReactComponent = exports.transformReactComponent = exports.sortReactMembers = exports.transformClass = exports.sortClassMembers = exports.compareMembers = exports.DEFAULT_CLASS_ORDER = exports.MemberType = exports.sortClassMembersInDirectory = exports.sortClassMembersInFile = exports.sortTsConfig = exports.sortTsConfigFile = exports.sortPackageJson = exports.sortPackageFile = void 0;
+exports.DEFAULT_FILE_ORDER = exports.DeclarationType = exports.sortFileDeclarations = exports.transformFile = exports.DEFAULT_REACT_ORDER = exports.ReactMemberType = exports.isReactComponent = exports.transformReactComponent = exports.sortReactMembers = exports.transformClass = exports.sortClassMembers = exports.compareMembers = exports.DEFAULT_CLASS_ORDER = exports.MemberType = exports.sortClassMembersInDirectory = exports.sortClassMembersInFile = exports.sortTsConfig = exports.sortTsConfigFile = exports.sortPackageJson = exports.sortPackageFile = void 0;
 var sortPackage_1 = require("./sortPackage");
 Object.defineProperty(exports, "sortPackageFile", { enumerable: true, get: function () { return sortPackage_1.sortPackageFile; } });
 Object.defineProperty(exports, "sortPackageJson", { enumerable: true, get: function () { return sortPackage_1.sortPackageJson; } });
@@ -23,3 +23,8 @@ Object.defineProperty(exports, "transformReactComponent", { enumerable: true, ge
 Object.defineProperty(exports, "isReactComponent", { enumerable: true, get: function () { return react_1.isReactComponent; } });
 Object.defineProperty(exports, "ReactMemberType", { enumerable: true, get: function () { return react_1.ReactMemberType; } });
 Object.defineProperty(exports, "DEFAULT_REACT_ORDER", { enumerable: true, get: function () { return react_1.DEFAULT_REACT_ORDER; } });
+var file_1 = require("./formatters/file");
+Object.defineProperty(exports, "transformFile", { enumerable: true, get: function () { return file_1.transformFile; } });
+Object.defineProperty(exports, "sortFileDeclarations", { enumerable: true, get: function () { return file_1.sortFileDeclarations; } });
+Object.defineProperty(exports, "DeclarationType", { enumerable: true, get: function () { return file_1.DeclarationType; } });
+Object.defineProperty(exports, "DEFAULT_FILE_ORDER", { enumerable: true, get: function () { return file_1.DEFAULT_FILE_ORDER; } });
