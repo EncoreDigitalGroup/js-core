@@ -8,6 +8,7 @@ export interface SortOptions {
     filePath?: string;
     dryRun?: boolean;
 }
+
 export const DefaultSortOptions: SortOptions = {
     customSortOrder: [
         "name",

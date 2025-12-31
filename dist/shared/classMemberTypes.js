@@ -12,15 +12,6 @@ var MemberType;
     MemberType["GetAccessor"] = "get_accessor";
     MemberType["SetAccessor"] = "set_accessor";
 })(MemberType || (exports.MemberType = MemberType = {}));
-exports.DEFAULT_CLASS_ORDER = [
-    MemberType.StaticProperty,
-    MemberType.InstanceProperty,
-    MemberType.Constructor,
-    MemberType.GetAccessor,
-    MemberType.SetAccessor,
-    MemberType.StaticMethod,
-    MemberType.InstanceMethod,
-];
 function compareMembers(a, b, aTypeIndex, bTypeIndex, config) {
     if (aTypeIndex !== bTypeIndex) {
         return aTypeIndex - bTypeIndex;
@@ -35,3 +26,12 @@ function compareMembers(a, b, aTypeIndex, bTypeIndex, config) {
     }
     return a.name.localeCompare(b.name);
 }
+exports.DEFAULT_CLASS_ORDER = [
+    MemberType.StaticProperty,
+    MemberType.InstanceProperty,
+    MemberType.Constructor,
+    MemberType.GetAccessor,
+    MemberType.SetAccessor,
+    MemberType.StaticMethod,
+    MemberType.InstanceMethod,
+];

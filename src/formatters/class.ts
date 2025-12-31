@@ -6,6 +6,34 @@ import {ClassMember, compareMembers, DEFAULT_CLASS_ORDER, MemberType, SortConfig
 import {getMemberName, hasModifier} from "../shared/classMemberUtils";
 import * as ts from "typescript";
 
+function analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile): ClassMember {
+    const type = getMemberType(member);
+    const name = getMemberName(member);
+    const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
+    const isPublic =
+        hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
+        (!hasModifier(member, ts.SyntaxKind.PrivateKeyword) && !hasModifier(member, ts.SyntaxKind.ProtectedKeyword));
+    const isProtected = hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
+    const isPrivate = hasModifier(member, ts.SyntaxKind.PrivateKeyword);
+    // Check for decorators using ts.getDecorators
+    const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
+    const hasDecorator = decorators ? decorators.length > 0 : false;
+    // Get the full text including decorators and comments
+    const text = member.getFullText(sourceFile);
+
+    return {
+        node: member,
+        type,
+        name,
+        isPublic,
+        isProtected,
+        isPrivate,
+        isStatic,
+        hasDecorator,
+        text,
+    };
+}
+
 function getMemberType(member: ts.ClassElement): MemberType {
     if (ts.isConstructorDeclaration(member)) {
         return MemberType.Constructor;
@@ -23,42 +51,21 @@ function getMemberType(member: ts.ClassElement): MemberType {
     if (ts.isMethodDeclaration(member)) {
         return isStatic ? MemberType.StaticMethod : MemberType.InstanceMethod;
     }
+
     return MemberType.InstanceMethod;
 }
-function analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile): ClassMember {
-    const type = getMemberType(member);
-    const name = getMemberName(member);
-    const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
-    const isPublic =
-        hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
-        (!hasModifier(member, ts.SyntaxKind.PrivateKeyword) && !hasModifier(member, ts.SyntaxKind.ProtectedKeyword));
-    const isProtected = hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
-    const isPrivate = hasModifier(member, ts.SyntaxKind.PrivateKeyword);
-    // Check for decorators using ts.getDecorators
-    const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
-    const hasDecorator = decorators ? decorators.length > 0 : false;
-    // Get the full text including decorators and comments
-    const text = member.getFullText(sourceFile);
-    return {
-        node: member,
-        type,
-        name,
-        isPublic,
-        isProtected,
-        isPrivate,
-        isStatic,
-        hasDecorator,
-        text,
-    };
-}
+
 export function sortClassMembers(members: ClassMember[], config: SortConfig = {}): ClassMember[] {
     const order = config.order || DEFAULT_CLASS_ORDER;
+
     return [...members].sort((a, b) => {
         const aTypeIndex = order.indexOf(a.type);
         const bTypeIndex = order.indexOf(b.type);
+
         return compareMembers(a, b, aTypeIndex, bTypeIndex, config);
     });
 }
+
 export function transformClass(
     classNode: ts.ClassDeclaration,
     sourceFile: ts.SourceFile,
