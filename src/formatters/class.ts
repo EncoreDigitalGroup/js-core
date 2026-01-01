@@ -2,37 +2,11 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
+import {extractClassMemberReferences} from "../shared/astTraversal";
 import {ClassMember, compareMembers, DEFAULT_CLASS_ORDER, MemberType, SortConfig} from "../shared/classMemberTypes";
 import {getMemberName, hasModifier} from "../shared/classMemberUtils";
+import {reorderWithDependencies} from "../shared/dependencyAnalysis";
 import * as ts from "typescript";
-
-function analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile): ClassMember {
-    const type = getMemberType(member);
-    const name = getMemberName(member);
-    const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
-    const isPublic =
-        hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
-        (!hasModifier(member, ts.SyntaxKind.PrivateKeyword) && !hasModifier(member, ts.SyntaxKind.ProtectedKeyword));
-    const isProtected = hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
-    const isPrivate = hasModifier(member, ts.SyntaxKind.PrivateKeyword);
-    // Check for decorators using ts.getDecorators
-    const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
-    const hasDecorator = decorators ? decorators.length > 0 : false;
-    // Get the full text including decorators and comments
-    const text = member.getFullText(sourceFile);
-
-    return {
-        node: member,
-        type,
-        name,
-        isPublic,
-        isProtected,
-        isPrivate,
-        isStatic,
-        hasDecorator,
-        text,
-    };
-}
 
 function getMemberType(member: ts.ClassElement): MemberType {
     if (ts.isConstructorDeclaration(member)) {
@@ -55,6 +29,44 @@ function getMemberType(member: ts.ClassElement): MemberType {
     return MemberType.InstanceMethod;
 }
 
+function analyzeClassMember(
+    member: ts.ClassElement,
+    sourceFile: ts.SourceFile,
+    index: number,
+    allMemberNames: Set<string>,
+): ClassMember {
+    const type = getMemberType(member);
+    const name = getMemberName(member);
+    const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
+    const isPublic =
+        hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
+        (!hasModifier(member, ts.SyntaxKind.PrivateKeyword) && !hasModifier(member, ts.SyntaxKind.ProtectedKeyword));
+    const isProtected = hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
+    const isPrivate = hasModifier(member, ts.SyntaxKind.PrivateKeyword);
+    // Check for decorators using ts.getDecorators
+    const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
+    const hasDecorator = decorators ? decorators.length > 0 : false;
+    // Get the full text including decorators and comments
+    const text = member.getFullText(sourceFile);
+    const allDependencies = extractClassMemberReferences(member, allMemberNames);
+    // Remove self-reference
+    const dependencies = new Set(Array.from(allDependencies).filter(dep => dep !== name));
+
+    return {
+        node: member,
+        type,
+        name,
+        isPublic,
+        isProtected,
+        isPrivate,
+        isStatic,
+        hasDecorator,
+        text,
+        dependencies,
+        originalIndex: index,
+    };
+}
+
 export function sortClassMembers(members: ClassMember[], config: SortConfig = {}): ClassMember[] {
     const order = config.order || DEFAULT_CLASS_ORDER;
 
@@ -74,10 +86,20 @@ export function transformClass(
     if (!classNode.members || classNode.members.length === 0) {
         return classNode;
     }
+    // Collect all member names first
+    const allMemberNames = new Set<string>(
+        classNode.members.map(m => getMemberName(m)).filter(n => n && n !== "constructor"),
+    );
     // Analyze all members
-    const analyzedMembers = classNode.members.map(member => analyzeClassMember(member, sourceFile));
+    const analyzedMembers = classNode.members.map((member, index) =>
+        analyzeClassMember(member, sourceFile, index, allMemberNames),
+    );
     // Sort members
-    const sortedMembers = sortClassMembers(analyzedMembers, config);
+    let sortedMembers = sortClassMembers(analyzedMembers, config);
+    // Apply dependency reordering if enabled
+    if (config.respectDependencies !== false) {
+        sortedMembers = reorderWithDependencies(sortedMembers, m => m.name);
+    }
     // Create new class with sorted members
     return ts.factory.updateClassDeclaration(
         classNode,

@@ -36,8 +36,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortClassMembersInDirectory = sortClassMembersInDirectory;
 exports.sortClassMembersInFile = sortClassMembersInFile;
+exports.sortClassMembersInDirectory = sortClassMembersInDirectory;
 const class_1 = require("./formatters/class");
 const file_1 = require("./formatters/file");
 const react_1 = require("./formatters/react");
@@ -70,11 +70,16 @@ function addBlankLinesBetweenDeclarations(code) {
     let braceDepth = 0;
     let inImportSection = true;
     let lastNonBlankLineWasDeclarationEnd = false;
+    const DEBUG = false;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmedLine = line.trim();
         const openBraces = (line.match(/{/g) || []).length;
         const closeBraces = (line.match(/}/g) || []).length;
+        if (DEBUG) {
+            console.log(`Line ${i}: "${trimmedLine.substring(0, 50)}${trimmedLine.length > 50 ? "..." : ""}"`);
+            console.log(`  open:${openBraces} close:${closeBraces} depth:${braceDepth}->${braceDepth + openBraces - closeBraces}`);
+        }
         const isBlankLine = trimmedLine === "";
         const isComment = trimmedLine.startsWith("//") || trimmedLine.startsWith("/*") || trimmedLine.startsWith("*");
         const isBlockCommentStart = trimmedLine.startsWith("/*") && !trimmedLine.endsWith("*/");
@@ -111,16 +116,20 @@ function addBlankLinesBetweenDeclarations(code) {
             }
         }
         result.push(line);
+        const willBeAtDepthZero = braceDepth + openBraces - closeBraces === 0;
+        const hasClosingElement = trimmedLine === "}" || trimmedLine.endsWith("}") || trimmedLine.endsWith(";");
+        const isJustClosingBraces = /^[\s});]*$/.test(trimmedLine);
+        if (!isBlankLine && willBeAtDepthZero && hasClosingElement) {
+            lastNonBlankLineWasDeclarationEnd = true;
+        }
+        else if (!isBlankLine && !isComment) {
+            if (!isBlockCommentStart && trimmedLine !== "" && !(braceDepth === 0 && isJustClosingBraces)) {
+                lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
+            }
+        }
         braceDepth += openBraces - closeBraces;
-        if (!isBlankLine) {
-            if (braceDepth === 0 && (trimmedLine === "}" || trimmedLine.endsWith("}") || trimmedLine.endsWith(";"))) {
-                lastNonBlankLineWasDeclarationEnd = true;
-            }
-            else if (!isComment) {
-                if (!isBlockCommentStart && trimmedLine !== "") {
-                    lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
-                }
-            }
+        if (braceDepth < 0) {
+            braceDepth = 0;
         }
     }
     return result.join("\n");
@@ -153,23 +162,6 @@ function hasClassDeclarations(sourceFile) {
     visit(sourceFile);
     return hasClass;
 }
-function sortClassMembersInDirectory(targetDir, config = {}) {
-    const glob = require("glob");
-    const files = glob.sync("**/*.{ts,tsx,js,jsx}", {
-        cwd: targetDir,
-        ignore: ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"],
-        absolute: true,
-    });
-    console.info(`Sorting class members in ${files.length} files...`);
-    for (const file of files) {
-        try {
-            sortClassMembersInFile(file, config);
-        }
-        catch (error) {
-            console.error(`Error sorting file ${file}:`, error.message);
-        }
-    }
-}
 function sortClassMembersInFile(filePath, config = {}) {
     const sourceCode = fs_1.default.readFileSync(filePath, "utf8");
     const sourceFile = ts.createSourceFile(filePath, sourceCode, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
@@ -191,4 +183,21 @@ function sortClassMembersInFile(filePath, config = {}) {
         console.log(`✨ Sorted declarations in: ${filePath}`);
     }
     return output;
+}
+function sortClassMembersInDirectory(targetDir, config = {}) {
+    const glob = require("glob");
+    const files = glob.sync("**/*.{ts,tsx,js,jsx}", {
+        cwd: targetDir,
+        ignore: ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"],
+        absolute: true,
+    });
+    console.info(`Sorting class members in ${files.length} files...`);
+    for (const file of files) {
+        try {
+            sortClassMembersInFile(file, config);
+        }
+        catch (error) {
+            console.error(`Error sorting file ${file}:`, error.message);
+        }
+    }
 }

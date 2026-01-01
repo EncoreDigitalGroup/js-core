@@ -45,7 +45,6 @@ function addBlankLinesBeforeReturns(code: string): string {
 }
 
 /**
-
  * Adds blank lines between top-level declarations
  */
 function addBlankLinesBetweenDeclarations(code: string): string {
@@ -54,12 +53,19 @@ function addBlankLinesBetweenDeclarations(code: string): string {
     let braceDepth = 0;
     let inImportSection = true;
     let lastNonBlankLineWasDeclarationEnd = false;
+    const DEBUG = false; // Set to true to enable debugging
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmedLine = line.trim();
         // Track brace depth
         const openBraces = (line.match(/{/g) || []).length;
         const closeBraces = (line.match(/}/g) || []).length;
+        if (DEBUG) {
+            console.log(`Line ${i}: "${trimmedLine.substring(0, 50)}${trimmedLine.length > 50 ? "..." : ""}"`);
+            console.log(
+                `  open:${openBraces} close:${closeBraces} depth:${braceDepth}->${braceDepth + openBraces - closeBraces}`,
+            );
+        }
         const isBlankLine = trimmedLine === "";
         const isComment = trimmedLine.startsWith("//") || trimmedLine.startsWith("/*") || trimmedLine.startsWith("*");
         const isBlockCommentStart = trimmedLine.startsWith("/*") && !trimmedLine.endsWith("*/");
@@ -105,23 +111,31 @@ function addBlankLinesBetweenDeclarations(code: string): string {
             }
         }
         result.push(line);
-        // Update brace depth
-        braceDepth += openBraces - closeBraces;
-        // Track declaration ends (when we're at depth 0 after a closing brace or semicolon)
-        if (!isBlankLine) {
-            if (braceDepth === 0 && (trimmedLine === "}" || trimmedLine.endsWith("}") || trimmedLine.endsWith(";"))) {
-                lastNonBlankLineWasDeclarationEnd = true;
-            } else if (!isComment) {
-                // Reset if we hit a non-comment, non-declaration-end line
-                if (!isBlockCommentStart && trimmedLine !== "") {
-                    lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
-                }
+        // Track declaration ends BEFORE updating brace depth
+        // Check if this line will end at depth 0 (top level)
+        const willBeAtDepthZero = braceDepth + openBraces - closeBraces === 0;
+        const hasClosingElement = trimmedLine === "}" || trimmedLine.endsWith("}") || trimmedLine.endsWith(";");
+
+        const isJustClosingBraces = /^[\s});]*$/.test(trimmedLine);
+        if (!isBlankLine && willBeAtDepthZero && hasClosingElement) {
+            lastNonBlankLineWasDeclarationEnd = true;
+        } else if (!isBlankLine && !isComment) {
+            // Don't reset if we're at depth 0 and the line is just closing braces
+            // (this handles cases like }; }; } where multiple closes happen at top level)
+            if (!isBlockCommentStart && trimmedLine !== "" && !(braceDepth === 0 && isJustClosingBraces)) {
+                lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
             }
+        }
+        // Update brace depth (clamp to 0 if it goes negative)
+        braceDepth += openBraces - closeBraces;
+        if (braceDepth < 0) {
+            braceDepth = 0;
         }
     }
 
     return result.join("\n");
 }
+
 function createTransformer(config: SortConfig): ts.TransformerFactory<ts.SourceFile> {
     return (context: ts.TransformationContext) => {
         return (sourceFile: ts.SourceFile) => {
@@ -142,6 +156,7 @@ function createTransformer(config: SortConfig): ts.TransformerFactory<ts.SourceF
         };
     };
 }
+
 /**
  * Checks if a source file contains any class declarations
  */
@@ -158,6 +173,50 @@ function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
 
     return hasClass;
 }
+
+export function sortClassMembersInFile(filePath: string, config: SortConfig = {}): string {
+    const sourceCode = fs.readFileSync(filePath, "utf8");
+    const sourceFile = ts.createSourceFile(
+        filePath,
+        sourceCode,
+        ts.ScriptTarget.Latest,
+        true,
+        filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    );
+    // STEP 1: Sort top-level file declarations
+    // - Sorts by type (interface, type, enum, function, variable, class, etc.)
+    // - Then alphabetically within each type
+    // - Then applies dependency analysis to prevent usage-before-declaration
+    let transformedSourceFile = transformFile(sourceFile);
+    // STEP 2: Sort class members (if any classes exist)
+    // - Sorts by member type (properties, constructor, methods, accessors)
+    // - Then by visibility (public, protected, private) if configured
+    // - Then alphabetically within each group
+    // - Then applies dependency analysis to prevent usage-before-declaration
+    if (hasClassDeclarations(sourceFile)) {
+        const result = ts.transform(transformedSourceFile, [createTransformer(config)]);
+        transformedSourceFile = result.transformed[0];
+        result.dispose();
+    }
+    // STEP 3: Convert AST back to source code string
+    const printer = ts.createPrinter({
+        newLine: ts.NewLineKind.LineFeed,
+        removeComments: false,
+    });
+    let output = printer.printFile(transformedSourceFile);
+    // STEP 4: Final formatting - add blank lines (applied to final sorted output)
+    // This happens AFTER all sorting and dependency reordering is complete
+    output = addBlankLinesBetweenDeclarations(output);
+    output = addBlankLinesBeforeReturns(output);
+    // Only write if the output is different from the source
+    if (output !== sourceCode && !config.dryRun) {
+        fs.writeFileSync(filePath, output, "utf8");
+        console.log(`✨ Sorted declarations in: ${filePath}`);
+    }
+
+    return output;
+}
+
 export function sortClassMembersInDirectory(targetDir: string, config: SortConfig = {}): void {
     const glob = require("glob");
     const files = glob.sync("**/*.{ts,tsx,js,jsx}", {
@@ -173,39 +232,4 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
             console.error(`Error sorting file ${file}:`, (error as Error).message);
         }
     }
-}
-export function sortClassMembersInFile(filePath: string, config: SortConfig = {}): string {
-    const sourceCode = fs.readFileSync(filePath, "utf8");
-    const sourceFile = ts.createSourceFile(
-        filePath,
-        sourceCode,
-        ts.ScriptTarget.Latest,
-        true,
-        filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-    );
-    // First, sort top-level declarations (interfaces, functions, etc.)
-    let transformedSourceFile = transformFile(sourceFile);
-    // Then, if the file has classes, sort class members
-    if (hasClassDeclarations(sourceFile)) {
-        const result = ts.transform(transformedSourceFile, [createTransformer(config)]);
-        transformedSourceFile = result.transformed[0];
-        result.dispose();
-    }
-    // Print the transformed source file
-    const printer = ts.createPrinter({
-        newLine: ts.NewLineKind.LineFeed,
-        removeComments: false,
-    });
-    let output = printer.printFile(transformedSourceFile);
-    // Add blank lines between top-level declarations
-    output = addBlankLinesBetweenDeclarations(output);
-    // Add blank lines before return statements
-    output = addBlankLinesBeforeReturns(output);
-    // Only write if the output is different from the source
-    if (output !== sourceCode && !config.dryRun) {
-        fs.writeFileSync(filePath, output, "utf8");
-        console.log(`✨ Sorted declarations in: ${filePath}`);
-    }
-
-    return output;
 }

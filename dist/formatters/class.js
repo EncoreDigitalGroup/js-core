@@ -35,32 +35,11 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sortClassMembers = sortClassMembers;
 exports.transformClass = transformClass;
+const astTraversal_1 = require("../shared/astTraversal");
 const classMemberTypes_1 = require("../shared/classMemberTypes");
 const classMemberUtils_1 = require("../shared/classMemberUtils");
+const dependencyAnalysis_1 = require("../shared/dependencyAnalysis");
 const ts = __importStar(require("typescript"));
-function analyzeClassMember(member, sourceFile) {
-    const type = getMemberType(member);
-    const name = (0, classMemberUtils_1.getMemberName)(member);
-    const isStatic = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.StaticKeyword);
-    const isPublic = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.PublicKeyword) ||
-        (!(0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.PrivateKeyword) && !(0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.ProtectedKeyword));
-    const isProtected = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.ProtectedKeyword);
-    const isPrivate = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.PrivateKeyword);
-    const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
-    const hasDecorator = decorators ? decorators.length > 0 : false;
-    const text = member.getFullText(sourceFile);
-    return {
-        node: member,
-        type,
-        name,
-        isPublic,
-        isProtected,
-        isPrivate,
-        isStatic,
-        hasDecorator,
-        text,
-    };
-}
 function getMemberType(member) {
     if (ts.isConstructorDeclaration(member)) {
         return classMemberTypes_1.MemberType.Constructor;
@@ -80,6 +59,33 @@ function getMemberType(member) {
     }
     return classMemberTypes_1.MemberType.InstanceMethod;
 }
+function analyzeClassMember(member, sourceFile, index, allMemberNames) {
+    const type = getMemberType(member);
+    const name = (0, classMemberUtils_1.getMemberName)(member);
+    const isStatic = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.StaticKeyword);
+    const isPublic = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.PublicKeyword) ||
+        (!(0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.PrivateKeyword) && !(0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.ProtectedKeyword));
+    const isProtected = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.ProtectedKeyword);
+    const isPrivate = (0, classMemberUtils_1.hasModifier)(member, ts.SyntaxKind.PrivateKeyword);
+    const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
+    const hasDecorator = decorators ? decorators.length > 0 : false;
+    const text = member.getFullText(sourceFile);
+    const allDependencies = (0, astTraversal_1.extractClassMemberReferences)(member, allMemberNames);
+    const dependencies = new Set(Array.from(allDependencies).filter(dep => dep !== name));
+    return {
+        node: member,
+        type,
+        name,
+        isPublic,
+        isProtected,
+        isPrivate,
+        isStatic,
+        hasDecorator,
+        text,
+        dependencies,
+        originalIndex: index,
+    };
+}
 function sortClassMembers(members, config = {}) {
     const order = config.order || classMemberTypes_1.DEFAULT_CLASS_ORDER;
     return [...members].sort((a, b) => {
@@ -92,7 +98,11 @@ function transformClass(classNode, sourceFile, config) {
     if (!classNode.members || classNode.members.length === 0) {
         return classNode;
     }
-    const analyzedMembers = classNode.members.map(member => analyzeClassMember(member, sourceFile));
-    const sortedMembers = sortClassMembers(analyzedMembers, config);
+    const allMemberNames = new Set(classNode.members.map(m => (0, classMemberUtils_1.getMemberName)(m)).filter(n => n && n !== "constructor"));
+    const analyzedMembers = classNode.members.map((member, index) => analyzeClassMember(member, sourceFile, index, allMemberNames));
+    let sortedMembers = sortClassMembers(analyzedMembers, config);
+    if (config.respectDependencies !== false) {
+        sortedMembers = (0, dependencyAnalysis_1.reorderWithDependencies)(sortedMembers, m => m.name);
+    }
     return ts.factory.updateClassDeclaration(classNode, ts.getModifiers(classNode), classNode.name, classNode.typeParameters, classNode.heritageClauses, sortedMembers.map(m => m.node));
 }
