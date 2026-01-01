@@ -3,13 +3,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortPackageFile = sortPackageFile;
 exports.sortPackageJson = sortPackageJson;
+exports.sortPackageFile = sortPackageFile;
 const package_1 = require("./formatters/package");
 const types_1 = require("./shared/types");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const sort_package_json_1 = require("sort-package-json");
+function sortPackageJson(packageObj, options = {}) {
+    const sortOrder = options.customSortOrder || types_1.DefaultSortOptions.customSortOrder;
+    let sortedPackage = (0, sort_package_json_1.sortPackageJson)(packageObj, {
+        sortOrder,
+    });
+    if (sortedPackage.exports) {
+        sortedPackage.exports = (0, package_1.sortExportsKeys)(sortedPackage.exports);
+    }
+    return sortedPackage;
+}
 function sortPackageFile(filePath, options = {}) {
     const packagePath = filePath || path_1.default.join(process.cwd(), "package.json");
     const indentation = options.indentation || types_1.DefaultSortOptions.indentation;
@@ -26,14 +36,4 @@ function sortPackageFile(filePath, options = {}) {
         console.error(`Error processing ${packagePath}:`, error);
         throw error;
     }
-}
-function sortPackageJson(packageObj, options = {}) {
-    const sortOrder = options.customSortOrder || types_1.DefaultSortOptions.customSortOrder;
-    let sortedPackage = (0, sort_package_json_1.sortPackageJson)(packageObj, {
-        sortOrder,
-    });
-    if (sortedPackage.exports) {
-        sortedPackage.exports = (0, package_1.sortExportsKeys)(sortedPackage.exports);
-    }
-    return sortedPackage;
 }

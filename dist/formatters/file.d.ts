@@ -1,15 +1,4 @@
 import * as ts from "typescript";
-export interface FileDeclaration {
-    node: ts.Statement;
-    type: DeclarationType;
-    name: string;
-    isExported: boolean;
-    isDefaultExport: boolean;
-    text: string;
-}
-export interface FileSortConfig {
-    order?: DeclarationType[];
-}
 export declare enum DeclarationType {
     Interface = "interface",
     TypeAlias = "type_alias",
@@ -22,6 +11,20 @@ export declare enum DeclarationType {
     DefaultExport = "default_export",
     Other = "other"
 }
+export interface FileDeclaration {
+    node: ts.Statement;
+    type: DeclarationType;
+    name: string;
+    isExported: boolean;
+    isDefaultExport: boolean;
+    text: string;
+    dependencies?: Set<string>;
+    originalIndex?: number;
+}
+export interface FileSortConfig {
+    order?: DeclarationType[];
+    respectDependencies?: boolean;
+}
+export declare const DEFAULT_FILE_ORDER: DeclarationType[];
 export declare function sortFileDeclarations(declarations: FileDeclaration[], config?: FileSortConfig): FileDeclaration[];
 export declare function transformFile(sourceFile: ts.SourceFile, config?: FileSortConfig): ts.SourceFile;
-export declare const DEFAULT_FILE_ORDER: DeclarationType[];
