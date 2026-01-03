@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DEFAULT_FILE_ORDER = exports.DeclarationType = exports.sortFileDeclarations = exports.transformFile = exports.DEFAULT_REACT_ORDER = exports.ReactMemberType = exports.isReactComponent = exports.transformReactComponent = exports.sortReactMembers = exports.transformClass = exports.sortClassMembers = exports.compareMembers = exports.DEFAULT_CLASS_ORDER = exports.MemberType = exports.sortClassMembersInDirectory = exports.sortClassMembersInFile = exports.sortTsConfig = exports.sortTsConfigFile = exports.sortPackageJson = exports.sortPackageFile = void 0;
+exports.CONFIG_FILE_NAME = exports.hasConfigFile = exports.loadConfig = exports.mergeConfig = exports.defaultConfig = exports.DEFAULT_FILE_ORDER = exports.DeclarationType = exports.sortFileDeclarations = exports.transformFile = exports.DEFAULT_REACT_ORDER = exports.ReactMemberType = exports.isReactComponent = exports.transformReactComponent = exports.sortReactMembers = exports.transformClass = exports.sortClassMembers = exports.compareMembers = exports.DEFAULT_CLASS_ORDER = exports.MemberType = exports.sortClassMembersInDirectory = exports.sortClassMembersInFile = exports.sortTsConfig = exports.sortTsConfigFile = exports.sortPackageJson = exports.sortPackageFile = void 0;
 var sortPackage_1 = require("./sortPackage");
 Object.defineProperty(exports, "sortPackageFile", { enumerable: true, get: function () { return sortPackage_1.sortPackageFile; } });
 Object.defineProperty(exports, "sortPackageJson", { enumerable: true, get: function () { return sortPackage_1.sortPackageJson; } });
@@ -28,3 +28,9 @@ Object.defineProperty(exports, "transformFile", { enumerable: true, get: functio
 Object.defineProperty(exports, "sortFileDeclarations", { enumerable: true, get: function () { return file_1.sortFileDeclarations; } });
 Object.defineProperty(exports, "DeclarationType", { enumerable: true, get: function () { return file_1.DeclarationType; } });
 Object.defineProperty(exports, "DEFAULT_FILE_ORDER", { enumerable: true, get: function () { return file_1.DEFAULT_FILE_ORDER; } });
+var config_1 = require("./config");
+Object.defineProperty(exports, "defaultConfig", { enumerable: true, get: function () { return config_1.defaultConfig; } });
+Object.defineProperty(exports, "mergeConfig", { enumerable: true, get: function () { return config_1.mergeConfig; } });
+Object.defineProperty(exports, "loadConfig", { enumerable: true, get: function () { return config_1.loadConfig; } });
+Object.defineProperty(exports, "hasConfigFile", { enumerable: true, get: function () { return config_1.hasConfigFile; } });
+Object.defineProperty(exports, "CONFIG_FILE_NAME", { enumerable: true, get: function () { return config_1.CONFIG_FILE_NAME; } });
