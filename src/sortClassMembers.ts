@@ -3,16 +3,28 @@
  * All Rights Reserved.
  */
 import {transformClass} from "./formatters/class";
-import {transformFile} from "./formatters/file";
+import {transformFile, FileSortConfig} from "./formatters/file";
 import {isReactComponent, transformReactComponent} from "./formatters/react";
 import {SortConfig} from "./shared/classMemberTypes";
 import fs from "fs";
 import * as ts from "typescript";
 
 /**
- * Adds blank lines before return statements (unless there's a comment directly above)
+ * Configuration for sorting class members in a directory
  */
 
+export interface SortClassMembersConfig {
+    dryRun?: boolean;
+    classConfig?: SortConfig | null;
+    reactConfig?: SortConfig | null;
+    fileConfig?: FileSortConfig | null;
+    include?: string[];
+    exclude?: string[];
+}
+
+/**
+ * Adds blank lines before return statements (unless there's a comment directly above)
+ */
 function addBlankLinesBeforeReturns(code: string): string {
     const lines = code.split("\n");
     const result: string[] = [];
@@ -136,17 +148,23 @@ function addBlankLinesBetweenDeclarations(code: string): string {
     return result.join("\n");
 }
 
-function createTransformer(config: SortConfig): ts.TransformerFactory<ts.SourceFile> {
+function createTransformer(
+    classConfig: SortConfig | null | undefined,
+    reactConfig: SortConfig | null | undefined,
+): ts.TransformerFactory<ts.SourceFile> {
     return (context: ts.TransformationContext) => {
         return (sourceFile: ts.SourceFile) => {
             function visit(node: ts.Node): ts.Node {
                 if (ts.isClassDeclaration(node)) {
                     // Check if it's a React component
                     if (isReactComponent(node)) {
-                        return transformReactComponent(node, sourceFile, config);
+                        if (reactConfig) {
+                            return transformReactComponent(node, sourceFile, reactConfig);
+                        }
+                    } else if (classConfig) {
+                        // Otherwise, treat as regular TypeScript class
+                        return transformClass(node, sourceFile, classConfig);
                     }
-                    // Otherwise, treat as regular TypeScript class
-                    return transformClass(node, sourceFile, config);
                 }
 
                 return ts.visitEachChild(node, visit, context);
@@ -174,7 +192,16 @@ function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
     return hasClass;
 }
 
-export function sortClassMembersInFile(filePath: string, config: SortConfig = {}): string {
+/**
+ * Internal function for sorting a single file with granular config options
+ */
+function sortFileInternal(
+    filePath: string,
+    classConfig: SortConfig | null | undefined,
+    reactConfig: SortConfig | null | undefined,
+    fileConfig: FileSortConfig | null | undefined,
+    dryRun: boolean = false,
+): string {
     const sourceCode = fs.readFileSync(filePath, "utf8");
     const sourceFile = ts.createSourceFile(
         filePath,
@@ -184,17 +211,13 @@ export function sortClassMembersInFile(filePath: string, config: SortConfig = {}
         filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
     );
     // STEP 1: Sort top-level file declarations
-    // - Sorts by type (interface, type, enum, function, variable, class, etc.)
-    // - Then alphabetically within each type
-    // - Then applies dependency analysis to prevent usage-before-declaration
-    let transformedSourceFile = transformFile(sourceFile);
-    // STEP 2: Sort class members (if any classes exist)
-    // - Sorts by member type (properties, constructor, methods, accessors)
-    // - Then by visibility (public, protected, private) if configured
-    // - Then alphabetically within each group
-    // - Then applies dependency analysis to prevent usage-before-declaration
-    if (hasClassDeclarations(sourceFile)) {
-        const result = ts.transform(transformedSourceFile, [createTransformer(config)]);
+    let transformedSourceFile = sourceFile;
+    if (fileConfig) {
+        transformedSourceFile = transformFile(sourceFile, fileConfig);
+    }
+    // STEP 2: Sort class members (if any classes exist and configs provided)
+    if (hasClassDeclarations(sourceFile) && (classConfig || reactConfig)) {
+        const result = ts.transform(transformedSourceFile, [createTransformer(classConfig, reactConfig)]);
         transformedSourceFile = result.transformed[0];
         result.dispose();
     }
@@ -204,12 +227,11 @@ export function sortClassMembersInFile(filePath: string, config: SortConfig = {}
         removeComments: false,
     });
     let output = printer.printFile(transformedSourceFile);
-    // STEP 4: Final formatting - add blank lines (applied to final sorted output)
-    // This happens AFTER all sorting and dependency reordering is complete
+    // STEP 4: Final formatting - add blank lines
     output = addBlankLinesBetweenDeclarations(output);
     output = addBlankLinesBeforeReturns(output);
     // Only write if the output is different from the source
-    if (output !== sourceCode && !config.dryRun) {
+    if (output !== sourceCode && !dryRun) {
         fs.writeFileSync(filePath, output, "utf8");
         console.log(`✨ Sorted declarations in: ${filePath}`);
     }
@@ -217,19 +239,58 @@ export function sortClassMembersInFile(filePath: string, config: SortConfig = {}
     return output;
 }
 
-export function sortClassMembersInDirectory(targetDir: string, config: SortConfig = {}): void {
+export function sortClassMembersInDirectory(targetDir: string, config: SortConfig | SortClassMembersConfig = {}): void {
     const glob = require("glob");
-    const files = glob.sync("**/*.{ts,tsx,js,jsx}", {
-        cwd: targetDir,
-        ignore: ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"],
-        absolute: true,
-    });
+    // Handle both old and new config formats
+    let classConfig: SortConfig | null | undefined;
+    let reactConfig: SortConfig | null | undefined;
+    let fileConfig: FileSortConfig | null | undefined;
+    let dryRun: boolean;
+    let include: string[];
+    let exclude: string[];
+    if ("classConfig" in config || "reactConfig" in config || "fileConfig" in config) {
+        // New config format
+        const newConfig = config as SortClassMembersConfig;
+        classConfig = newConfig.classConfig;
+        reactConfig = newConfig.reactConfig;
+        fileConfig = newConfig.fileConfig;
+        dryRun = newConfig.dryRun || false;
+        include = newConfig.include || ["**/*.{ts,tsx}"];
+        exclude = newConfig.exclude || [];
+    } else {
+        // Old config format (backward compatibility)
+        const oldConfig = config as SortConfig;
+        classConfig = oldConfig;
+        reactConfig = oldConfig;
+        fileConfig = undefined;
+        dryRun = oldConfig.dryRun || false;
+        include = ["**/*.{ts,tsx,js,jsx}"];
+        exclude = [];
+    }
+    // Always exclude these critical directories
+    const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
+    const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
+    const files = include.flatMap(pattern =>
+        glob.sync(pattern, {
+            cwd: targetDir,
+            ignore: finalExclude,
+            absolute: true,
+        }),
+    );
     console.info(`Sorting class members in ${files.length} files...`);
     for (const file of files) {
         try {
-            sortClassMembersInFile(file, config);
+            sortFileInternal(file, classConfig, reactConfig, fileConfig, dryRun);
         } catch (error) {
             console.error(`Error sorting file ${file}:`, (error as Error).message);
         }
     }
+}
+
+/**
+ * Sorts class members in a single file (backward compatibility)
+ * @deprecated Use sortFileInternal with SortClassMembersConfig for more control
+ */
+export function sortClassMembersInFile(filePath: string, config: SortConfig = {}): string {
+    return sortFileInternal(filePath, config, config, undefined, config.dryRun);
 }

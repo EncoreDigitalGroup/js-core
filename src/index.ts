@@ -6,7 +6,7 @@ export {sortPackageFile, sortPackageJson} from "./sortPackage";
 
 export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig";
 
-export {sortClassMembersInFile, sortClassMembersInDirectory} from "./sortClassMembers";
+export {sortClassMembersInFile, sortClassMembersInDirectory, type SortClassMembersConfig} from "./sortClassMembers";
 
 export {
     MemberType,
@@ -34,3 +34,19 @@ export {
     type FileDeclaration,
     type FileSortConfig,
 } from "./formatters/file";
+
+export {
+    type CoreConfig,
+    type PrettierConfig,
+    type PackageJsonConfig,
+    type TsConfigConfig,
+    type ClassMemberConfig,
+    type ReactComponentConfig,
+    type FileDeclarationConfig,
+    type SortersConfig,
+    defaultConfig,
+    mergeConfig,
+    loadConfig,
+    hasConfigFile,
+    CONFIG_FILE_NAME,
+} from "./config";

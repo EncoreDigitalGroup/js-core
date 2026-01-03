@@ -36,8 +36,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortClassMembersInFile = sortClassMembersInFile;
 exports.sortClassMembersInDirectory = sortClassMembersInDirectory;
+exports.sortClassMembersInFile = sortClassMembersInFile;
 const class_1 = require("./formatters/class");
 const file_1 = require("./formatters/file");
 const react_1 = require("./formatters/react");
@@ -134,15 +134,19 @@ function addBlankLinesBetweenDeclarations(code) {
     }
     return result.join("\n");
 }
-function createTransformer(config) {
+function createTransformer(classConfig, reactConfig) {
     return (context) => {
         return (sourceFile) => {
             function visit(node) {
                 if (ts.isClassDeclaration(node)) {
                     if ((0, react_1.isReactComponent)(node)) {
-                        return (0, react_1.transformReactComponent)(node, sourceFile, config);
+                        if (reactConfig) {
+                            return (0, react_1.transformReactComponent)(node, sourceFile, reactConfig);
+                        }
                     }
-                    return (0, class_1.transformClass)(node, sourceFile, config);
+                    else if (classConfig) {
+                        return (0, class_1.transformClass)(node, sourceFile, classConfig);
+                    }
                 }
                 return ts.visitEachChild(node, visit, context);
             }
@@ -162,12 +166,15 @@ function hasClassDeclarations(sourceFile) {
     visit(sourceFile);
     return hasClass;
 }
-function sortClassMembersInFile(filePath, config = {}) {
+function sortFileInternal(filePath, classConfig, reactConfig, fileConfig, dryRun = false) {
     const sourceCode = fs_1.default.readFileSync(filePath, "utf8");
     const sourceFile = ts.createSourceFile(filePath, sourceCode, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-    let transformedSourceFile = (0, file_1.transformFile)(sourceFile);
-    if (hasClassDeclarations(sourceFile)) {
-        const result = ts.transform(transformedSourceFile, [createTransformer(config)]);
+    let transformedSourceFile = sourceFile;
+    if (fileConfig) {
+        transformedSourceFile = (0, file_1.transformFile)(sourceFile, fileConfig);
+    }
+    if (hasClassDeclarations(sourceFile) && (classConfig || reactConfig)) {
+        const result = ts.transform(transformedSourceFile, [createTransformer(classConfig, reactConfig)]);
         transformedSourceFile = result.transformed[0];
         result.dispose();
     }
@@ -178,7 +185,7 @@ function sortClassMembersInFile(filePath, config = {}) {
     let output = printer.printFile(transformedSourceFile);
     output = addBlankLinesBetweenDeclarations(output);
     output = addBlankLinesBeforeReturns(output);
-    if (output !== sourceCode && !config.dryRun) {
+    if (output !== sourceCode && !dryRun) {
         fs_1.default.writeFileSync(filePath, output, "utf8");
         console.log(`✨ Sorted declarations in: ${filePath}`);
     }
@@ -186,18 +193,47 @@ function sortClassMembersInFile(filePath, config = {}) {
 }
 function sortClassMembersInDirectory(targetDir, config = {}) {
     const glob = require("glob");
-    const files = glob.sync("**/*.{ts,tsx,js,jsx}", {
+    let classConfig;
+    let reactConfig;
+    let fileConfig;
+    let dryRun;
+    let include;
+    let exclude;
+    if ("classConfig" in config || "reactConfig" in config || "fileConfig" in config) {
+        const newConfig = config;
+        classConfig = newConfig.classConfig;
+        reactConfig = newConfig.reactConfig;
+        fileConfig = newConfig.fileConfig;
+        dryRun = newConfig.dryRun || false;
+        include = newConfig.include || ["**/*.{ts,tsx}"];
+        exclude = newConfig.exclude || [];
+    }
+    else {
+        const oldConfig = config;
+        classConfig = oldConfig;
+        reactConfig = oldConfig;
+        fileConfig = undefined;
+        dryRun = oldConfig.dryRun || false;
+        include = ["**/*.{ts,tsx,js,jsx}"];
+        exclude = [];
+    }
+    const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
+    const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
+    const files = include.flatMap(pattern => glob.sync(pattern, {
         cwd: targetDir,
-        ignore: ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"],
+        ignore: finalExclude,
         absolute: true,
-    });
+    }));
     console.info(`Sorting class members in ${files.length} files...`);
     for (const file of files) {
         try {
-            sortClassMembersInFile(file, config);
+            sortFileInternal(file, classConfig, reactConfig, fileConfig, dryRun);
         }
         catch (error) {
             console.error(`Error sorting file ${file}:`, error.message);
         }
     }
+}
+function sortClassMembersInFile(filePath, config = {}) {
+    return sortFileInternal(filePath, config, config, undefined, config.dryRun);
 }
