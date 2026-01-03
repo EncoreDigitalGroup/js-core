@@ -13,6 +13,7 @@ export {
     type SortersConfig,
     defaultConfig,
     mergeConfig,
+    configure,
 } from "./types";
 
 export {loadConfig, hasConfigFile, CONFIG_FILE_NAME} from "./loader";

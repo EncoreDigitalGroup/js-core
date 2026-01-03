@@ -64,19 +64,18 @@ function addBlankLinesBeforeReturns(code) {
     }
     return result.join("\n");
 }
-function addBlankLinesBetweenDeclarations(code) {
+function addBlankLinesBetweenDeclarations(code, debug = false) {
     const lines = code.split("\n");
     const result = [];
     let braceDepth = 0;
     let inImportSection = true;
     let lastNonBlankLineWasDeclarationEnd = false;
-    const DEBUG = false;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmedLine = line.trim();
         const openBraces = (line.match(/{/g) || []).length;
         const closeBraces = (line.match(/}/g) || []).length;
-        if (DEBUG) {
+        if (debug) {
             console.log(`Line ${i}: "${trimmedLine.substring(0, 50)}${trimmedLine.length > 50 ? "..." : ""}"`);
             console.log(`  open:${openBraces} close:${closeBraces} depth:${braceDepth}->${braceDepth + openBraces - closeBraces}`);
         }
@@ -166,7 +165,28 @@ function hasClassDeclarations(sourceFile) {
     visit(sourceFile);
     return hasClass;
 }
-function sortFileInternal(filePath, classConfig, reactConfig, fileConfig, dryRun = false) {
+function sortFileInternal(config, filePath, dryRun = false) {
+    const debug = config.debug || false;
+    const classConfig = config.sorters?.classMembers?.enabled
+        ? {
+            order: config.sorters.classMembers.order,
+            groupByVisibility: config.sorters.classMembers.groupByVisibility,
+            respectDependencies: config.sorters.classMembers.respectDependencies,
+        }
+        : null;
+    const reactConfig = config.sorters?.reactComponents?.enabled
+        ? {
+            order: config.sorters.reactComponents.order,
+            groupByVisibility: config.sorters.reactComponents.groupByVisibility,
+            respectDependencies: config.sorters.reactComponents.respectDependencies,
+        }
+        : null;
+    const fileConfig = config.sorters?.fileDeclarations?.enabled
+        ? {
+            order: config.sorters.fileDeclarations.order,
+            respectDependencies: config.sorters.fileDeclarations.respectDependencies,
+        }
+        : null;
     const sourceCode = fs_1.default.readFileSync(filePath, "utf8");
     const sourceFile = ts.createSourceFile(filePath, sourceCode, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     let transformedSourceFile = sourceFile;
@@ -183,7 +203,7 @@ function sortFileInternal(filePath, classConfig, reactConfig, fileConfig, dryRun
         removeComments: false,
     });
     let output = printer.printFile(transformedSourceFile);
-    output = addBlankLinesBetweenDeclarations(output);
+    output = addBlankLinesBetweenDeclarations(output, debug);
     output = addBlankLinesBeforeReturns(output);
     if (output !== sourceCode && !dryRun) {
         fs_1.default.writeFileSync(filePath, output, "utf8");
@@ -191,32 +211,10 @@ function sortFileInternal(filePath, classConfig, reactConfig, fileConfig, dryRun
     }
     return output;
 }
-function sortClassMembersInDirectory(targetDir, config = {}) {
+function sortClassMembersInDirectory(config, targetDir, dryRun = false) {
     const glob = require("glob");
-    let classConfig;
-    let reactConfig;
-    let fileConfig;
-    let dryRun;
-    let include;
-    let exclude;
-    if ("classConfig" in config || "reactConfig" in config || "fileConfig" in config) {
-        const newConfig = config;
-        classConfig = newConfig.classConfig;
-        reactConfig = newConfig.reactConfig;
-        fileConfig = newConfig.fileConfig;
-        dryRun = newConfig.dryRun || false;
-        include = newConfig.include || ["**/*.{ts,tsx}"];
-        exclude = newConfig.exclude || [];
-    }
-    else {
-        const oldConfig = config;
-        classConfig = oldConfig;
-        reactConfig = oldConfig;
-        fileConfig = undefined;
-        dryRun = oldConfig.dryRun || false;
-        include = ["**/*.{ts,tsx,js,jsx}"];
-        exclude = [];
-    }
+    const include = config.sorters?.include || ["**/*.{ts,tsx}"];
+    const exclude = config.sorters?.exclude || [];
     const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
     const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
     const files = include.flatMap(pattern => glob.sync(pattern, {
@@ -227,13 +225,13 @@ function sortClassMembersInDirectory(targetDir, config = {}) {
     console.info(`Sorting class members in ${files.length} files...`);
     for (const file of files) {
         try {
-            sortFileInternal(file, classConfig, reactConfig, fileConfig, dryRun);
+            sortFileInternal(config, file, dryRun);
         }
         catch (error) {
             console.error(`Error sorting file ${file}:`, error.message);
         }
     }
 }
-function sortClassMembersInFile(filePath, config = {}) {
-    return sortFileInternal(filePath, config, config, undefined, config.dryRun);
+function sortClassMembersInFile(config, filePath, dryRun = false) {
+    return sortFileInternal(config, filePath, dryRun);
 }

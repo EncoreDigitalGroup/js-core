@@ -172,6 +172,10 @@ export interface SortersConfig {
  */
 export interface CoreConfig {
     /**
+     * Enable debug logging (default: false)
+     */
+    debug?: boolean;
+    /**
      * Configuration for Prettier formatting
      */
     prettier?: PrettierConfig;
@@ -218,6 +222,7 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
  * Default configuration
  */
 export const defaultConfig: CoreConfig = {
+    debug: false,
     prettier: {
         enabled: true,
         skipIfConfigExists: true,
@@ -274,4 +279,27 @@ export const defaultConfig: CoreConfig = {
  */
 export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
     return deepMerge(defaultConfig, userConfig);
+}
+
+/**
+ * Configure the tool with type-safe autocomplete
+ *
+ * Use this function in your core.config.ts file to get full TypeScript autocomplete
+ * without needing type assertions.
+ *
+ * @example
+ * ```ts
+ * import { configure } from '@encoredigitalgroup/core';
+ *
+ * export default configure({
+ *   debug: true,
+ *   prettier: {
+ *     enabled: true
+ *   }
+ * });
+ * ```
+ */
+
+export function configure(config: Partial<CoreConfig>): CoreConfig {
+    return mergeConfig(config);
 }

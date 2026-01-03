@@ -46,6 +46,7 @@ export {
     type SortersConfig,
     defaultConfig,
     mergeConfig,
+    configure,
     loadConfig,
     hasConfigFile,
     CONFIG_FILE_NAME,

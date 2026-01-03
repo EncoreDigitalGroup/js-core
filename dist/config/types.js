@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.defaultConfig = void 0;
 exports.mergeConfig = mergeConfig;
+exports.configure = configure;
 const file_1 = require("../formatters/file");
 const react_1 = require("../formatters/react");
 const classMemberTypes_1 = require("../shared/classMemberTypes");
@@ -26,6 +27,7 @@ function deepMerge(target, source) {
     return result;
 }
 exports.defaultConfig = {
+    debug: false,
     prettier: {
         enabled: true,
         skipIfConfigExists: true,
@@ -78,4 +80,7 @@ exports.defaultConfig = {
 };
 function mergeConfig(userConfig) {
     return deepMerge(exports.defaultConfig, userConfig);
+}
+function configure(config) {
+    return mergeConfig(config);
 }

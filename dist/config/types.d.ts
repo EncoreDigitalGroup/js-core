@@ -55,6 +55,7 @@ export interface SortersConfig {
     exclude?: string[];
 }
 export interface CoreConfig {
+    debug?: boolean;
     prettier?: PrettierConfig;
     packageJson?: PackageJsonConfig;
     tsConfig?: TsConfigConfig;
@@ -62,3 +63,4 @@ export interface CoreConfig {
 }
 export declare const defaultConfig: CoreConfig;
 export declare function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig;
+export declare function configure(config: Partial<CoreConfig>): CoreConfig;

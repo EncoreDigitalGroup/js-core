@@ -136,31 +136,7 @@ async function main(): Promise<void> {
             config.sorters?.fileDeclarations?.enabled
         ) {
             console.log("Sorting class members and file declarations...");
-            sortClassMembersInDirectory(targetDir, {
-                dryRun,
-                classConfig: config.sorters.classMembers?.enabled
-                    ? {
-                          order: config.sorters.classMembers.order,
-                          groupByVisibility: config.sorters.classMembers.groupByVisibility,
-                          respectDependencies: config.sorters.classMembers.respectDependencies,
-                      }
-                    : null,
-                reactConfig: config.sorters.reactComponents?.enabled
-                    ? {
-                          order: config.sorters.reactComponents.order as any,
-                          groupByVisibility: config.sorters.reactComponents.groupByVisibility,
-                          respectDependencies: config.sorters.reactComponents.respectDependencies,
-                      }
-                    : null,
-                fileConfig: config.sorters.fileDeclarations?.enabled
-                    ? {
-                          order: config.sorters.fileDeclarations.order,
-                          respectDependencies: config.sorters.fileDeclarations.respectDependencies,
-                      }
-                    : null,
-                include: config.sorters.include,
-                exclude: config.sorters.exclude,
-            });
+            sortClassMembersInDirectory(config, targetDir, dryRun);
         }
         // Run Prettier
         if (config.prettier?.enabled) {

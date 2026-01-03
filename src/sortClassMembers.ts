@@ -2,6 +2,7 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
+import type {CoreConfig} from "./config";
 import {transformClass} from "./formatters/class";
 import {transformFile, FileSortConfig} from "./formatters/file";
 import {isReactComponent, transformReactComponent} from "./formatters/react";
@@ -15,6 +16,7 @@ import * as ts from "typescript";
 
 export interface SortClassMembersConfig {
     dryRun?: boolean;
+    debug?: boolean;
     classConfig?: SortConfig | null;
     reactConfig?: SortConfig | null;
     fileConfig?: FileSortConfig | null;
@@ -59,20 +61,19 @@ function addBlankLinesBeforeReturns(code: string): string {
 /**
  * Adds blank lines between top-level declarations
  */
-function addBlankLinesBetweenDeclarations(code: string): string {
+function addBlankLinesBetweenDeclarations(code: string, debug: boolean = false): string {
     const lines = code.split("\n");
     const result: string[] = [];
     let braceDepth = 0;
     let inImportSection = true;
     let lastNonBlankLineWasDeclarationEnd = false;
-    const DEBUG = false; // Set to true to enable debugging
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmedLine = line.trim();
         // Track brace depth
         const openBraces = (line.match(/{/g) || []).length;
         const closeBraces = (line.match(/}/g) || []).length;
-        if (DEBUG) {
+        if (debug) {
             console.log(`Line ${i}: "${trimmedLine.substring(0, 50)}${trimmedLine.length > 50 ? "..." : ""}"`);
             console.log(
                 `  open:${openBraces} close:${closeBraces} depth:${braceDepth}->${braceDepth + openBraces - closeBraces}`,
@@ -195,13 +196,28 @@ function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
 /**
  * Internal function for sorting a single file with granular config options
  */
-function sortFileInternal(
-    filePath: string,
-    classConfig: SortConfig | null | undefined,
-    reactConfig: SortConfig | null | undefined,
-    fileConfig: FileSortConfig | null | undefined,
-    dryRun: boolean = false,
-): string {
+function sortFileInternal(config: CoreConfig, filePath: string, dryRun: boolean = false): string {
+    const debug = config.debug || false;
+    const classConfig = config.sorters?.classMembers?.enabled
+        ? {
+              order: config.sorters.classMembers.order,
+              groupByVisibility: config.sorters.classMembers.groupByVisibility,
+              respectDependencies: config.sorters.classMembers.respectDependencies,
+          }
+        : null;
+    const reactConfig = config.sorters?.reactComponents?.enabled
+        ? {
+              order: config.sorters.reactComponents.order as any,
+              groupByVisibility: config.sorters.reactComponents.groupByVisibility,
+              respectDependencies: config.sorters.reactComponents.respectDependencies,
+          }
+        : null;
+    const fileConfig = config.sorters?.fileDeclarations?.enabled
+        ? {
+              order: config.sorters.fileDeclarations.order,
+              respectDependencies: config.sorters.fileDeclarations.respectDependencies,
+          }
+        : null;
     const sourceCode = fs.readFileSync(filePath, "utf8");
     const sourceFile = ts.createSourceFile(
         filePath,
@@ -228,7 +244,7 @@ function sortFileInternal(
     });
     let output = printer.printFile(transformedSourceFile);
     // STEP 4: Final formatting - add blank lines
-    output = addBlankLinesBetweenDeclarations(output);
+    output = addBlankLinesBetweenDeclarations(output, debug);
     output = addBlankLinesBeforeReturns(output);
     // Only write if the output is different from the source
     if (output !== sourceCode && !dryRun) {
@@ -239,34 +255,10 @@ function sortFileInternal(
     return output;
 }
 
-export function sortClassMembersInDirectory(targetDir: string, config: SortConfig | SortClassMembersConfig = {}): void {
+export function sortClassMembersInDirectory(config: CoreConfig, targetDir: string, dryRun: boolean = false): void {
     const glob = require("glob");
-    // Handle both old and new config formats
-    let classConfig: SortConfig | null | undefined;
-    let reactConfig: SortConfig | null | undefined;
-    let fileConfig: FileSortConfig | null | undefined;
-    let dryRun: boolean;
-    let include: string[];
-    let exclude: string[];
-    if ("classConfig" in config || "reactConfig" in config || "fileConfig" in config) {
-        // New config format
-        const newConfig = config as SortClassMembersConfig;
-        classConfig = newConfig.classConfig;
-        reactConfig = newConfig.reactConfig;
-        fileConfig = newConfig.fileConfig;
-        dryRun = newConfig.dryRun || false;
-        include = newConfig.include || ["**/*.{ts,tsx}"];
-        exclude = newConfig.exclude || [];
-    } else {
-        // Old config format (backward compatibility)
-        const oldConfig = config as SortConfig;
-        classConfig = oldConfig;
-        reactConfig = oldConfig;
-        fileConfig = undefined;
-        dryRun = oldConfig.dryRun || false;
-        include = ["**/*.{ts,tsx,js,jsx}"];
-        exclude = [];
-    }
+    const include = config.sorters?.include || ["**/*.{ts,tsx}"];
+    const exclude = config.sorters?.exclude || [];
     // Always exclude these critical directories
     const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
     const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
@@ -280,7 +272,7 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
     console.info(`Sorting class members in ${files.length} files...`);
     for (const file of files) {
         try {
-            sortFileInternal(file, classConfig, reactConfig, fileConfig, dryRun);
+            sortFileInternal(config, file, dryRun);
         } catch (error) {
             console.error(`Error sorting file ${file}:`, (error as Error).message);
         }
@@ -289,8 +281,8 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
 
 /**
  * Sorts class members in a single file (backward compatibility)
- * @deprecated Use sortFileInternal with SortClassMembersConfig for more control
+ * @deprecated Use sortFileInternal with CoreConfig for more control
  */
-export function sortClassMembersInFile(filePath: string, config: SortConfig = {}): string {
-    return sortFileInternal(filePath, config, config, undefined, config.dryRun);
+export function sortClassMembersInFile(config: CoreConfig, filePath: string, dryRun: boolean = false): string {
+    return sortFileInternal(config, filePath, dryRun);
 }
