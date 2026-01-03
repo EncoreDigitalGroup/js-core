@@ -33,10 +33,10 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMemberName = getMemberName;
-exports.hasModifier = hasModifier;
+exports.__getMemberName = __getMemberName;
+exports.__hasModifier = __hasModifier;
 const ts = __importStar(require("typescript"));
-function getMemberName(member) {
+function __getMemberName(member) {
     if (ts.isConstructorDeclaration(member)) {
         return "constructor";
     }
@@ -53,7 +53,7 @@ function getMemberName(member) {
     }
     return "anonymous";
 }
-function hasModifier(node, kind) {
+function __hasModifier(node, kind) {
     if (!ts.canHaveModifiers(node)) {
         return false;
     }

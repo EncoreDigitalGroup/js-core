@@ -27,5 +27,5 @@ export interface SortConfig {
     dryRun?: boolean;
     respectDependencies?: boolean;
 }
-export declare function compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: number, bTypeIndex: number, config: SortConfig): number;
+export declare function __compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: number, bTypeIndex: number, config: SortConfig): number;
 export declare const DEFAULT_CLASS_ORDER: MemberType[];

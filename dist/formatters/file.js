@@ -34,8 +34,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_FILE_ORDER = exports.DeclarationType = void 0;
-exports.sortFileDeclarations = sortFileDeclarations;
-exports.transformFile = transformFile;
+exports.__sortFileDeclarations = __sortFileDeclarations;
+exports.__transformFile = __transformFile;
 const astTraversal_1 = require("../shared/astTraversal");
 const dependencyAnalysis_1 = require("../shared/dependencyAnalysis");
 const ts = __importStar(require("typescript"));
@@ -132,7 +132,7 @@ function analyzeDeclaration(node, sourceFile, index, allDeclarationNames) {
     const exported = isExported(node);
     const defaultExp = isDefaultExport(node);
     const text = node.getFullText(sourceFile);
-    const allDependencies = (0, astTraversal_1.extractFileDeclarationReferences)(node, allDeclarationNames);
+    const allDependencies = (0, astTraversal_1.__extractFileDeclarationReferences)(node, allDeclarationNames);
     const dependencies = new Set(Array.from(allDependencies).filter(dep => dep !== name));
     return {
         node,
@@ -157,7 +157,7 @@ exports.DEFAULT_FILE_ORDER = [
     DeclarationType.DefaultExport,
     DeclarationType.Other,
 ];
-function sortFileDeclarations(declarations, config = {}) {
+function __sortFileDeclarations(declarations, config = {}) {
     const order = config.order || exports.DEFAULT_FILE_ORDER;
     return [...declarations].sort((a, b) => {
         const aTypeIndex = order.indexOf(a.type);
@@ -168,7 +168,7 @@ function sortFileDeclarations(declarations, config = {}) {
         return a.name.localeCompare(b.name);
     });
 }
-function transformFile(sourceFile, config = {}) {
+function __transformFile(sourceFile, config = {}) {
     const imports = [];
     const otherStatements = [];
     sourceFile.statements.forEach(statement => {
@@ -181,9 +181,9 @@ function transformFile(sourceFile, config = {}) {
     });
     const allDeclarationNames = new Set(otherStatements.map(stmt => getDeclarationName(stmt)).filter(n => n));
     const analyzedDeclarations = otherStatements.map((stmt, index) => analyzeDeclaration(stmt, sourceFile, index, allDeclarationNames));
-    let sortedDeclarations = sortFileDeclarations(analyzedDeclarations, config);
+    let sortedDeclarations = __sortFileDeclarations(analyzedDeclarations, config);
     if (config.respectDependencies !== false) {
-        sortedDeclarations = (0, dependencyAnalysis_1.reorderWithDependencies)(sortedDeclarations, d => d.name);
+        sortedDeclarations = (0, dependencyAnalysis_1.__reorderWithDependencies)(sortedDeclarations, d => d.name);
     }
     const sortedStatements = [...imports, ...sortedDeclarations.map(d => d.node)];
     return ts.factory.updateSourceFile(sourceFile, sortedStatements);

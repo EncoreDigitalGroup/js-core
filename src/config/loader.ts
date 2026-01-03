@@ -2,7 +2,7 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
-import {CoreConfig, defaultConfig, mergeConfig} from "./types";
+import {CoreConfig, defaultConfig, __mergeConfig} from "./types";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
@@ -75,7 +75,7 @@ function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
  * @param projectRoot - The root directory of the project (defaults to current working directory)
  * @returns true if core.config.ts exists
  */
-export function hasConfigFile(projectRoot: string = process.cwd()): boolean {
+export function __hasConfigFile(projectRoot: string = process.cwd()): boolean {
     const configPath = path.join(projectRoot, CONFIG_FILE_NAME);
 
     return fs.existsSync(configPath);
@@ -87,7 +87,7 @@ export function hasConfigFile(projectRoot: string = process.cwd()): boolean {
  * @param projectRoot - The root directory of the project (defaults to current working directory)
  * @returns The merged configuration
  */
-export function loadConfig(projectRoot: string = process.cwd()): CoreConfig {
+export function __loadConfig(projectRoot: string = process.cwd()): CoreConfig {
     const configPath = path.join(projectRoot, CONFIG_FILE_NAME);
     if (!fs.existsSync(configPath)) {
         // No config file found, return default configuration
@@ -96,7 +96,7 @@ export function loadConfig(projectRoot: string = process.cwd()): CoreConfig {
     try {
         const userConfig = loadTypeScriptConfig(configPath);
 
-        return mergeConfig(userConfig);
+        return __mergeConfig(userConfig);
     } catch (error) {
         console.error(`Error loading configuration from ${configPath}:`);
         console.error(error instanceof Error ? error.message : String(error));

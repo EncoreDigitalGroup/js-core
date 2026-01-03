@@ -66,7 +66,7 @@ function findStronglyConnectedComponents(nodes: Map<string, DependencyInfo>): Se
 /**
  * Builds a dependency graph from a list of items
  */
-export function buildDependencyGraph<T>(
+export function __buildDependencyGraph<T>(
     items: T[],
     getName: (item: T) => string,
     getDependencies: (item: T) => Set<string>,
@@ -98,7 +98,7 @@ export function buildDependencyGraph<T>(
  * Performs topological sort respecting the ideal sorted order
  * Returns array of names in dependency-aware order
  */
-export function topologicalSort(graph: DependencyGraph, sortedNames: string[]): string[] {
+export function __topologicalSort(graph: DependencyGraph, sortedNames: string[]): string[] {
     const result: string[] = [];
     const visited = new Set<string>();
     const visiting = new Set<string>(); // For cycle detection
@@ -145,18 +145,18 @@ export function topologicalSort(graph: DependencyGraph, sortedNames: string[]): 
  * Reorders items to respect dependencies while minimizing changes
  * from the ideal sorted order
  */
-export function reorderWithDependencies<T>(items: T[], getName: (item: T) => string): T[] {
+export function __reorderWithDependencies<T>(items: T[], getName: (item: T) => string): T[] {
     // Build dependency graph
     const getDeps = (item: T) => {
         const member = item as any;
 
         return member.dependencies || new Set<string>();
     };
-    const graph = buildDependencyGraph(items, getName, getDeps);
+    const graph = __buildDependencyGraph(items, getName, getDeps);
     // Get ideal order (current sorted order)
     const sortedNames = items.map(getName);
     // Perform topological sort
-    const dependencyOrder = topologicalSort(graph, sortedNames);
+    const dependencyOrder = __topologicalSort(graph, sortedNames);
     // Create name to item map
     const nameToItem = new Map<string, T>();
     items.forEach(item => {

@@ -23,16 +23,16 @@ function sortObjectKeysAlphabetically(obj: Record<string, any>): Record<string, 
         );
 }
 
-export function sortTsConfig(tsConfig: Record<string, any>): Record<string, any> {
+export function __sortTsConfig(tsConfig: Record<string, any>): Record<string, any> {
     return sortObjectKeysAlphabetically(tsConfig);
 }
 
-export function sortTsConfigFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
+export function __sortTsConfigFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
     const tsConfigPath = filePath || path.join(process.cwd(), "tsconfig.json");
     const indentation = options.indentation || (DefaultSortOptions.indentation as number);
     try {
         const tsConfig = JSON.parse(fs.readFileSync(tsConfigPath, "utf8"));
-        const sortedTsConfig = sortTsConfig(tsConfig);
+        const sortedTsConfig = __sortTsConfig(tsConfig);
         if (!options.dryRun) {
             fs.writeFileSync(tsConfigPath, JSON.stringify(sortedTsConfig, null, indentation) + "\n");
             console.log(`✨ ${tsConfigPath} has been sorted alphabetically!`);

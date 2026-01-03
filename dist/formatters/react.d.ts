@@ -21,7 +21,7 @@ export declare enum ReactMemberType {
     GetAccessor = "get_accessor",
     SetAccessor = "set_accessor"
 }
-export declare function isReactComponent(classNode: ts.ClassDeclaration): boolean;
+export declare function __isReactComponent(classNode: ts.ClassDeclaration): boolean;
 export declare const DEFAULT_REACT_ORDER: ReactMemberType[];
-export declare function sortReactMembers(members: ClassMember[], config?: SortConfig): ClassMember[];
-export declare function transformReactComponent(classNode: ts.ClassDeclaration, sourceFile: ts.SourceFile, config: SortConfig): ts.ClassDeclaration;
+export declare function __sortReactMembers(members: ClassMember[], config?: SortConfig): ClassMember[];
+export declare function __transformReactComponent(classNode: ts.ClassDeclaration, sourceFile: ts.SourceFile, config: SortConfig): ts.ClassDeclaration;

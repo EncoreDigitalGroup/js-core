@@ -3,9 +3,9 @@
  * All Rights Reserved.
  */
 import type {CoreConfig} from "./config";
-import {transformClass} from "./formatters/class";
-import {transformFile, FileSortConfig} from "./formatters/file";
-import {isReactComponent, transformReactComponent} from "./formatters/react";
+import {__transformClass} from "./formatters/class";
+import {__transformFile, FileSortConfig} from "./formatters/file";
+import {__isReactComponent, __transformReactComponent} from "./formatters/react";
 import {SortConfig} from "./shared/classMemberTypes";
 import fs from "fs";
 import * as ts from "typescript";
@@ -25,37 +25,47 @@ export interface SortClassMembersConfig {
 }
 
 /**
- * Adds blank lines before return statements (unless there's a comment directly above)
+ * Checks if a source file contains any class declarations
  */
-function addBlankLinesBeforeReturns(code: string): string {
-    const lines = code.split("\n");
-    const result: string[] = [];
-    for (let i = 0; i < lines.length; i++) {
-        const currentLine = lines[i];
-        const trimmedCurrentLine = currentLine.trim();
-        const previousLine = i > 0 ? lines[i - 1] : "";
-        const trimmedPreviousLine = previousLine.trim();
-        // Check if current line is a return statement
-        const isReturnStatement = trimmedCurrentLine.startsWith("return ");
-        // Check if previous line is a comment or blank
-        const previousIsComment =
-            trimmedPreviousLine.startsWith("//") ||
-            trimmedPreviousLine.startsWith("/*") ||
-            trimmedPreviousLine.startsWith("*") ||
-            trimmedPreviousLine.endsWith("*/");
-        const previousIsBlank = trimmedPreviousLine === "";
-        // Add blank line before return if:
-        // - It's a return statement
-        // - Previous line is not blank
-        // - Previous line is not a comment
-        // - We have at least one line before
-        if (isReturnStatement && !previousIsBlank && !previousIsComment && i > 0) {
-            result.push("");
+function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
+    let hasClass = false;
+    function visit(node: ts.Node): void {
+        if (ts.isClassDeclaration(node)) {
+            hasClass = true;
+            return;
         }
-        result.push(currentLine);
+        ts.forEachChild(node, visit);
     }
+    visit(sourceFile);
 
-    return result.join("\n");
+    return hasClass;
+}
+
+function createTransformer(
+    classConfig: SortConfig | null | undefined,
+    reactConfig: SortConfig | null | undefined,
+): ts.TransformerFactory<ts.SourceFile> {
+    return (context: ts.TransformationContext) => {
+        return (sourceFile: ts.SourceFile) => {
+            function visit(node: ts.Node): ts.Node {
+                if (ts.isClassDeclaration(node)) {
+                    // Check if it's a React component
+                    if (__isReactComponent(node)) {
+                        if (reactConfig) {
+                            return __transformReactComponent(node, sourceFile, reactConfig);
+                        }
+                    } else if (classConfig) {
+                        // Otherwise, treat as regular TypeScript class
+                        return __transformClass(node, sourceFile, classConfig);
+                    }
+                }
+
+                return ts.visitEachChild(node, visit, context);
+            }
+
+            return ts.visitNode(sourceFile, visit) as ts.SourceFile;
+        };
+    };
 }
 
 /**
@@ -149,54 +159,44 @@ function addBlankLinesBetweenDeclarations(code: string, debug: boolean = false):
     return result.join("\n");
 }
 
-function createTransformer(
-    classConfig: SortConfig | null | undefined,
-    reactConfig: SortConfig | null | undefined,
-): ts.TransformerFactory<ts.SourceFile> {
-    return (context: ts.TransformationContext) => {
-        return (sourceFile: ts.SourceFile) => {
-            function visit(node: ts.Node): ts.Node {
-                if (ts.isClassDeclaration(node)) {
-                    // Check if it's a React component
-                    if (isReactComponent(node)) {
-                        if (reactConfig) {
-                            return transformReactComponent(node, sourceFile, reactConfig);
-                        }
-                    } else if (classConfig) {
-                        // Otherwise, treat as regular TypeScript class
-                        return transformClass(node, sourceFile, classConfig);
-                    }
-                }
-
-                return ts.visitEachChild(node, visit, context);
-            }
-
-            return ts.visitNode(sourceFile, visit) as ts.SourceFile;
-        };
-    };
-}
-
 /**
- * Checks if a source file contains any class declarations
+ * Adds blank lines before return statements (unless there's a comment directly above)
  */
-function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
-    let hasClass = false;
-    function visit(node: ts.Node): void {
-        if (ts.isClassDeclaration(node)) {
-            hasClass = true;
-            return;
+function addBlankLinesBeforeReturns(code: string): string {
+    const lines = code.split("\n");
+    const result: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+        const currentLine = lines[i];
+        const trimmedCurrentLine = currentLine.trim();
+        const previousLine = i > 0 ? lines[i - 1] : "";
+        const trimmedPreviousLine = previousLine.trim();
+        // Check if current line is a return statement
+        const isReturnStatement = trimmedCurrentLine.startsWith("return ");
+        // Check if previous line is a comment or blank
+        const previousIsComment =
+            trimmedPreviousLine.startsWith("//") ||
+            trimmedPreviousLine.startsWith("/*") ||
+            trimmedPreviousLine.startsWith("*") ||
+            trimmedPreviousLine.endsWith("*/");
+        const previousIsBlank = trimmedPreviousLine === "";
+        // Add blank line before return if:
+        // - It's a return statement
+        // - Previous line is not blank
+        // - Previous line is not a comment
+        // - We have at least one line before
+        if (isReturnStatement && !previousIsBlank && !previousIsComment && i > 0) {
+            result.push("");
         }
-        ts.forEachChild(node, visit);
+        result.push(currentLine);
     }
-    visit(sourceFile);
 
-    return hasClass;
+    return result.join("\n");
 }
 
 /**
  * Internal function for sorting a single file with granular config options
  */
-function sortFileInternal(config: CoreConfig, filePath: string, dryRun: boolean = false): string {
+function __sortFileInternal(config: CoreConfig, filePath: string, dryRun: boolean = false): string {
     const debug = config.debug || false;
     const classConfig = config.sorters?.classMembers?.enabled
         ? {
@@ -229,7 +229,7 @@ function sortFileInternal(config: CoreConfig, filePath: string, dryRun: boolean 
     // STEP 1: Sort top-level file declarations
     let transformedSourceFile = sourceFile;
     if (fileConfig) {
-        transformedSourceFile = transformFile(sourceFile, fileConfig);
+        transformedSourceFile = __transformFile(sourceFile, fileConfig);
     }
     // STEP 2: Sort class members (if any classes exist and configs provided)
     if (hasClassDeclarations(sourceFile) && (classConfig || reactConfig)) {
@@ -255,7 +255,7 @@ function sortFileInternal(config: CoreConfig, filePath: string, dryRun: boolean 
     return output;
 }
 
-export function sortClassMembersInDirectory(config: CoreConfig, targetDir: string, dryRun: boolean = false): void {
+export function __sortClassMembersInDirectory(config: CoreConfig, targetDir: string, dryRun: boolean = false): void {
     const glob = require("glob");
     const include = config.sorters?.include || ["**/*.{ts,tsx}"];
     const exclude = config.sorters?.exclude || [];
@@ -272,7 +272,7 @@ export function sortClassMembersInDirectory(config: CoreConfig, targetDir: strin
     console.info(`Sorting class members in ${files.length} files...`);
     for (const file of files) {
         try {
-            sortFileInternal(config, file, dryRun);
+            __sortFileInternal(config, file, dryRun);
         } catch (error) {
             console.error(`Error sorting file ${file}:`, (error as Error).message);
         }
@@ -281,8 +281,8 @@ export function sortClassMembersInDirectory(config: CoreConfig, targetDir: strin
 
 /**
  * Sorts class members in a single file (backward compatibility)
- * @deprecated Use sortFileInternal with CoreConfig for more control
+ * @deprecated Use __sortFileInternal with CoreConfig for more control
  */
-export function sortClassMembersInFile(config: CoreConfig, filePath: string, dryRun: boolean = false): string {
-    return sortFileInternal(config, filePath, dryRun);
+export function __sortClassMembersInFile(config: CoreConfig, filePath: string, dryRun: boolean = false): string {
+    return __sortFileInternal(config, filePath, dryRun);
 }

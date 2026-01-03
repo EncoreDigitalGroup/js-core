@@ -1,6 +1,6 @@
+import type { CoreConfig } from "./config";
 import { FileSortConfig } from "./formatters/file";
 import { SortConfig } from "./shared/classMemberTypes";
-import type { CoreConfig } from "./config";
 export interface SortClassMembersConfig {
     dryRun?: boolean;
     debug?: boolean;
@@ -10,5 +10,5 @@ export interface SortClassMembersConfig {
     include?: string[];
     exclude?: string[];
 }
-export declare function sortClassMembersInDirectory(config: CoreConfig, targetDir: string, dryRun?: boolean): void;
-export declare function sortClassMembersInFile(config: CoreConfig, filePath: string, dryRun?: boolean): string;
+export declare function __sortClassMembersInDirectory(config: CoreConfig, targetDir: string, dryRun?: boolean): void;
+export declare function __sortClassMembersInFile(config: CoreConfig, filePath: string, dryRun?: boolean): string;

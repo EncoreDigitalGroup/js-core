@@ -12,8 +12,8 @@ export {
     type FileDeclarationConfig,
     type SortersConfig,
     defaultConfig,
-    mergeConfig,
+    __mergeConfig,
     configure,
 } from "./types";
 
-export {loadConfig, hasConfigFile, CONFIG_FILE_NAME} from "./loader";
+export {__loadConfig, __hasConfigFile, CONFIG_FILE_NAME} from "./loader";

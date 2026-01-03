@@ -62,5 +62,5 @@ export interface CoreConfig {
     sorters?: SortersConfig;
 }
 export declare const defaultConfig: CoreConfig;
-export declare function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig;
+export declare function __mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig;
 export declare function configure(config: Partial<CoreConfig>): CoreConfig;

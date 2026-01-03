@@ -3,11 +3,11 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
-import {loadConfig, hasConfigFile} from "./config";
+import {__loadConfig, __hasConfigFile} from "./config";
 import type {CoreConfig} from "./config";
-import {sortClassMembersInDirectory} from "./sortClassMembers";
-import {sortPackageFile} from "./sortPackage";
-import {sortTsConfigFile} from "./sortTSConfig";
+import {__sortClassMembersInDirectory} from "./sortClassMembers";
+import {__sortPackageFile} from "./sortPackage";
+import {__sortTsConfigFile} from "./sortTSConfig";
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
@@ -101,9 +101,9 @@ async function main(): Promise<void> {
     }
     try {
         // Load configuration
-        const config = loadConfig(targetDir);
+        const config = __loadConfig(targetDir);
         // Log if custom config is being used
-        if (hasConfigFile(targetDir)) {
+        if (__hasConfigFile(targetDir)) {
             console.log("Using custom configuration from core.config.ts");
         }
         // Sort package.json
@@ -111,7 +111,7 @@ async function main(): Promise<void> {
             const packagePath = path.join(targetDir, "package.json");
             if (fs.existsSync(packagePath)) {
                 console.log(`Processing ${packagePath}...`);
-                sortPackageFile(packagePath, {
+                __sortPackageFile(packagePath, {
                     customSortOrder: config.packageJson.customSortOrder,
                     indentation: config.packageJson.indentation,
                     dryRun,
@@ -123,7 +123,7 @@ async function main(): Promise<void> {
             const tsconfigPath = path.join(targetDir, "tsconfig.json");
             if (fs.existsSync(tsconfigPath)) {
                 console.log(`Processing ${tsconfigPath}...`);
-                sortTsConfigFile(tsconfigPath, {
+                __sortTsConfigFile(tsconfigPath, {
                     indentation: config.tsConfig.indentation,
                     dryRun,
                 });
@@ -136,7 +136,7 @@ async function main(): Promise<void> {
             config.sorters?.fileDeclarations?.enabled
         ) {
             console.log("Sorting class members and file declarations...");
-            sortClassMembersInDirectory(config, targetDir, dryRun);
+            __sortClassMembersInDirectory(config, targetDir, dryRun);
         }
         // Run Prettier
         if (config.prettier?.enabled) {

@@ -8,6 +8,6 @@ export interface DependencyGraph {
     nodes: Map<string, DependencyInfo>;
     circularGroups: Set<string>[];
 }
-export declare function buildDependencyGraph<T>(items: T[], getName: (item: T) => string, getDependencies: (item: T) => Set<string>): DependencyGraph;
-export declare function topologicalSort(graph: DependencyGraph, sortedNames: string[]): string[];
-export declare function reorderWithDependencies<T>(items: T[], getName: (item: T) => string): T[];
+export declare function __buildDependencyGraph<T>(items: T[], getName: (item: T) => string, getDependencies: (item: T) => Set<string>): DependencyGraph;
+export declare function __topologicalSort(graph: DependencyGraph, sortedNames: string[]): string[];
+export declare function __reorderWithDependencies<T>(items: T[], getName: (item: T) => string): T[];

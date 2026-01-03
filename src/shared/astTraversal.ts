@@ -14,7 +14,7 @@ export interface ReferenceInfo {
  * Extracts all identifier references from a node
  * This is the core traversal function that recursively visits the AST
  */
-export function extractReferences(node: ts.Node, scopeFilter?: (name: string) => boolean): ReferenceInfo {
+export function __extractReferences(node: ts.Node, scopeFilter?: (name: string) => boolean): ReferenceInfo {
     const identifiers = new Set<string>();
     const thisReferences = new Set<string>();
     const directCalls = new Set<string>();
@@ -64,12 +64,12 @@ export function extractReferences(node: ts.Node, scopeFilter?: (name: string) =>
  * Extract references from a class member
  * Only considers references to members in availableMembers set
  */
-export function extractClassMemberReferences(member: ts.ClassElement, availableMembers: Set<string>): Set<string> {
+export function __extractClassMemberReferences(member: ts.ClassElement, availableMembers: Set<string>): Set<string> {
     // Don't analyze constructor - it can reference anything
     if (ts.isConstructorDeclaration(member)) {
         return new Set();
     }
-    const refs = extractReferences(member, name => availableMembers.has(name));
+    const refs = __extractReferences(member, name => availableMembers.has(name));
     // For class members, we primarily care about this.x references
     // But also include direct identifiers that match member names
     return new Set([...refs.thisReferences, ...refs.identifiers]);
@@ -79,7 +79,7 @@ export function extractClassMemberReferences(member: ts.ClassElement, availableM
  * Extract references from a file-level declaration
  * Only considers references to declarations in availableDeclarations set
  */
-export function extractFileDeclarationReferences(
+export function __extractFileDeclarationReferences(
     declaration: ts.Statement,
     availableDeclarations: Set<string>,
 ): Set<string> {
@@ -91,7 +91,7 @@ export function extractFileDeclarationReferences(
     ) {
         return new Set();
     }
-    const refs = extractReferences(declaration, name => availableDeclarations.has(name));
+    const refs = __extractReferences(declaration, name => availableDeclarations.has(name));
     // For file declarations, we care about all identifiers
     // Exclude 'this' references as they don't apply at file level
     return refs.identifiers;

@@ -39,7 +39,7 @@ export interface SortConfig {
 
  * Compares two class members for sorting based on type index, visibility, and name
  */
-export function compareMembers(
+export function __compareMembers(
     a: ClassMember,
     b: ClassMember,
     aTypeIndex: number,

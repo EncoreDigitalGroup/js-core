@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildDependencyGraph = buildDependencyGraph;
-exports.topologicalSort = topologicalSort;
-exports.reorderWithDependencies = reorderWithDependencies;
+exports.__buildDependencyGraph = __buildDependencyGraph;
+exports.__topologicalSort = __topologicalSort;
+exports.__reorderWithDependencies = __reorderWithDependencies;
 function findStronglyConnectedComponents(nodes) {
     const index = new Map();
     const lowLink = new Map();
@@ -46,7 +46,7 @@ function findStronglyConnectedComponents(nodes) {
     }
     return sccs;
 }
-function buildDependencyGraph(items, getName, getDependencies) {
+function __buildDependencyGraph(items, getName, getDependencies) {
     const nodes = new Map();
     items.forEach((item, index) => {
         const name = getName(item);
@@ -66,7 +66,7 @@ function buildDependencyGraph(items, getName, getDependencies) {
     const circularGroups = findStronglyConnectedComponents(nodes);
     return { nodes, circularGroups };
 }
-function topologicalSort(graph, sortedNames) {
+function __topologicalSort(graph, sortedNames) {
     const result = [];
     const visited = new Set();
     const visiting = new Set();
@@ -102,14 +102,14 @@ function topologicalSort(graph, sortedNames) {
     }
     return result;
 }
-function reorderWithDependencies(items, getName) {
+function __reorderWithDependencies(items, getName) {
     const getDeps = (item) => {
         const member = item;
         return member.dependencies || new Set();
     };
-    const graph = buildDependencyGraph(items, getName, getDeps);
+    const graph = __buildDependencyGraph(items, getName, getDeps);
     const sortedNames = items.map(getName);
-    const dependencyOrder = topologicalSort(graph, sortedNames);
+    const dependencyOrder = __topologicalSort(graph, sortedNames);
     const nameToItem = new Map();
     items.forEach(item => {
         const name = getName(item);

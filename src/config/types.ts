@@ -196,7 +196,7 @@ export interface CoreConfig {
 /**
  * Deep merges two configuration objects
  */
-function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+function __deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
     const result = {...target};
     for (const key in source) {
         if (source[key] !== undefined) {
@@ -208,7 +208,7 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
                 result[key] !== null &&
                 !Array.isArray(result[key])
             ) {
-                result[key] = deepMerge(result[key] as any, source[key] as any);
+                result[key] = __deepMerge(result[key] as any, source[key] as any);
             } else {
                 result[key] = source[key] as T[Extract<keyof T, string>];
             }
@@ -277,8 +277,8 @@ export const defaultConfig: CoreConfig = {
 /**
  * Merges user configuration with default configuration
  */
-export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
-    return deepMerge(defaultConfig, userConfig);
+export function __mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
+    return __deepMerge(defaultConfig, userConfig);
 }
 
 /**
@@ -301,5 +301,5 @@ export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
  */
 
 export function configure(config: Partial<CoreConfig>): CoreConfig {
-    return mergeConfig(config);
+    return __mergeConfig(config);
 }

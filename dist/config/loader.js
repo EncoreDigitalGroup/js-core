@@ -34,8 +34,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CONFIG_FILE_NAME = void 0;
-exports.hasConfigFile = hasConfigFile;
-exports.loadConfig = loadConfig;
+exports.__hasConfigFile = __hasConfigFile;
+exports.__loadConfig = __loadConfig;
 const types_1 = require("./types");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
@@ -77,18 +77,18 @@ function loadTypeScriptConfig(filePath) {
         throw new Error(`Failed to load ${exports.CONFIG_FILE_NAME}: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
-function hasConfigFile(projectRoot = process.cwd()) {
+function __hasConfigFile(projectRoot = process.cwd()) {
     const configPath = path.join(projectRoot, exports.CONFIG_FILE_NAME);
     return fs.existsSync(configPath);
 }
-function loadConfig(projectRoot = process.cwd()) {
+function __loadConfig(projectRoot = process.cwd()) {
     const configPath = path.join(projectRoot, exports.CONFIG_FILE_NAME);
     if (!fs.existsSync(configPath)) {
         return types_1.defaultConfig;
     }
     try {
         const userConfig = loadTypeScriptConfig(configPath);
-        return (0, types_1.mergeConfig)(userConfig);
+        return (0, types_1.__mergeConfig)(userConfig);
     }
     catch (error) {
         console.error(`Error loading configuration from ${configPath}:`);

@@ -2,10 +2,10 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
-import {extractClassMemberReferences} from "../shared/astTraversal";
-import {ClassMember, compareMembers, MemberType, SortConfig} from "../shared/classMemberTypes";
-import {getMemberName, hasModifier} from "../shared/classMemberUtils";
-import {reorderWithDependencies} from "../shared/dependencyAnalysis";
+import {__extractClassMemberReferences} from "../shared/astTraversal";
+import {ClassMember, __compareMembers, MemberType, SortConfig} from "../shared/classMemberTypes";
+import {__getMemberName, __hasModifier} from "../shared/classMemberUtils";
+import {__reorderWithDependencies} from "../shared/dependencyAnalysis";
 import * as ts from "typescript";
 
 // React-specific member types
@@ -44,8 +44,8 @@ function getReactMemberType(member: ts.ClassElement): ReactMemberType {
     if (ts.isConstructorDeclaration(member)) {
         return ReactMemberType.Constructor;
     }
-    const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
-    const name = getMemberName(member);
+    const isStatic = __hasModifier(member, ts.SyntaxKind.StaticKeyword);
+    const name = __getMemberName(member);
     if (ts.isPropertyDeclaration(member)) {
         if (isStatic) {
             return ReactMemberType.StaticProperty;
@@ -101,19 +101,20 @@ function analyzeReactMember(
     allMemberNames: Set<string>,
 ): ClassMember {
     const type = getReactMemberType(member) as unknown as MemberType;
-    const name = getMemberName(member);
-    const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
+    const name = __getMemberName(member);
+    const isStatic = __hasModifier(member, ts.SyntaxKind.StaticKeyword);
     const isPublic =
-        hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
-        (!hasModifier(member, ts.SyntaxKind.PrivateKeyword) && !hasModifier(member, ts.SyntaxKind.ProtectedKeyword));
-    const isProtected = hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
-    const isPrivate = hasModifier(member, ts.SyntaxKind.PrivateKeyword);
+        __hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
+        (!__hasModifier(member, ts.SyntaxKind.PrivateKeyword) &&
+            !__hasModifier(member, ts.SyntaxKind.ProtectedKeyword));
+    const isProtected = __hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
+    const isPrivate = __hasModifier(member, ts.SyntaxKind.PrivateKeyword);
     // Check for decorators using ts.getDecorators
     const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
     const hasDecorator = decorators ? decorators.length > 0 : false;
     // Get the full text including decorators and comments
     const text = member.getFullText(sourceFile);
-    const allDependencies = extractClassMemberReferences(member, allMemberNames);
+    const allDependencies = __extractClassMemberReferences(member, allMemberNames);
     // Remove self-reference
     const dependencies = new Set(Array.from(allDependencies).filter(dep => dep !== name));
 
@@ -132,7 +133,7 @@ function analyzeReactMember(
     };
 }
 
-export function isReactComponent(classNode: ts.ClassDeclaration): boolean {
+export function __isReactComponent(classNode: ts.ClassDeclaration): boolean {
     if (!classNode.heritageClauses) {
         return false;
     }
@@ -177,18 +178,18 @@ export const DEFAULT_REACT_ORDER: ReactMemberType[] = [
     ReactMemberType.InstanceMethod,
 ];
 
-export function sortReactMembers(members: ClassMember[], config: SortConfig = {}): ClassMember[] {
+export function __sortReactMembers(members: ClassMember[], config: SortConfig = {}): ClassMember[] {
     const order = (config.order as unknown as ReactMemberType[]) || DEFAULT_REACT_ORDER;
 
     return [...members].sort((a, b) => {
         const aTypeIndex = order.indexOf(a.type as unknown as ReactMemberType);
         const bTypeIndex = order.indexOf(b.type as unknown as ReactMemberType);
 
-        return compareMembers(a, b, aTypeIndex, bTypeIndex, config);
+        return __compareMembers(a, b, aTypeIndex, bTypeIndex, config);
     });
 }
 
-export function transformReactComponent(
+export function __transformReactComponent(
     classNode: ts.ClassDeclaration,
     sourceFile: ts.SourceFile,
     config: SortConfig,
@@ -198,17 +199,17 @@ export function transformReactComponent(
     }
     // Collect all member names first
     const allMemberNames = new Set<string>(
-        classNode.members.map(m => getMemberName(m)).filter(n => n && n !== "constructor"),
+        classNode.members.map(m => __getMemberName(m)).filter(n => n && n !== "constructor"),
     );
     // Analyze all members
     const analyzedMembers = classNode.members.map((member, index) =>
         analyzeReactMember(member, sourceFile, index, allMemberNames),
     );
     // Sort members
-    let sortedMembers = sortReactMembers(analyzedMembers, config);
+    let sortedMembers = __sortReactMembers(analyzedMembers, config);
     // Apply dependency reordering if enabled
     if (config.respectDependencies !== false) {
-        sortedMembers = reorderWithDependencies(sortedMembers, m => m.name);
+        sortedMembers = __reorderWithDependencies(sortedMembers, m => m.name);
     }
     // Create new class with sorted members
     return ts.factory.updateClassDeclaration(

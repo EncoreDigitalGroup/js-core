@@ -8,7 +8,7 @@ import * as ts from "typescript";
  * Gets the name of a class member
  */
 
-export function getMemberName(member: ts.ClassElement): string {
+export function __getMemberName(member: ts.ClassElement): string {
     if (ts.isConstructorDeclaration(member)) {
         return "constructor";
     }
@@ -31,7 +31,7 @@ export function getMemberName(member: ts.ClassElement): string {
 
  * Checks if a node has a specific modifier
  */
-export function hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
+export function __hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
     if (!ts.canHaveModifiers(node)) {
         return false;
     }

@@ -116,15 +116,15 @@ async function main() {
         }
     }
     try {
-        const config = (0, config_1.loadConfig)(targetDir);
-        if ((0, config_1.hasConfigFile)(targetDir)) {
+        const config = (0, config_1.__loadConfig)(targetDir);
+        if ((0, config_1.__hasConfigFile)(targetDir)) {
             console.log("Using custom configuration from core.config.ts");
         }
         if (config.packageJson?.enabled) {
             const packagePath = path.join(targetDir, "package.json");
             if (fs.existsSync(packagePath)) {
                 console.log(`Processing ${packagePath}...`);
-                (0, sortPackage_1.sortPackageFile)(packagePath, {
+                (0, sortPackage_1.__sortPackageFile)(packagePath, {
                     customSortOrder: config.packageJson.customSortOrder,
                     indentation: config.packageJson.indentation,
                     dryRun,
@@ -135,7 +135,7 @@ async function main() {
             const tsconfigPath = path.join(targetDir, "tsconfig.json");
             if (fs.existsSync(tsconfigPath)) {
                 console.log(`Processing ${tsconfigPath}...`);
-                (0, sortTSConfig_1.sortTsConfigFile)(tsconfigPath, {
+                (0, sortTSConfig_1.__sortTsConfigFile)(tsconfigPath, {
                     indentation: config.tsConfig.indentation,
                     dryRun,
                 });
@@ -145,7 +145,7 @@ async function main() {
             config.sorters?.reactComponents?.enabled ||
             config.sorters?.fileDeclarations?.enabled) {
             console.log("Sorting class members and file declarations...");
-            (0, sortClassMembers_1.sortClassMembersInDirectory)(config, targetDir, dryRun);
+            (0, sortClassMembers_1.__sortClassMembersInDirectory)(config, targetDir, dryRun);
         }
         if (config.prettier?.enabled) {
             const shouldSkip = config.prettier.skipIfConfigExists && hasPrettierConfig(targetDir);

@@ -1,1 +1,1 @@
-export declare function sortExportsKeys(exports: Record<string, any>): Record<string, any>;
+export declare function __sortExportsKeys(exports: Record<string, any>): Record<string, any>;

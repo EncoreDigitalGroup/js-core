@@ -2,8 +2,8 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
-import {extractFileDeclarationReferences} from "../shared/astTraversal";
-import {reorderWithDependencies} from "../shared/dependencyAnalysis";
+import {__extractFileDeclarationReferences} from "../shared/astTraversal";
+import {__reorderWithDependencies} from "../shared/dependencyAnalysis";
 import * as ts from "typescript";
 
 /**
@@ -145,7 +145,7 @@ function analyzeDeclaration(
     const exported = isExported(node);
     const defaultExp = isDefaultExport(node);
     const text = node.getFullText(sourceFile);
-    const allDependencies = extractFileDeclarationReferences(node, allDeclarationNames);
+    const allDependencies = __extractFileDeclarationReferences(node, allDeclarationNames);
     // Remove self-reference
     const dependencies = new Set(Array.from(allDependencies).filter(dep => dep !== name));
 
@@ -180,7 +180,10 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 /**
  * Sorts top-level declarations according to the specified order
  */
-export function sortFileDeclarations(declarations: FileDeclaration[], config: FileSortConfig = {}): FileDeclaration[] {
+export function __sortFileDeclarations(
+    declarations: FileDeclaration[],
+    config: FileSortConfig = {},
+): FileDeclaration[] {
     const order = config.order || DEFAULT_FILE_ORDER;
 
     return [...declarations].sort((a, b) => {
@@ -198,7 +201,7 @@ export function sortFileDeclarations(declarations: FileDeclaration[], config: Fi
 /**
  * Transforms a source file by sorting its top-level declarations
  */
-export function transformFile(sourceFile: ts.SourceFile, config: FileSortConfig = {}): ts.SourceFile {
+export function __transformFile(sourceFile: ts.SourceFile, config: FileSortConfig = {}): ts.SourceFile {
     // Separate import statements from other declarations
     const imports: ts.Statement[] = [];
     const otherStatements: ts.Statement[] = [];
@@ -215,10 +218,10 @@ export function transformFile(sourceFile: ts.SourceFile, config: FileSortConfig 
     const analyzedDeclarations = otherStatements.map((stmt, index) =>
         analyzeDeclaration(stmt, sourceFile, index, allDeclarationNames),
     );
-    let sortedDeclarations = sortFileDeclarations(analyzedDeclarations, config);
+    let sortedDeclarations = __sortFileDeclarations(analyzedDeclarations, config);
     // Apply dependency reordering if enabled
     if (config.respectDependencies !== false) {
-        sortedDeclarations = reorderWithDependencies(sortedDeclarations, d => d.name);
+        sortedDeclarations = __reorderWithDependencies(sortedDeclarations, d => d.name);
     }
     // Combine imports with sorted declarations
     const sortedStatements = [...imports, ...sortedDeclarations.map(d => d.node)];

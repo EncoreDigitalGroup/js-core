@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortExportsKeys = sortExportsKeys;
-function sortExportsKeys(exports) {
+exports.__sortExportsKeys = __sortExportsKeys;
+function __sortExportsKeys(exports) {
     if (!exports || typeof exports !== "object") {
         return exports;
     }

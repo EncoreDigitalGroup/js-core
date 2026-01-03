@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_CLASS_ORDER = exports.MemberType = void 0;
-exports.compareMembers = compareMembers;
+exports.__compareMembers = __compareMembers;
 var MemberType;
 (function (MemberType) {
     MemberType["StaticProperty"] = "static_property";
@@ -12,7 +12,7 @@ var MemberType;
     MemberType["GetAccessor"] = "get_accessor";
     MemberType["SetAccessor"] = "set_accessor";
 })(MemberType || (exports.MemberType = MemberType = {}));
-function compareMembers(a, b, aTypeIndex, bTypeIndex, config) {
+function __compareMembers(a, b, aTypeIndex, bTypeIndex, config) {
     if (aTypeIndex !== bTypeIndex) {
         return aTypeIndex - bTypeIndex;
     }

@@ -26,5 +26,5 @@ export interface FileSortConfig {
     respectDependencies?: boolean;
 }
 export declare const DEFAULT_FILE_ORDER: DeclarationType[];
-export declare function sortFileDeclarations(declarations: FileDeclaration[], config?: FileSortConfig): FileDeclaration[];
-export declare function transformFile(sourceFile: ts.SourceFile, config?: FileSortConfig): ts.SourceFile;
+export declare function __sortFileDeclarations(declarations: FileDeclaration[], config?: FileSortConfig): FileDeclaration[];
+export declare function __transformFile(sourceFile: ts.SourceFile, config?: FileSortConfig): ts.SourceFile;

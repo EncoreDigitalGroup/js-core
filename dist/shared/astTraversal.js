@@ -33,11 +33,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractReferences = extractReferences;
-exports.extractClassMemberReferences = extractClassMemberReferences;
-exports.extractFileDeclarationReferences = extractFileDeclarationReferences;
+exports.__extractReferences = __extractReferences;
+exports.__extractClassMemberReferences = __extractClassMemberReferences;
+exports.__extractFileDeclarationReferences = __extractFileDeclarationReferences;
 const ts = __importStar(require("typescript"));
-function extractReferences(node, scopeFilter) {
+function __extractReferences(node, scopeFilter) {
     const identifiers = new Set();
     const thisReferences = new Set();
     const directCalls = new Set();
@@ -77,19 +77,19 @@ function extractReferences(node, scopeFilter) {
     visit(node);
     return { identifiers, thisReferences, directCalls };
 }
-function extractClassMemberReferences(member, availableMembers) {
+function __extractClassMemberReferences(member, availableMembers) {
     if (ts.isConstructorDeclaration(member)) {
         return new Set();
     }
-    const refs = extractReferences(member, name => availableMembers.has(name));
+    const refs = __extractReferences(member, name => availableMembers.has(name));
     return new Set([...refs.thisReferences, ...refs.identifiers]);
 }
-function extractFileDeclarationReferences(declaration, availableDeclarations) {
+function __extractFileDeclarationReferences(declaration, availableDeclarations) {
     if (ts.isImportDeclaration(declaration) ||
         ts.isImportEqualsDeclaration(declaration) ||
         ts.isExportDeclaration(declaration)) {
         return new Set();
     }
-    const refs = extractReferences(declaration, name => availableDeclarations.has(name));
+    const refs = __extractReferences(declaration, name => availableDeclarations.has(name));
     return refs.identifiers;
 }

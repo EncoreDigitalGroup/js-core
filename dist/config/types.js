@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.defaultConfig = void 0;
-exports.mergeConfig = mergeConfig;
+exports.__mergeConfig = __mergeConfig;
 exports.configure = configure;
 const file_1 = require("../formatters/file");
 const react_1 = require("../formatters/react");
 const classMemberTypes_1 = require("../shared/classMemberTypes");
 const types_1 = require("../shared/types");
-function deepMerge(target, source) {
+function __deepMerge(target, source) {
     const result = { ...target };
     for (const key in source) {
         if (source[key] !== undefined) {
@@ -17,7 +17,7 @@ function deepMerge(target, source) {
                 typeof result[key] === "object" &&
                 result[key] !== null &&
                 !Array.isArray(result[key])) {
-                result[key] = deepMerge(result[key], source[key]);
+                result[key] = __deepMerge(result[key], source[key]);
             }
             else {
                 result[key] = source[key];
@@ -78,9 +78,9 @@ exports.defaultConfig = {
         exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
     },
 };
-function mergeConfig(userConfig) {
-    return deepMerge(exports.defaultConfig, userConfig);
+function __mergeConfig(userConfig) {
+    return __deepMerge(exports.defaultConfig, userConfig);
 }
 function configure(config) {
-    return mergeConfig(config);
+    return __mergeConfig(config);
 }

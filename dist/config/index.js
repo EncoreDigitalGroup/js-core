@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CONFIG_FILE_NAME = exports.hasConfigFile = exports.loadConfig = exports.configure = exports.mergeConfig = exports.defaultConfig = void 0;
+exports.CONFIG_FILE_NAME = exports.__hasConfigFile = exports.__loadConfig = exports.configure = exports.__mergeConfig = exports.defaultConfig = void 0;
 var types_1 = require("./types");
 Object.defineProperty(exports, "defaultConfig", { enumerable: true, get: function () { return types_1.defaultConfig; } });
-Object.defineProperty(exports, "mergeConfig", { enumerable: true, get: function () { return types_1.mergeConfig; } });
+Object.defineProperty(exports, "__mergeConfig", { enumerable: true, get: function () { return types_1.__mergeConfig; } });
 Object.defineProperty(exports, "configure", { enumerable: true, get: function () { return types_1.configure; } });
 var loader_1 = require("./loader");
-Object.defineProperty(exports, "loadConfig", { enumerable: true, get: function () { return loader_1.loadConfig; } });
-Object.defineProperty(exports, "hasConfigFile", { enumerable: true, get: function () { return loader_1.hasConfigFile; } });
+Object.defineProperty(exports, "__loadConfig", { enumerable: true, get: function () { return loader_1.__loadConfig; } });
+Object.defineProperty(exports, "__hasConfigFile", { enumerable: true, get: function () { return loader_1.__hasConfigFile; } });
 Object.defineProperty(exports, "CONFIG_FILE_NAME", { enumerable: true, get: function () { return loader_1.CONFIG_FILE_NAME; } });

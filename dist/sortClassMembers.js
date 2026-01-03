@@ -36,8 +36,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sortClassMembersInDirectory = sortClassMembersInDirectory;
-exports.sortClassMembersInFile = sortClassMembersInFile;
+exports.__sortClassMembersInDirectory = __sortClassMembersInDirectory;
+exports.__sortClassMembersInFile = __sortClassMembersInFile;
 const class_1 = require("./formatters/class");
 const file_1 = require("./formatters/file");
 const react_1 = require("./formatters/react");
@@ -138,13 +138,13 @@ function createTransformer(classConfig, reactConfig) {
         return (sourceFile) => {
             function visit(node) {
                 if (ts.isClassDeclaration(node)) {
-                    if ((0, react_1.isReactComponent)(node)) {
+                    if ((0, react_1.__isReactComponent)(node)) {
                         if (reactConfig) {
-                            return (0, react_1.transformReactComponent)(node, sourceFile, reactConfig);
+                            return (0, react_1.__transformReactComponent)(node, sourceFile, reactConfig);
                         }
                     }
                     else if (classConfig) {
-                        return (0, class_1.transformClass)(node, sourceFile, classConfig);
+                        return (0, class_1.__transformClass)(node, sourceFile, classConfig);
                     }
                 }
                 return ts.visitEachChild(node, visit, context);
@@ -165,7 +165,7 @@ function hasClassDeclarations(sourceFile) {
     visit(sourceFile);
     return hasClass;
 }
-function sortFileInternal(config, filePath, dryRun = false) {
+function __sortFileInternal(config, filePath, dryRun = false) {
     const debug = config.debug || false;
     const classConfig = config.sorters?.classMembers?.enabled
         ? {
@@ -191,7 +191,7 @@ function sortFileInternal(config, filePath, dryRun = false) {
     const sourceFile = ts.createSourceFile(filePath, sourceCode, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     let transformedSourceFile = sourceFile;
     if (fileConfig) {
-        transformedSourceFile = (0, file_1.transformFile)(sourceFile, fileConfig);
+        transformedSourceFile = (0, file_1.__transformFile)(sourceFile, fileConfig);
     }
     if (hasClassDeclarations(sourceFile) && (classConfig || reactConfig)) {
         const result = ts.transform(transformedSourceFile, [createTransformer(classConfig, reactConfig)]);
@@ -211,7 +211,7 @@ function sortFileInternal(config, filePath, dryRun = false) {
     }
     return output;
 }
-function sortClassMembersInDirectory(config, targetDir, dryRun = false) {
+function __sortClassMembersInDirectory(config, targetDir, dryRun = false) {
     const glob = require("glob");
     const include = config.sorters?.include || ["**/*.{ts,tsx}"];
     const exclude = config.sorters?.exclude || [];
@@ -225,13 +225,13 @@ function sortClassMembersInDirectory(config, targetDir, dryRun = false) {
     console.info(`Sorting class members in ${files.length} files...`);
     for (const file of files) {
         try {
-            sortFileInternal(config, file, dryRun);
+            __sortFileInternal(config, file, dryRun);
         }
         catch (error) {
             console.error(`Error sorting file ${file}:`, error.message);
         }
     }
 }
-function sortClassMembersInFile(config, filePath, dryRun = false) {
-    return sortFileInternal(config, filePath, dryRun);
+function __sortClassMembersInFile(config, filePath, dryRun = false) {
+    return __sortFileInternal(config, filePath, dryRun);
 }
