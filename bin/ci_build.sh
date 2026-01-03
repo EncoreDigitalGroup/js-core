@@ -7,7 +7,11 @@
 git config --global user.name "EncoreBot"
 git config --global user.email "ghbot@encoredigitalgroup.com"
 
-cd "$GITHUB_WORKSPACE"
+# Change to workspace directory
+cd "$GITHUB_WORKSPACE" || {
+  echo "Error: Failed to change directory to $GITHUB_WORKSPACE"
+  exit 1
+}
 
 # Run build and capture exit code
 npm run build
