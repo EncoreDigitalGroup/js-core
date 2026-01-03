@@ -9,8 +9,27 @@ git config --global user.email "ghbot@encoredigitalgroup.com"
 
 cd "$GITHUB_WORKSPACE"
 
+# Run build and capture exit code
 npm run build
+BUILD_EXIT_CODE=$?
 
+# If build failed, exit with the same code
+if [ $BUILD_EXIT_CODE -ne 0 ]; then
+  echo "Build failed with exit code $BUILD_EXIT_CODE"
+  exit $BUILD_EXIT_CODE
+fi
+
+# Run format and capture exit code
+npm run format
+FORMAT_EXIT_CODE=$?
+
+# If format failed, exit with the same code
+if [ $FORMAT_EXIT_CODE -ne 0 ]; then
+  echo "Format failed with exit code $FORMAT_EXIT_CODE"
+  exit $FORMAT_EXIT_CODE
+fi
+
+# Build and format succeeded, check for changes
 if [ -z "$(git status --porcelain)" ]; then
   # Working directory clean
   echo "Working Tree is Clean! Nothing to commit."
@@ -24,5 +43,4 @@ else
 
   # Push changes to origin
   git push origin --force
-  # Uncommitted changes
 fi
