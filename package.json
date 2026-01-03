@@ -25,8 +25,9 @@
         "ts-jest": "^29.0.0"
     },
     "scripts": {
-        "prebuild": "node bin/cli.js",
-        "build": "tsc"
+        "build": "tsc",
+        "build:format": "npm run build && npm run format",
+        "format": "node bin/cli.js"
     },
     "types": "dist/index.d.ts",
     "main": "dist/index.js",
