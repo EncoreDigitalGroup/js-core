@@ -5,20 +5,21 @@
 
 import * as fs from "fs/promises";
 import * as path from "path";
-import { CoreConfig, FormatterOrder } from "../../config/types";
-import { IFormattingRule } from "../formatters/IFormattingRule";
-import { ClassMemberSortingRule } from "../formatters/rules/ast/ClassMemberSortingRule";
-import { FileDeclarationSortingRule } from "../formatters/rules/ast/FileDeclarationSortingRule";
-import { ImportOrganizationRule } from "../formatters/rules/imports/ImportOrganizationRule";
-import { IndexGenerationRule } from "../formatters/rules/index/IndexGenerationRule";
-import { BlankLineBeforeReturnsRule } from "../formatters/rules/spacing/BlankLineBeforeReturnsRule";
-import { BlankLineBetweenDeclarationsRule } from "../formatters/rules/spacing/BlankLineBetweenDeclarationsRule";
-import { BlankLineBetweenStatementTypesRule } from "../formatters/rules/spacing/BlankLineBetweenStatementTypesRule";
-import { BlockSpacingRule } from "../formatters/rules/spacing/BlockSpacingRule";
-import { BracketSpacingRule } from "../formatters/rules/spacing/BracketSpacingRule";
-import { IndentationRule } from "../formatters/rules/style/IndentationRule";
-import { QuoteStyleRule } from "../formatters/rules/style/QuoteStyleRule";
-import { SemicolonRule } from "../formatters/rules/style/SemicolonRule";
+import { CoreConfig, FormatterOrder } from "../../config";
+import { IFormattingRule } from "../formatters";
+import { ClassMemberSortingRule } from "../formatters";
+import { FileDeclarationSortingRule } from "../formatters";
+import { ImportOrganizationRule } from "../formatters";
+import { BlankLineBeforeReturnsRule } from "../formatters";
+import { BlankLineBetweenDeclarationsRule } from "../formatters";
+import { BlankLineBetweenStatementTypesRule } from "../formatters";
+import { BlockSpacingRule } from "../formatters";
+import { BracketSpacingRule } from "../formatters";
+import { IndentationRule } from "../formatters";
+import { QuoteStyleRule } from "../formatters";
+import { SemicolonRule } from "../formatters";
+import { DocBlockCommentRule } from "../formatters";
+import { IndexGenerationRule } from "../formatters";
 
 
 /*
@@ -32,9 +33,7 @@ export interface FormatterExecution {
     error?: Error;
 }
 
-/**
-* Context object tracking the entire pipeline execution
-*/
+/** Context object tracking the entire pipeline execution */
 
 export interface PipelineContext {
     filePath: string;
@@ -45,9 +44,7 @@ export interface PipelineContext {
     dryRun: boolean;
 }
 
-/**
-* Error thrown when a formatter fails during pipeline execution
-*/
+/** Error thrown when a formatter fails during pipeline execution */
 
 export class FormatterError extends Error {
     constructor(public readonly formatterName: string, public readonly filePath: string, public readonly originalError: Error) {
@@ -76,9 +73,7 @@ export class FormatterPipeline {
         this.initializeRules();
     }
 
-    /**
-    * Add a rule to the pipeline at a specific order position
-    */
+    /** Add a rule to the pipeline at a specific order position */
     private addRule(order: FormatterOrder, rule: IFormattingRule): void {
         if (!this.rules.has(order)) {
             this.rules.set(order, []);
@@ -86,9 +81,7 @@ export class FormatterPipeline {
         this.rules.get(order)!.push(rule);
     }
 
-    /**
-    * Get all files in a directory recursively
-    */
+    /** Get all files in a directory recursively */
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
         const files: string[] = [];
         const entries = await fs.readdir(dirPath, {withFileTypes: true});
@@ -219,30 +212,22 @@ export class FormatterPipeline {
         return this.formatFiles(files, dryRun);
     }
 
-    /**
-    * Get the list of formatters in execution order
-    */
+    /** Get the list of formatters in execution order */
     getFormatterOrder(): FormatterOrder[] {
         return [...this.formatterOrder];
     }
 
-    /**
-    * Get all rules at a specific order position
-    */
+    /** Get all rules at a specific order position */
     getRulesAtOrder(order: FormatterOrder): IFormattingRule[] {
         return this.rules.get(order) || [];
     }
 
-    /**
-    * Check if any rules are configured
-    */
+    /** Check if any rules are configured */
     hasRules(): boolean {
         return this.rules.size > 0;
     }
 
-    /**
-    * Initialize rules based on configuration
-    */
+    /** Initialize rules based on configuration */
     private initializeRules(): void {
         // Index Generation Rule
 
@@ -258,6 +243,7 @@ export class FormatterPipeline {
             this.addRule(FormatterOrder.CodeStyle, new BracketSpacingRule(this.config.codeStyle));
             this.addRule(FormatterOrder.CodeStyle, new IndentationRule(this.config.codeStyle));
             this.addRule(FormatterOrder.CodeStyle, new BlockSpacingRule());
+            this.addRule(FormatterOrder.CodeStyle, new DocBlockCommentRule());
         }
 
         // Import Organization Rule

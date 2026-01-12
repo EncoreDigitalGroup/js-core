@@ -10,9 +10,7 @@ import { DependencyResolver } from "../../../ast/DependencyResolver";
 import { IFormattingRule } from "../../IFormattingRule";
 
 
-/**
-* Types of class members
-*/
+/** Types of class members */
 
 export enum MemberType {
     StaticProperty = "static_property",
@@ -24,9 +22,7 @@ export enum MemberType {
     SetAccessor = "set_accessor"
 }
 
-/**
-* Analyzed class member with metadata
-*/
+/** Analyzed class member with metadata */
 
 export interface ClassMember {
     node: ts.ClassElement;
@@ -42,9 +38,7 @@ export interface ClassMember {
     originalIndex?: number;
 }
 
-/**
-* Default order for class members
-*/
+/** Default order for class members */
 
 export const DEFAULT_CLASS_ORDER: MemberType[] = [
 
@@ -57,9 +51,7 @@ export const DEFAULT_CLASS_ORDER: MemberType[] = [
     MemberType.InstanceMethod,
 ];
 
-/**
-* Sorts class members according to configured order
-*/
+/** Sorts class members according to configured order */
 
 export class ClassMemberSortingRule implements IFormattingRule {
     readonly name = "ClassMemberSortingRule";
@@ -67,9 +59,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
     constructor(private readonly config: ClassMemberConfig) {
     }
 
-    /**
-    * Determine the type of a class member
-    */
+    /** Determine the type of a class member */
     private getMemberType(member: ts.ClassElement): MemberType {
         if (ts.isConstructorDeclaration(member)) {
             return MemberType.Constructor;
@@ -96,9 +86,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
         return MemberType.InstanceMethod;
     }
 
-    /**
-    * Analyze a class member to extract metadata
-    */
+    /** Analyze a class member to extract metadata */
     private analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile, index: number, allMemberNames: Set<string>): ClassMember {
         const type = this.getMemberType(member);
         const name = ASTAnalyzer.getClassMemberName(member);
@@ -139,9 +127,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
         return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     }
 
-    /**
-    * Compare two class members for sorting
-    */
+    /** Compare two class members for sorting */
     private compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: number, bTypeIndex: number): number {
         // First, sort by member type according to the defined order
 
@@ -167,9 +153,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
         return a.name.localeCompare(b.name);
     }
 
-    /**
-    * Sort class members according to configuration
-    */
+    /** Sort class members according to configuration */
     private sortClassMembers(members: ClassMember[]): ClassMember[] {
         const order = this.config.order || DEFAULT_CLASS_ORDER;
 

@@ -3,279 +3,175 @@
 * All Rights Reserved.
 */
 
-import { DEFAULT_CLASS_ORDER, MemberType } from "../core/formatters/rules/ast/ClassMemberSortingRule";
-import { DeclarationType, DEFAULT_FILE_ORDER } from "../core/formatters/rules/ast/FileDeclarationSortingRule";
-import { IndexGenerationConfig } from "../core/formatters/rules/index/IndexGenerationRule";
-import { DefaultSortOptions } from "../shared/types";
+import { DEFAULT_CLASS_ORDER, MemberType } from "../core";
+import { DeclarationType, DEFAULT_FILE_ORDER } from "../core";
+import { IndexGenerationConfig } from "../core";
+import { DefaultSortOptions } from "../shared";
 
 
-/**
-* Configuration for class member sorting
-*/
+/** Configuration for class member sorting */
 
 export interface ClassMemberConfig {
-    /**
-    * Whether to sort class members (default: true)
-    */
+    /** Whether to sort class members (default: true) */
     enabled?: boolean;
 
-    /**
-    * Custom order for class members
-    */
+    /** Custom order for class members */
     order?: MemberType[];
 
-    /**
-    * Whether to group members by visibility (public, protected, private) (default: false)
-    */
+    /** Whether to group members by visibility (public, protected, private) (default: false) */
     groupByVisibility?: boolean;
 
-    /**
-    * Whether to respect dependencies between members (default: true)
-    */
+    /** Whether to respect dependencies between members (default: true) */
     respectDependencies?: boolean;
 }
 
-/**
-* Configuration for code style formatting
-*/
+/** Configuration for code style formatting */
 
 export interface CodeStyleConfig {
-    /**
-    * Whether to run code style formatting (default: true)
-    */
+    /** Whether to run code style formatting (default: true) */
     enabled?: boolean;
 
-    /**
-    * Quote style for strings (default: 'double')
-    */
+    /** Quote style for strings (default: 'double') */
     quoteStyle?: "single" | "double";
 
-    /**
-    * Semicolon usage (default: 'always')
-    */
+    /** Semicolon usage (default: 'always') */
     semicolons?: "always" | "never";
 
-    /**
-    * Bracket spacing in object literals (default: false)
-    */
+    /** Bracket spacing in object literals (default: false) */
     bracketSpacing?: boolean;
 
-    /**
-    * Indentation style (default: 'space')
-    */
+    /** Indentation style (default: 'space') */
     indentStyle?: "tab" | "space";
 
-    /**
-    * Indentation width (default: 4)
-    */
+    /** Indentation width (default: 4) */
     indentWidth?: number;
 
-    /**
-    * Maximum line width (default: 120)
-    */
+    /** Maximum line width (default: 120) */
     lineWidth?: number;
 
-    /**
-    * Trailing commas (default: 'all')
-    */
+    /** Trailing commas (default: 'all') */
     trailingCommas?: "none" | "es5" | "all";
 
-    /**
-    * Arrow function parentheses (default: 'avoid')
-    */
+    /** Arrow function parentheses (default: 'avoid') */
     arrowParens?: "always" | "avoid";
 }
 
-/**
-* Configuration for import organization
-*/
+/** Configuration for import organization */
 
 export interface ImportConfig {
-    /**
-    * Whether to organize imports (default: true)
-    */
+    /** Whether to organize imports (default: true) */
     enabled?: boolean;
 
-    /**
-    * Sort imports alphabetically (default: true)
-    */
+    /** Sort imports alphabetically (default: true) */
     sortImports?: boolean;
 
-    /**
-    * Remove unused imports (default: true)
-    */
+    /** Remove unused imports (default: true) */
     removeUnused?: boolean;
 
-    /**
-    * Remove side-effect imports like "import './styles.css'" (default: false)
-    */
+    /** Remove side-effect imports like "import './styles.css'" (default: false) */
     removeSideEffects?: boolean;
 
-    /**
-    * Group imports by type (default: true)
-    */
+    /** Group imports by type (default: true) */
     groupImports?: boolean;
 
-    /**
-    * Custom group order (default: ["external", "internal", "relative"])
-    */
+    /** Custom group order (default: ["external", "internal", "relative"]) */
     groupOrder?: string[];
 
-    /**
-    * Add blank lines between import groups (default: false)
-    */
+    /** Add blank lines between import groups (default: false) */
     separateGroups?: boolean;
 }
 
-/**
-* Configuration for React component member sorting
-*/
+/** Configuration for React component member sorting */
 
 export interface ReactComponentConfig {
-    /**
-    * Whether to sort React component members (default: true)
-    */
+    /** Whether to sort React component members (default: true) */
     enabled?: boolean;
 
-    /**
-    * Custom order for React component members
-    */
+    /** Custom order for React component members */
     order?: MemberType[];
 
-    /**
-    * Whether to group members by visibility (public, protected, private) (default: false)
-    */
+    /** Whether to group members by visibility (public, protected, private) (default: false) */
     groupByVisibility?: boolean;
 
-    /**
-    * Whether to respect dependencies between members (default: true)
-    */
+    /** Whether to respect dependencies between members (default: true) */
     respectDependencies?: boolean;
 }
 
-/**
-* Configuration for file-level declaration sorting
-*/
+/** Configuration for file-level declaration sorting */
 
 export interface FileDeclarationConfig {
-    /**
-    * Whether to sort file-level declarations (default: true)
-    */
+    /** Whether to sort file-level declarations (default: true) */
     enabled?: boolean;
 
-    /**
-    * Custom order for file-level declarations
-    */
+    /** Custom order for file-level declarations */
     order?: DeclarationType[];
 
-    /**
-    * Whether to respect dependencies between declarations (default: true)
-    */
+    /** Whether to respect dependencies between declarations (default: true) */
     respectDependencies?: boolean;
 }
 
-/**
-* Configuration for AST-based sorting (class members, file declarations)
-*/
+/** Configuration for AST-based sorting (class members, file declarations) */
 
 export interface SortingConfig {
-    /**
-    * Whether to enable AST-based sorting (default: true)
-    */
+    /** Whether to enable AST-based sorting (default: true) */
     enabled?: boolean;
 
-    /**
-    * Configuration for class member sorting
-    */
+    /** Configuration for class member sorting */
     classMembers?: ClassMemberConfig;
 
-    /**
-    * Configuration for React component member sorting
-    */
+    /** Configuration for React component member sorting */
     reactComponents?: ReactComponentConfig;
 
-    /**
-    * Configuration for file-level declaration sorting
-    */
+    /** Configuration for file-level declaration sorting */
     fileDeclarations?: FileDeclarationConfig;
 
-    /**
-    * File patterns to include (default: ["**\/*.{ts,tsx}"])
-    */
+    /** File patterns to include (default: ["**\/*.{ts,tsx}"]) */
     include?: string[];
 
-    /**
-    * Directories to exclude (default: ["node_modules/**", "dist/**", "vendor/**", "bin/**"])
-    */
+    /** Directories to exclude (default: ["node_modules/**", "dist/**", "vendor/**", "bin/**"]) */
     exclude?: string[];
 }
 
-/**
-* Configuration for spacing rules
-*/
+/** Configuration for spacing rules */
 
 export interface SpacingConfig {
-    /**
-    * Whether to apply spacing rules (default: true)
-    */
+    /** Whether to apply spacing rules (default: true) */
     enabled?: boolean;
 
-    /**
-    * Add blank lines between declarations with different keywords (default: true)
-    */
+    /** Add blank lines between declarations with different keywords (default: true) */
     betweenDeclarations?: boolean;
 
-    /**
-    * Add blank lines before return statements (default: true)
-    */
+    /** Add blank lines before return statements (default: true) */
     beforeReturns?: boolean;
 
-    /**
-    * Add blank lines between different statement types (default: true)
-    */
+    /** Add blank lines between different statement types (default: true) */
     betweenStatementTypes?: boolean;
 }
 
-/**
-* Configuration for package.json sorting
-*/
+/** Configuration for package.json sorting */
 
 export interface PackageJsonConfig {
-    /**
-    * Whether to sort package.json (default: true)
-    */
+    /** Whether to sort package.json (default: true) */
     enabled?: boolean;
 
-    /**
-    * Custom sort order for package.json fields
-    */
+    /** Custom sort order for package.json fields */
     customSortOrder?: string[];
 
-    /**
-    * JSON indentation (default: 4)
-    */
+    /** JSON indentation (default: 4) */
     indentation?: number;
 }
 
-/**
-* Configuration for tsconfig.json sorting
-*/
+/** Configuration for tsconfig.json sorting */
 
 export interface TsConfigConfig {
-    /**
-    * Whether to sort tsconfig.json (default: true)
-    */
+    /** Whether to sort tsconfig.json (default: true) */
     enabled?: boolean;
 
-    /**
-    * JSON indentation (default: 4)
-    */
+    /** JSON indentation (default: 4) */
     indentation?: number;
 }
 
-/**
-* Represents the execution order of formatters in the pipeline
-*/
+/** Represents the execution order of formatters in the pipeline */
 
 export enum FormatterOrder {
     IndexGeneration = "IndexGeneration",
@@ -285,31 +181,21 @@ export enum FormatterOrder {
     Spacing = "Spacing"
 }
 
-/**
-* @deprecated Use SortingConfig instead
-*/
+/** @deprecated Use SortingConfig instead */
 
 export interface SortersConfig extends SortingConfig {
 }
 
-/**
-* Configuration for Prettier formatting
-*/
+/** Configuration for Prettier formatting */
 
 export interface PrettierConfig {
-    /**
-    * Whether to run Prettier (default: true)
-    */
+    /** Whether to run Prettier (default: true) */
     enabled?: boolean;
 
-    /**
-    * Whether to skip Prettier if a config file exists in the project (default: true)
-    */
+    /** Whether to skip Prettier if a config file exists in the project (default: true) */
     skipIfConfigExists?: boolean;
 
-    /**
-    * Prettier options to use when no config file exists
-    */
+    /** Prettier options to use when no config file exists */
     options?: {
         plugins?: string[];
         bracketSpacing?: boolean;
@@ -325,60 +211,38 @@ export interface PrettierConfig {
         [key: string]: any;
     };
 
-    /**
-    * File patterns to include (default: ["**\/*.{js,ts,jsx,tsx}"])
-    */
+    /** File patterns to include (default: ["**\/*.{js,ts,jsx,tsx}"]) */
     include?: string[];
 
-    /**
-    * Directories to exclude (default: ["node_modules/**", "dist/**", "vendor/**", "bin/**"])
-    */
+    /** Directories to exclude (default: ["node_modules/**", "dist/**", "vendor/**", "bin/**"]) */
     exclude?: string[];
 }
 
-/**
-* Main configuration interface for @encoredigitalgroup/core
-*/
+/** Main configuration interface for tsfmt */
 
 export interface CoreConfig {
-    /**
-    * Configuration for automatic index.ts file generation
-    */
+    /** Configuration for automatic index.ts file generation */
     indexGeneration?: IndexGenerationConfig;
 
-    /**
-    * Configuration for code style formatting (quotes, semicolons, spacing)
-    */
+    /** Configuration for code style formatting (quotes, semicolons, spacing) */
     codeStyle?: CodeStyleConfig;
 
-    /**
-    * Configuration for import organization
-    */
+    /** Configuration for import organization */
     imports?: ImportConfig;
 
-    /**
-    * Configuration for AST-based sorting (class members, file declarations)
-    */
+    /** Configuration for AST-based sorting (class members, file declarations) */
     sorting?: SortingConfig;
 
-    /**
-    * Configuration for blank line spacing rules
-    */
+    /** Configuration for blank line spacing rules */
     spacing?: SpacingConfig;
 
-    /**
-    * Configuration for package.json sorting
-    */
+    /** Configuration for package.json sorting */
     packageJson?: PackageJsonConfig;
 
-    /**
-    * Configuration for tsconfig.json sorting
-    */
+    /** Configuration for tsconfig.json sorting */
     tsConfig?: TsConfigConfig;
 
-    /**
-    * Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing)
-    */
+    /** Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];
 
     /**
@@ -394,9 +258,7 @@ export interface CoreConfig {
     prettier?: PrettierConfig;
 }
 
-/**
-* Deep merges two configuration objects
-*/
+/** Deep merges two configuration objects */
 
 function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
     const result = {...target};
@@ -420,9 +282,7 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
     return result;
 }
 
-/**
-* Default configuration
-*/
+/** Default configuration */
 
 export const defaultConfig: CoreConfig = {
     indexGeneration: {
@@ -537,9 +397,7 @@ export const defaultConfig: CoreConfig = {
 },
 };
 
-/**
-* Merges user configuration with default configuration
-*/
+/** Merges user configuration with default configuration */
 
 export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
     return deepMerge(defaultConfig, userConfig);

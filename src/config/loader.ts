@@ -9,9 +9,7 @@ import * as ts from "typescript";
 import { CoreConfig, defaultConfig, mergeConfig } from "./types";
 
 
-/**
-* Transpiles TypeScript code to JavaScript
-*/
+/** Transpiles TypeScript code to JavaScript */
 
 function transpileTypeScript(code: string): string {
     const result = ts.transpileModule(code, {
@@ -26,15 +24,11 @@ function transpileTypeScript(code: string): string {
     return result.outputText;
 }
 
-/**
-* Config file name that users should create
-*/
+/** Config file name that users should create */
 
 export const CONFIG_FILE_NAME = "core.config.ts";
 
-/**
-* Loads and evaluates a TypeScript config file
-*/
+/** Loads and evaluates a TypeScript config file */
 
 function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
     try {

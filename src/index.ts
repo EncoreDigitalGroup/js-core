@@ -1,10 +1,5 @@
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
 // Auto-generated exports - do not edit manually
-// Run build to regenerate
+// Run tsfmt to regenerate
 
 export * from "./config";
 export * from "./core";

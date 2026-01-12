@@ -6,9 +6,7 @@
 import { CoreConfig, defaultConfig } from "../../config/types";
 
 
-/**
-* Merges user configuration with default configuration
-*/
+/** Merges user configuration with default configuration */
 
 export class ConfigMerger {
     /**

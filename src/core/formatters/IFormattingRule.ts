@@ -9,9 +9,7 @@
 
 
 export interface IFormattingRule {
-    /**
-    * Name of the rule for logging and debugging
-    */
+    /** Name of the rule for logging and debugging */
     readonly name: string;
 
     /**

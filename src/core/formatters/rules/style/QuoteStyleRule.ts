@@ -8,9 +8,7 @@ import { CodeStyleConfig } from "../../../../config/types";
 import { IFormattingRule } from "../../IFormattingRule";
 
 
-/**
-* Converts quote style between single and double quotes using AST
-*/
+/** Converts quote style between single and double quotes using AST */
 
 export class QuoteStyleRule implements IFormattingRule {
     readonly name = "QuoteStyleRule";

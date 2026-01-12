@@ -6,14 +6,10 @@
 import * as ts from "typescript";
 
 
-/**
-* Transforms TypeScript AST nodes by reordering children
-*/
+/** Transforms TypeScript AST nodes by reordering children */
 
 export class ASTTransformer {
-    /**
-    * Create a source file from source code
-    */
+    /** Create a source file from source code */
     static createSourceFile(source: string, filePath: string): ts.SourceFile {
         const scriptKind = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
 
@@ -23,9 +19,7 @@ export class ASTTransformer {
         return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, scriptKind);
     }
 
-    /**
-    * Print a node to string using TypeScript printer
-    */
+    /** Print a node to string using TypeScript printer */
     static printNode(node: ts.Node, sourceFile: ts.SourceFile, removeComments = false): string {
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
@@ -82,23 +76,17 @@ export class ASTTransformer {
         return printed;
     }
 
-    /**
-    * Create a new class declaration with reordered members
-    */
+    /** Create a new class declaration with reordered members */
     static reorderClassMembers(classNode: ts.ClassDeclaration, orderedMembers: ts.ClassElement[]): ts.ClassDeclaration {
         return ts.factory.updateClassDeclaration(classNode, classNode.modifiers, classNode.name, classNode.typeParameters, classNode.heritageClauses, orderedMembers);
     }
 
-    /**
-    * Create a new source file with reordered statements
-    */
+    /** Create a new source file with reordered statements */
     static reorderSourceFileStatements(sourceFile: ts.SourceFile, orderedStatements: ts.Statement[]): ts.SourceFile {
         return ts.factory.updateSourceFile(sourceFile, orderedStatements, sourceFile.isDeclarationFile, sourceFile.referencedFiles, sourceFile.typeReferenceDirectives, sourceFile.hasNoDefaultLib, sourceFile.libReferenceDirectives);
     }
 
-    /**
-    * Transform a source file by visiting all nodes
-    */
+    /** Transform a source file by visiting all nodes */
     static transformSourceFile(sourceFile: ts.SourceFile, visitor: (node: ts.Node) => ts.Node | undefined): ts.SourceFile {
         const transformer: ts.TransformerFactory<ts.SourceFile> = context => {
             const visit = (node: ts.Node): ts.Node => {

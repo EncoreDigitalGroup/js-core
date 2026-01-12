@@ -7,9 +7,7 @@ import { SpacingConfig } from "../../../../config/types";
 import { IFormattingRule } from "../../IFormattingRule";
 
 
-/**
-* Statement types for categorization
-*/
+/** Statement types for categorization */
 
 enum StatementType {
     Declaration = "declaration",// const, let, var, function, class, etc.
@@ -34,9 +32,7 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
     constructor(private config: SpacingConfig) {
     }
 
-    /**
-    * Determine the type of a statement
-    */
+    /** Determine the type of a statement */
     private getStatementType(trimmedLine: string): StatementType {
         // Control flow
 

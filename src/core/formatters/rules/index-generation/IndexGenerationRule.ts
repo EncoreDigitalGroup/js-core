@@ -8,9 +8,7 @@ import * as path from "path";
 import { IFormattingRule } from "../../IFormattingRule";
 
 
-/**
-* Options for configuring how index files are generated
-*/
+/** Options for configuring how index files are generated */
 
 export interface IndexGenerationOptions {
     /** File extension to match (e.g., ".tsx", ".ts") */
@@ -21,9 +19,7 @@ export interface IndexGenerationOptions {
     recursive: boolean;
 }
 
-/**
-* Configuration for index file generation
-*/
+/** Configuration for index file generation */
 
 export interface IndexGenerationConfig {
     /** Whether to generate index files (default: false) */
@@ -39,9 +35,7 @@ export interface IndexGenerationConfig {
     updateMainIndex?: boolean;
 }
 
-/**
-* Rule that generates index.ts files for directories
-*/
+/** Rule that generates index.ts files for directories */
 
 export class IndexGenerationRule implements IFormattingRule {
 private readonly defaultOptions: IndexGenerationOptions = {
@@ -242,13 +236,8 @@ private updateMainIndex(indexPath: string, modules: string[]): void {
         try {
             const exports = modules.map(mod => `export * from "./${mod}";`).join("\n");
 
-            const content = `/*
-* Copyright (c) ${new Date().getFullYear()}. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-// Auto-generated exports - do not edit manually
-// Run build to regenerate
+            const content = `// Auto-generated exports - do not edit manually
+// Run tsfmt to regenerate
 
 ${exports}
 `;

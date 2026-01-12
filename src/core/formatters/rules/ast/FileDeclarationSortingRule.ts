@@ -10,9 +10,7 @@ import { DependencyResolver } from "../../../ast/DependencyResolver";
 import { IFormattingRule } from "../../IFormattingRule";
 
 
-/**
-* Types of top-level declarations in a file
-*/
+/** Types of top-level declarations in a file */
 
 export enum DeclarationType {
     Interface = "interface",
@@ -27,9 +25,7 @@ export enum DeclarationType {
     Other = "other"
 }
 
-/**
-* Analyzed file declaration with metadata
-*/
+/** Analyzed file declaration with metadata */
 
 export interface FileDeclaration {
     node: ts.Statement;
@@ -42,9 +38,7 @@ export interface FileDeclaration {
     originalIndex?: number;
 }
 
-/**
-* Default order for file declarations
-*/
+/** Default order for file declarations */
 
 export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 
@@ -60,9 +54,7 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
     DeclarationType.Other,
 ];
 
-/**
-* Sorts file-level declarations according to configured order
-*/
+/** Sorts file-level declarations according to configured order */
 
 export class FileDeclarationSortingRule implements IFormattingRule {
     readonly name = "FileDeclarationSortingRule";
@@ -70,9 +62,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
     constructor(private readonly config: FileDeclarationConfig) {
     }
 
-    /**
-    * Determine the type of a top-level declaration
-    */
+    /** Determine the type of a top-level declaration */
     private getDeclarationType(node: ts.Statement): DeclarationType {
         const exported = ASTAnalyzer.isExported(node);
         const defaultExp = ASTAnalyzer.isDefaultExport(node);
@@ -112,9 +102,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
         return DeclarationType.Other;
     }
 
-    /**
-    * Analyze a top-level statement
-    */
+    /** Analyze a top-level statement */
     private analyzeDeclaration(node: ts.Statement, sourceFile: ts.SourceFile, index: number, allDeclarationNames: Set<string>): FileDeclaration {
         const type = this.getDeclarationType(node);
         const name = ASTAnalyzer.getDeclarationName(node);
@@ -142,9 +130,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
         return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     }
 
-    /**
-    * Sort file declarations according to configuration
-    */
+    /** Sort file declarations according to configuration */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
         const order = this.config.order || DEFAULT_FILE_ORDER;
 
