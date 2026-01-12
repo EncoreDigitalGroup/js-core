@@ -65,12 +65,12 @@ export const DEFAULT_CLASS_ORDER: MemberType[] = [
 
 export class ClassMemberSortingRule implements IFormattingRule {
 
-readonly name = "ClassMemberSortingRule";
+    readonly name = "ClassMemberSortingRule";
 
-constructor(private readonly config: ClassMemberConfig) {
+    constructor(private readonly config: ClassMemberConfig) {
     }
 
-/**
+    /**
     * Determine the type of a class member
     */
     private getMemberType(member: ts.ClassElement): MemberType {
@@ -105,11 +105,10 @@ constructor(private readonly config: ClassMemberConfig) {
         return MemberType.InstanceMethod;
     }
 
-/**
+    /**
     * Analyze a class member to extract metadata
     */
     private analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile, index: number, allMemberNames: Set<string>): ClassMember {
-
         const type = this.getMemberType(member);
         const name = ASTAnalyzer.getClassMemberName(member);
         const isStatic = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.StaticKeyword);
@@ -145,12 +144,12 @@ constructor(private readonly config: ClassMemberConfig) {
 };
     }
 
-private createSourceFile(source: string, filePath: string): ts.SourceFile {
+    private createSourceFile(source: string, filePath: string): ts.SourceFile {
 
         return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     }
 
-/**
+    /**
     * Compare two class members for sorting
     */
     private compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: number, bTypeIndex: number): number {
@@ -179,7 +178,7 @@ private createSourceFile(source: string, filePath: string): ts.SourceFile {
         return a.name.localeCompare(b.name);
     }
 
-/**
+    /**
     * Sort class members according to configuration
     */
     private sortClassMembers(members: ClassMember[]): ClassMember[] {
@@ -195,7 +194,7 @@ private createSourceFile(source: string, filePath: string): ts.SourceFile {
         });
     }
 
-apply(source: string, filePath?: string): string {
+    apply(source: string, filePath?: string): string {
 
         if (!this.config.enabled) {
 

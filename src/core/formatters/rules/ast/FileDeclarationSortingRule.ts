@@ -68,12 +68,12 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 
 export class FileDeclarationSortingRule implements IFormattingRule {
 
-readonly name = "FileDeclarationSortingRule";
+    readonly name = "FileDeclarationSortingRule";
 
-constructor(private readonly config: FileDeclarationConfig) {
+    constructor(private readonly config: FileDeclarationConfig) {
     }
 
-/**
+    /**
     * Determine the type of a top-level declaration
     */
     private getDeclarationType(node: ts.Statement): DeclarationType {
@@ -124,7 +124,7 @@ constructor(private readonly config: FileDeclarationConfig) {
         return DeclarationType.Other;
     }
 
-/**
+    /**
     * Analyze a top-level statement
     */
     private analyzeDeclaration(node: ts.Statement, sourceFile: ts.SourceFile, index: number, allDeclarationNames: Set<string>): FileDeclaration {
@@ -151,12 +151,12 @@ constructor(private readonly config: FileDeclarationConfig) {
 };
     }
 
-private createSourceFile(source: string, filePath: string): ts.SourceFile {
+    private createSourceFile(source: string, filePath: string): ts.SourceFile {
 
         return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     }
 
-/**
+    /**
     * Sort file declarations according to configuration
     */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
@@ -178,7 +178,7 @@ private createSourceFile(source: string, filePath: string): ts.SourceFile {
         });
     }
 
-apply(source: string, filePath?: string): string {
+    apply(source: string, filePath?: string): string {
 
         if (!this.config.enabled) {
 
