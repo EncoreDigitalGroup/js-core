@@ -4,8 +4,8 @@
 */
 
 import * as ts from "typescript";
-import { ImportConfig } from "../../../config/types";
-import { IFormattingRule } from "../IFormattingRule";
+import { ImportConfig } from "../../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 interface ImportInfo {
