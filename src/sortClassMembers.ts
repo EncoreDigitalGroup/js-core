@@ -57,6 +57,41 @@ function addBlankLinesBeforeReturns(code: string): string {
 }
 
 /**
+ * Extracts the keyword from a declaration line
+ */
+function getDeclarationKeyword(trimmedLine: string): string | null {
+    if (trimmedLine.startsWith("export ")) {
+        return "export";
+    }
+    if (trimmedLine.startsWith("function ")) {
+        return "function";
+    }
+    if (trimmedLine.startsWith("const ")) {
+        return "const";
+    }
+    if (trimmedLine.startsWith("let ")) {
+        return "let";
+    }
+    if (trimmedLine.startsWith("var ")) {
+        return "var";
+    }
+    if (trimmedLine.startsWith("enum ")) {
+        return "enum";
+    }
+    if (trimmedLine.startsWith("interface ")) {
+        return "interface";
+    }
+    if (trimmedLine.startsWith("type ")) {
+        return "type";
+    }
+    if (trimmedLine.startsWith("class ")) {
+        return "class";
+    }
+
+    return null;
+}
+
+/**
  * Adds blank lines between top-level declarations
  */
 function addBlankLinesBetweenDeclarations(code: string): string {
@@ -65,6 +100,7 @@ function addBlankLinesBetweenDeclarations(code: string): string {
     let braceDepth = 0;
     let inImportSection = true;
     let lastNonBlankLineWasDeclarationEnd = false;
+    let lastDeclarationKeyword: string | null = null;
     const DEBUG = false; // Set to true to enable debugging
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -82,19 +118,9 @@ function addBlankLinesBetweenDeclarations(code: string): string {
         const isComment = trimmedLine.startsWith("//") || trimmedLine.startsWith("/*") || trimmedLine.startsWith("*");
         const isBlockCommentStart = trimmedLine.startsWith("/*") && !trimmedLine.endsWith("*/");
         const isImport = trimmedLine.startsWith("import ");
-        const isDeclarationStart =
-            !isComment &&
-            !isImport &&
-            braceDepth === 0 &&
-            (trimmedLine.startsWith("export ") ||
-                trimmedLine.startsWith("function ") ||
-                trimmedLine.startsWith("const ") ||
-                trimmedLine.startsWith("let ") ||
-                trimmedLine.startsWith("var ") ||
-                trimmedLine.startsWith("enum ") ||
-                trimmedLine.startsWith("interface ") ||
-                trimmedLine.startsWith("type ") ||
-                trimmedLine.startsWith("class "));
+        const declarationKeyword =
+            !isComment && !isImport && braceDepth === 0 ? getDeclarationKeyword(trimmedLine) : null;
+        const isDeclarationStart = declarationKeyword !== null;
         // Check if we've left the import section
         if (inImportSection && !isImport && !isBlankLine && !isComment) {
             inImportSection = false;
@@ -111,12 +137,13 @@ function addBlankLinesBetweenDeclarations(code: string): string {
                 result.push("");
                 lastNonBlankLineWasDeclarationEnd = false;
             }
-            // Add blank line before declaration starts
+            // Add blank line before declaration starts ONLY if the keyword is different
             else if (
                 isDeclarationStart &&
                 lastNonBlankLineWasDeclarationEnd &&
                 result.length > 0 &&
-                result[result.length - 1].trim() !== ""
+                result[result.length - 1].trim() !== "" &&
+                declarationKeyword !== lastDeclarationKeyword
             ) {
                 result.push("");
                 lastNonBlankLineWasDeclarationEnd = false;
@@ -131,11 +158,18 @@ function addBlankLinesBetweenDeclarations(code: string): string {
         const isJustClosingBraces = /^[\s});]*$/.test(trimmedLine);
         if (!isBlankLine && willBeAtDepthZero && hasClosingElement) {
             lastNonBlankLineWasDeclarationEnd = true;
+            // Update the last declaration keyword when a declaration ends
+            if (isDeclarationStart) {
+                lastDeclarationKeyword = declarationKeyword;
+            }
         } else if (!isBlankLine && !isComment) {
             // Don't reset if we're at depth 0 and the line is just closing braces
             // (this handles cases like }; }; } where multiple closes happen at top level)
             if (!isBlockCommentStart && trimmedLine !== "" && !(braceDepth === 0 && isJustClosingBraces)) {
                 lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
+                if (isDeclarationStart) {
+                    lastDeclarationKeyword = declarationKeyword;
+                }
             }
         }
         // Update brace depth (clamp to 0 if it goes negative)
