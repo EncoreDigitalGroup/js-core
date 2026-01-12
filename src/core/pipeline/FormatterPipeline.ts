@@ -26,7 +26,6 @@ import { SemicolonRule } from "../formatters/rules/style/SemicolonRule";
 */
 
 export interface FormatterExecution {
-
     formatterName: string;
     order: FormatterOrder;
     changed: boolean;
@@ -38,7 +37,6 @@ export interface FormatterExecution {
 */
 
 export interface PipelineContext {
-
     filePath: string;
     originalSource: string;
     currentSource: string;
@@ -52,7 +50,6 @@ export interface PipelineContext {
 */
 
 export class FormatterError extends Error {
-
     constructor(public readonly formatterName: string, public readonly filePath: string, public readonly originalError: Error) {
         super(`Formatter '${formatterName}' failed for file '${filePath}': ${originalError.message}`);
         this.name = "FormatterError";
@@ -65,7 +62,6 @@ export class FormatterError extends Error {
 */
 
 export class FormatterPipeline {
-
     private formatterOrder: FormatterOrder[];
     private rules: Map<FormatterOrder, IFormattingRule[]> = new Map();
 
@@ -84,9 +80,7 @@ export class FormatterPipeline {
     * Add a rule to the pipeline at a specific order position
     */
     private addRule(order: FormatterOrder, rule: IFormattingRule): void {
-
         if (!this.rules.has(order)) {
-
             this.rules.set(order, []);
         }
         this.rules.get(order)!.push(rule);
@@ -96,18 +90,15 @@ export class FormatterPipeline {
     * Get all files in a directory recursively
     */
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
-
         const files: string[] = [];
         const entries = await fs.readdir(dirPath, {withFileTypes: true});
 
         for (const entry of entries) {
-
             const fullPath = path.join(dirPath, entry.name);
 
             if (entry.isDirectory()) {
                 // Skip node_modules and other common directories
                 if (["node_modules", ".git", "dist", "build"].includes(entry.name)) {
-
                     continue;
                 }
 
@@ -115,9 +106,7 @@ export class FormatterPipeline {
 
                 files.push(...subFiles);
             } else if (entry.isFile()) {
-
                 if (extensions.some(ext => entry.name.endsWith(ext))) {
-
                     files.push(fullPath);
                 }
             }
@@ -140,7 +129,6 @@ export class FormatterPipeline {
 
         // Initialize pipeline context
         const context: PipelineContext = {
-
             filePath,
             originalSource,
             currentSource: originalSource,
@@ -152,18 +140,14 @@ export class FormatterPipeline {
         // Execute rules in order
 
         for (const order of this.formatterOrder) {
-
             const rulesAtOrder = this.rules.get(order);
 
             if (!rulesAtOrder || rulesAtOrder.length === 0) {
-
                 continue;
             }
 
             for (const rule of rulesAtOrder) {
-
                 const execution: FormatterExecution = {
-
                     formatterName: rule.name,
                     order,
                     changed: false,
@@ -181,7 +165,6 @@ export class FormatterPipeline {
                     context.currentSource = afterSource;
 
                     if (execution.changed) {
-
                         context.changed = true;
                     }
                     context.executions.push(execution);
@@ -191,7 +174,6 @@ export class FormatterPipeline {
                     context.executions.push(execution);
 
                     throw new FormatterError(rule.name, filePath, error as Error);
-
                 }
             }
         }
@@ -199,7 +181,6 @@ export class FormatterPipeline {
         // Write to disk if changes were made and not in dry-run mode
 
         if (context.changed && !dryRun) {
-
             await fs.writeFile(filePath, context.currentSource, "utf-8");
         }
 
@@ -214,11 +195,9 @@ export class FormatterPipeline {
     * @throws FormatterError if any formatter fails for any file
     */
     async formatFiles(filePaths: string[], dryRun = false): Promise<PipelineContext[]> {
-
         const results: PipelineContext[] = [];
 
         for (const filePath of filePaths) {
-
             const context = await this.formatFile(filePath, dryRun);
 
             results.push(context);
@@ -235,7 +214,6 @@ export class FormatterPipeline {
     * @returns Array of pipeline contexts for each file
     */
     async formatDirectory(dirPath: string, dryRun = false, extensions: string[] = [".ts", ".tsx", ".js", ".jsx"]): Promise<PipelineContext[]> {
-
         const files = await this.getFilesRecursively(dirPath, extensions);
 
         return this.formatFiles(files, dryRun);
@@ -245,7 +223,6 @@ export class FormatterPipeline {
     * Get the list of formatters in execution order
     */
     getFormatterOrder(): FormatterOrder[] {
-
         return [...this.formatterOrder];
     }
 
@@ -253,7 +230,6 @@ export class FormatterPipeline {
     * Get all rules at a specific order position
     */
     getRulesAtOrder(order: FormatterOrder): IFormattingRule[] {
-
         return this.rules.get(order) || [];
     }
 
@@ -261,7 +237,6 @@ export class FormatterPipeline {
     * Check if any rules are configured
     */
     hasRules(): boolean {
-
         return this.rules.size > 0;
     }
 
@@ -272,14 +247,12 @@ export class FormatterPipeline {
         // Index Generation Rule
 
         if (this.config.indexGeneration?.enabled) {
-
             this.addRule(FormatterOrder.IndexGeneration, new IndexGenerationRule(this.config.indexGeneration));
         }
 
         // Code Style Rules
 
         if (this.config.codeStyle?.enabled) {
-
             this.addRule(FormatterOrder.CodeStyle, new QuoteStyleRule(this.config.codeStyle));
             this.addRule(FormatterOrder.CodeStyle, new SemicolonRule(this.config.codeStyle));
             this.addRule(FormatterOrder.CodeStyle, new BracketSpacingRule(this.config.codeStyle));
@@ -290,7 +263,6 @@ export class FormatterPipeline {
         // Import Organization Rule
 
         if (this.config.imports?.enabled) {
-
             this.addRule(FormatterOrder.ImportOrganization, new ImportOrganizationRule(this.config.imports));
         }
 
@@ -298,12 +270,10 @@ export class FormatterPipeline {
 
         if (this.config.sorting?.enabled) {
             if (this.config.sorting.classMembers?.enabled) {
-
                 this.addRule(FormatterOrder.ASTTransformation, new ClassMemberSortingRule(this.config.sorting.classMembers));
             }
 
             if (this.config.sorting.fileDeclarations?.enabled) {
-
                 this.addRule(FormatterOrder.ASTTransformation, new FileDeclarationSortingRule(this.config.sorting.fileDeclarations));
             }
         }
@@ -311,7 +281,6 @@ export class FormatterPipeline {
         // Spacing Rules
 
         if (this.config.spacing?.enabled) {
-
             this.addRule(FormatterOrder.Spacing, new BlankLineBetweenDeclarationsRule(this.config.spacing));
             this.addRule(FormatterOrder.Spacing, new BlankLineBetweenStatementTypesRule(this.config.spacing));
             this.addRule(FormatterOrder.Spacing, new BlankLineBeforeReturnsRule(this.config.spacing));

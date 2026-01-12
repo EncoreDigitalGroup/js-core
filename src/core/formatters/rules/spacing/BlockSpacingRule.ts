@@ -14,11 +14,9 @@ import { IFormattingRule } from "../../IFormattingRule";
 */
 
 export class BlockSpacingRule implements IFormattingRule {
-
     readonly name = "BlockSpacingRule";
 
     apply(source: string, filePath?: string): string {
-
         let result = source;
 
         // Remove blank lines after opening braces of interfaces, classes, enums, functions
