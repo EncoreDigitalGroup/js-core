@@ -6,12 +6,11 @@
 import * as fs from "fs/promises";
 import * as os from "os";
 import * as path from "path";
-import { CoreConfig, defaultConfig, FormatterOrder } from "../../../config/types";
-import { FormatterPipeline } from "../FormatterPipeline";
+import {CoreConfig, defaultConfig, FormatterOrder} from "../../../config/types";
+import {FormatterPipeline} from "../FormatterPipeline";
 
 
 describe("FormatterPipeline", () => {
-
     let tempDir: string;
     let testFilePath: string;
 
@@ -26,7 +25,6 @@ describe("FormatterPipeline", () => {
     });
     describe("initialization", () => {
         it("should initialize with default formatter order", () => {
-
             const config: CoreConfig = {
 
                 ...defaultConfig,
@@ -44,7 +42,6 @@ describe("FormatterPipeline", () => {
             ]);
         });
         it("should initialize with custom formatter order", () => {
-
             const config: CoreConfig = {
 
                 ...defaultConfig,
@@ -57,7 +54,6 @@ describe("FormatterPipeline", () => {
             expect(order).toEqual([FormatterOrder.Spacing, FormatterOrder.CodeStyle]);
         });
         it("should initialize CodeStyleFormatter when enabled", () => {
-
             const config: CoreConfig = {
 
                 ...defaultConfig,
@@ -73,7 +69,6 @@ describe("FormatterPipeline", () => {
             expect(formatters[0].name).toBe("CodeStyleFormatter");
         });
         it("should initialize ImportOrganizer when enabled", () => {
-
             const config: CoreConfig = {
 
                 ...defaultConfig,
@@ -89,7 +84,6 @@ describe("FormatterPipeline", () => {
             expect(formatters[0].name).toBe("ImportOrganizer");
         });
         it("should not initialize disabled formatters", () => {
-
             const config: CoreConfig = {
 
                 ...defaultConfig,
@@ -106,7 +100,6 @@ describe("FormatterPipeline", () => {
     });
     describe("formatFile", () => {
         it("should format a file with CodeStyleFormatter", async () => {
-
             const source = "const foo = 'single quotes';";
 
             await fs.writeFile(testFilePath, source, "utf-8");
@@ -135,7 +128,6 @@ describe("FormatterPipeline", () => {
             expect(fileContent).toContain('"single quotes"');
         });
         it("should not write to disk in dry-run mode", async () => {
-
             const source = "const foo = 'single quotes';";
 
             await fs.writeFile(testFilePath, source, "utf-8");
@@ -160,7 +152,6 @@ describe("FormatterPipeline", () => {
             expect(fileContent).toBe(source);
         });
         it("should execute formatters in sequence", async () => {
-
             const source = `import {foo} from 'bar';\nconst x = 'test';`;
 
             await fs.writeFile(testFilePath, source, "utf-8");
@@ -182,7 +173,6 @@ describe("FormatterPipeline", () => {
             expect(context.executions[1].order).toBe(FormatterOrder.ImportOrganization);
         });
         it("should preserve original source on formatter error (fail-fast)", async () => {
-
             const source = "const foo = 'test';";
 
             await fs.writeFile(testFilePath, source, "utf-8");
@@ -207,7 +197,6 @@ describe("FormatterPipeline", () => {
             expect(fileContent).toBe(source);
         });
         it("should track unchanged files", async () => {
-
             const source = 'const foo = "already double quotes";';
 
             await fs.writeFile(testFilePath, source, "utf-8");
@@ -229,7 +218,6 @@ describe("FormatterPipeline", () => {
     });
     describe("formatFiles", () => {
         it("should format multiple files", async () => {
-
             const file1 = path.join(tempDir, "file1.ts");
             const file2 = path.join(tempDir, "file2.ts");
 
@@ -254,7 +242,6 @@ describe("FormatterPipeline", () => {
     });
     describe("formatDirectory", () => {
         it("should format all files in a directory", async () => {
-
             const subDir = path.join(tempDir, "src");
 
             await fs.mkdir(subDir);
@@ -279,7 +266,6 @@ describe("FormatterPipeline", () => {
             expect(contexts.length).toBeGreaterThanOrEqual(2);
         });
         it("should skip node_modules directory", async () => {
-
             const nodeModules = path.join(tempDir, "node_modules");
 
             await fs.mkdir(nodeModules);
@@ -299,7 +285,6 @@ describe("FormatterPipeline", () => {
     });
     describe("error handling", () => {
         it("should throw error on file read failure", async () => {
-
             const invalidPath = path.join(tempDir, "nonexistent.ts");
             const config: CoreConfig = {
 
@@ -314,4 +299,4 @@ describe("FormatterPipeline", () => {
             await expect(pipeline.formatFile(invalidPath, false)).rejects.toThrow();
         });
     });
-})
+});

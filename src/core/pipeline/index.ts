@@ -3,6 +3,5 @@
 * All Rights Reserved.
 */
 
-
 export {FormatterPipeline, FormatterError, type PipelineContext, type FormatterExecution,} from "./FormatterPipeline";
-export {FormatterOrder} from "../../config/types"
+export {FormatterOrder} from "../../config/types";

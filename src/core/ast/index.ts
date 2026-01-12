@@ -3,7 +3,6 @@
 * All Rights Reserved.
 */
 
-
 export {ASTAnalyzer, type ReferenceInfo} from "./ASTAnalyzer";
 export {DependencyResolver, type DependencyNode, type DependencyGraph} from "./DependencyResolver";
-export {ASTTransformer} from "./ASTTransformer"
+export {ASTTransformer} from "./ASTTransformer";

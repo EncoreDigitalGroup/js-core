@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2026. Encore Digital Group.
- * All Rights Reserved.
- */
+* Copyright (c) 2026. Encore Digital Group.
+* All Rights Reserved.
+*/
 
 import * as ts from "typescript";
 import {CodeStyleConfig} from "../../../../config/types";

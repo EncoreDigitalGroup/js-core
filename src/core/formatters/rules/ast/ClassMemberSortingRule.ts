@@ -4,10 +4,10 @@
 */
 
 import * as ts from "typescript";
-import { ClassMemberConfig } from "../../../../config/types";
-import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
-import { DependencyResolver } from "../../../ast/DependencyResolver";
-import { IFormattingRule } from "../../IFormattingRule";
+import {ClassMemberConfig} from "../../../../config/types";
+import {ASTAnalyzer} from "../../../ast/ASTAnalyzer";
+import {DependencyResolver} from "../../../ast/DependencyResolver";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 /**
@@ -15,7 +15,6 @@ import { IFormattingRule } from "../../IFormattingRule";
 */
 
 export enum MemberType {
-
     StaticProperty = "static_property",
     InstanceProperty = "instance_property",
     Constructor = "constructor",
@@ -30,7 +29,6 @@ export enum MemberType {
 */
 
 export interface ClassMember {
-
     node: ts.ClassElement;
     type: MemberType;
     name: string;
@@ -64,7 +62,6 @@ export const DEFAULT_CLASS_ORDER: MemberType[] = [
 */
 
 export class ClassMemberSortingRule implements IFormattingRule {
-
     readonly name = "ClassMemberSortingRule";
 
     constructor(private readonly config: ClassMemberConfig) {
@@ -74,31 +71,25 @@ export class ClassMemberSortingRule implements IFormattingRule {
     * Determine the type of a class member
     */
     private getMemberType(member: ts.ClassElement): MemberType {
-
         if (ts.isConstructorDeclaration(member)) {
-
             return MemberType.Constructor;
         }
 
         const isStatic = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.StaticKeyword);
 
         if (ts.isPropertyDeclaration(member)) {
-
             return isStatic ? MemberType.StaticProperty : MemberType.InstanceProperty;
         }
 
         if (ts.isGetAccessorDeclaration(member)) {
-
             return MemberType.GetAccessor;
         }
 
         if (ts.isSetAccessorDeclaration(member)) {
-
             return MemberType.SetAccessor;
         }
 
         if (ts.isMethodDeclaration(member)) {
-
             return isStatic ? MemberType.StaticMethod : MemberType.InstanceMethod;
         }
 
@@ -145,7 +136,6 @@ export class ClassMemberSortingRule implements IFormattingRule {
     }
 
     private createSourceFile(source: string, filePath: string): ts.SourceFile {
-
         return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     }
 
@@ -156,7 +146,6 @@ export class ClassMemberSortingRule implements IFormattingRule {
         // First, sort by member type according to the defined order
 
         if (aTypeIndex !== bTypeIndex) {
-
             return aTypeIndex - bTypeIndex;
         }
         // Within the same type, sort by visibility if configured
@@ -182,11 +171,9 @@ export class ClassMemberSortingRule implements IFormattingRule {
     * Sort class members according to configuration
     */
     private sortClassMembers(members: ClassMember[]): ClassMember[] {
-
         const order = this.config.order || DEFAULT_CLASS_ORDER;
 
         return [...members].sort((a, b) => {
-
             const aTypeIndex = order.indexOf(a.type);
             const bTypeIndex = order.indexOf(b.type);
 
@@ -195,9 +182,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-
         if (!this.config.enabled) {
-
             return source;
         }
 
@@ -209,9 +194,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
 
         const classes: ts.ClassDeclaration[] = [];
         const visit = (node: ts.Node) => {
-
             if (ts.isClassDeclaration(node)) {
-
                 classes.push(node);
             }
             ts.forEachChild(node, visit);
@@ -221,11 +204,9 @@ export class ClassMemberSortingRule implements IFormattingRule {
         // Process classes in reverse order to maintain correct positions
 
         for (let i = classes.length - 1; i >= 0; i--) {
-
             const classNode = classes[i];
 
             if (!classNode.members || classNode.members.length === 0) {
-
                 continue;
             }
 
@@ -244,7 +225,6 @@ export class ClassMemberSortingRule implements IFormattingRule {
             let sortedMembers = this.sortClassMembers(analyzedMembers);
 
             if (this.config.respectDependencies !== false) {
-
                 sortedMembers = DependencyResolver.reorderWithDependencies(sortedMembers, m => m.name);
             }
 
@@ -253,7 +233,6 @@ export class ClassMemberSortingRule implements IFormattingRule {
             const orderChanged = sortedMembers.some((member, index) => member.originalIndex !== index);
 
             if (!orderChanged) {
-
                 continue;
             }
 

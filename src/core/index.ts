@@ -3,6 +3,5 @@
 * All Rights Reserved.
 */
 
-
 export * from "./formatters/base";
-export * from "./config"
+export * from "./config";

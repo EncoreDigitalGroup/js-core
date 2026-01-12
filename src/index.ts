@@ -29,7 +29,6 @@ export {BetweenStatementTypesRule} from "./core/formatters/rules/spacing/Between
 export {ASTAnalyzer, DependencyResolver, ASTTransformer, type ReferenceInfo} from "./core/ast";
 // Configuration
 export {
-
     type CoreConfig,
     type CodeStyleConfig,
     type ImportConfig,
@@ -49,4 +48,4 @@ export {
 // ===== LEGACY EXPORTS (Backward Compatibility) =====
 
 export {sortPackageFile, sortPackageJson} from "./sortPackage";
-export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig"
+export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig";

@@ -3,9 +3,7 @@
 * All Rights Reserved.
 */
 
-
 export {
-
     type CoreConfig,
     type PrettierConfig,
     type PackageJsonConfig,
@@ -23,4 +21,4 @@ export {
     mergeConfig,
 } from "./types";
 
-export {loadConfig, hasConfigFile, CONFIG_FILE_NAME} from "./loader"
+export {loadConfig, hasConfigFile, CONFIG_FILE_NAME} from "./loader";
