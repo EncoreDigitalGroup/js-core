@@ -5,6 +5,7 @@
 
 import {DEFAULT_CLASS_ORDER, MemberType} from "../core/formatters/rules/ast/ClassMemberSortingRule";
 import {DeclarationType, DEFAULT_FILE_ORDER} from "../core/formatters/rules/ast/FileDeclarationSortingRule";
+import {IndexGenerationConfig} from "../core/formatters/rules/index/IndexGenerationRule";
 import {DefaultSortOptions} from "../shared/types";
 
 
@@ -277,6 +278,7 @@ export interface TsConfigConfig {
 */
 
 export enum FormatterOrder {
+    IndexGeneration = "IndexGeneration",
     CodeStyle = "CodeStyle",
     ImportOrganization = "ImportOrganization",
     ASTTransformation = "ASTTransformation",
@@ -340,6 +342,11 @@ export interface PrettierConfig {
 
 export interface CoreConfig {
     /**
+    * Configuration for automatic index.ts file generation
+    */
+    indexGeneration?: IndexGenerationConfig;
+
+    /**
     * Configuration for code style formatting (quotes, semicolons, spacing)
     */
     codeStyle?: CodeStyleConfig;
@@ -370,7 +377,7 @@ export interface CoreConfig {
     tsConfig?: TsConfigConfig;
 
     /**
-    * Custom order for formatter execution (default: CodeStyle, ImportOrganization, ASTTransformation, Spacing)
+    * Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing)
     */
     formatterOrder?: FormatterOrder[];
 
@@ -418,6 +425,16 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
 */
 
 export const defaultConfig: CoreConfig = {
+    indexGeneration: {
+        enabled: false,
+        directories: ["src/", "packages/"],
+        options: {
+            fileExtension: ".ts",
+            indexFileName: "index.ts",
+            recursive: true
+        },
+        updateMainIndex: true,
+    },
     codeStyle: {
         enabled: true,
         quoteStyle: "double",

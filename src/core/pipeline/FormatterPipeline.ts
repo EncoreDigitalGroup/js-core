@@ -10,6 +10,7 @@ import {IFormattingRule} from "../formatters/IFormattingRule";
 import {ClassMemberSortingRule} from "../formatters/rules/ast/ClassMemberSortingRule";
 import {FileDeclarationSortingRule} from "../formatters/rules/ast/FileDeclarationSortingRule";
 import {ImportOrganizationRule} from "../formatters/rules/imports/ImportOrganizationRule";
+import {IndexGenerationRule} from "../formatters/rules/index/IndexGenerationRule";
 import {BlankLineBeforeReturnsRule} from "../formatters/rules/spacing/BlankLineBeforeReturnsRule";
 import {BlankLineBetweenDeclarationsRule} from "../formatters/rules/spacing/BlankLineBetweenDeclarationsRule";
 import {BlankLineBetweenStatementTypesRule} from "../formatters/rules/spacing/BlankLineBetweenStatementTypesRule";
@@ -66,10 +67,11 @@ export class FormatterPipeline {
 
     constructor(private readonly config: CoreConfig) {
         this.formatterOrder = config.formatterOrder || [
-            FormatterOrder.ASTTransformation,
-            FormatterOrder.ImportOrganization,
-            FormatterOrder.Spacing,
+            FormatterOrder.IndexGeneration,
             FormatterOrder.CodeStyle,
+            FormatterOrder.ImportOrganization,
+            FormatterOrder.ASTTransformation,
+            FormatterOrder.Spacing,
         ];
         this.initializeRules();
     }
@@ -242,6 +244,11 @@ export class FormatterPipeline {
     * Initialize rules based on configuration
     */
     private initializeRules(): void {
+        // Index Generation Rule
+        if (this.config.indexGeneration) {
+            this.addRule(FormatterOrder.IndexGeneration, new IndexGenerationRule(this.config.indexGeneration));
+        }
+
         // Code Style Rules
 
         if (this.config.codeStyle) {
