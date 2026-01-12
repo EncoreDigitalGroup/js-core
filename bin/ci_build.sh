@@ -48,3 +48,5 @@ else
   # Push changes to origin
   git push origin --force
 fi
+
+npm test
