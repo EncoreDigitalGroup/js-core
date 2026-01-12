@@ -1,8 +1,8 @@
 {
-    "name": "@encoredigitalgroup/core",
+    "name": "tsfmt",
     "author": "Encore Digital Group",
     "version": "0.0.0",
-    "description": "Common Configurations for Encore Digital Group NPM Packages",
+    "description": "An opinionated TypeScript code formatter",
     "publishConfig": {
         "access": "public",
         "registry": "https://registry.npmjs.org"
@@ -11,11 +11,10 @@
         "node": ">=20.0.0"
     },
     "dependencies": {
-        "@trivago/prettier-plugin-sort-imports": "^6.0.0",
         "glob": "^13.0.0",
         "json-sort-cli": "^4.0.9",
-        "prettier": "^3.5.3",
         "sort-package-json": "^3.0.0",
+        "tsx": "^4.21.0",
         "typescript": "^5.0.0"
     },
     "devDependencies": {
@@ -25,24 +24,20 @@
         "ts-jest": "^29.0.0"
     },
     "scripts": {
-        "build": "tsc",
-        "build:format": "npm run build && npm run format",
         "format": "node bin/cli.js",
         "test": "jest"
     },
-    "types": "dist/index.d.ts",
-    "main": "dist/index.js",
+    "main": "bin/cli.js",
     "files": [
-        "dist",
         "bin",
         "README.md"
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/EncoreDigitalGroup/js-core.git"
+        "url": "https://github.com/EncoreDigitalGroup/tsfmt.git"
     },
     "license": "BSD-3-Clause",
     "bin": {
-        "@encoredigitalgroup/core": "./bin/cli.js"
+        "tsfmt": "./bin/cli.js"
     }
 }
