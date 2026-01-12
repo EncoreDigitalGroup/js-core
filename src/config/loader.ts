@@ -14,7 +14,9 @@ import { CoreConfig, defaultConfig, mergeConfig } from "./types";
 */
 
 function transpileTypeScript(code: string): string {
+
     const result = ts.transpileModule(code, {
+
         compilerOptions: {
             module: ts.ModuleKind.CommonJS,
             target: ts.ScriptTarget.ES2015,
@@ -35,18 +37,23 @@ export const CONFIG_FILE_NAME = "core.config.ts";
 /**
 * Loads and evaluates a TypeScript config file
 */
+
 function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
+
     try {
+
         const code = fs.readFileSync(filePath, "utf-8");
         const transpiled = transpileTypeScript(code);
         // Create a temporary module to evaluate the code
         const module: {
+
             exports: any;
         } = {exports: {}};
 
         const exports = module.exports;
         // Create a require function that can resolve relative imports
         const requireFunc = (moduleName: string) => {
+
             if (moduleName.startsWith(".")) {
                 // Handle relative imports
 
@@ -67,12 +74,16 @@ function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
         const config = module.exports.default || module.exports;
 
         if (typeof config !== "object" || config === null) {
+
             throw new Error(`${CONFIG_FILE_NAME} must export a configuration object. Found: ${typeof config}`);
+
         }
 
         return config;
     } catch (error) {
+
         throw new Error(`Failed to load ${CONFIG_FILE_NAME}: ${error instanceof Error ? error.message : String(error)}`);
+
     }
 }
 
@@ -84,6 +95,7 @@ function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
 */
 
 export function hasConfigFile(projectRoot: string = process.cwd()): boolean {
+
     const configPath = path.join(projectRoot, CONFIG_FILE_NAME);
 
     return fs.existsSync(configPath);
@@ -97,6 +109,7 @@ export function hasConfigFile(projectRoot: string = process.cwd()): boolean {
 */
 
 export function loadConfig(projectRoot: string = process.cwd()): CoreConfig {
+
     const configPath = path.join(projectRoot, CONFIG_FILE_NAME);
 
     if (!fs.existsSync(configPath)) {
@@ -106,6 +119,7 @@ export function loadConfig(projectRoot: string = process.cwd()): CoreConfig {
     }
 
     try {
+
         const userConfig = loadTypeScriptConfig(configPath);
 
         return mergeConfig(userConfig);

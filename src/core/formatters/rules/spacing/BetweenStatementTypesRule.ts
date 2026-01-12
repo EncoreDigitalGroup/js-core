@@ -4,7 +4,7 @@
 */
 
 import { SpacingConfig } from "../../../../config/types";
-import { ISpacingRule } from "../ISpacingRule";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
@@ -12,6 +12,7 @@ import { ISpacingRule } from "../ISpacingRule";
 */
 
 enum StatementType {
+
     Declaration = "declaration",// const, let, var, function, class, etc.
     Control = "control",// if, else, switch, case
     Loop = "loop",// for, while, do
@@ -28,7 +29,8 @@ enum StatementType {
 * - No blank line within the same statement type
 */
 
-export class BetweenStatementTypesRule implements ISpacingRule {
+export class BetweenStatementTypesRule implements IFormattingRule {
+
     readonly name = "BetweenStatementTypesRule";
 
     constructor(private config: SpacingConfig) {
@@ -49,6 +51,7 @@ export class BetweenStatementTypesRule implements ISpacingRule {
             trimmedLine.startsWith("switch(") ||
             trimmedLine.startsWith("case ") ||
             trimmedLine.startsWith("default:")) {
+
             return StatementType.Control;
         }
         // Loops
@@ -60,6 +63,7 @@ export class BetweenStatementTypesRule implements ISpacingRule {
             trimmedLine.startsWith("while(") ||
             trimmedLine.startsWith("do ") ||
             trimmedLine.startsWith("do{")) {
+
             return StatementType.Loop;
         }
         // Exceptions
@@ -72,6 +76,7 @@ export class BetweenStatementTypesRule implements ISpacingRule {
             trimmedLine.startsWith("finally ") ||
             trimmedLine.startsWith("finally{") ||
             trimmedLine.startsWith("throw ")) {
+
             return StatementType.Exception;
         }
         // Declarations
@@ -86,14 +91,17 @@ export class BetweenStatementTypesRule implements ISpacingRule {
             trimmedLine.startsWith("type ") ||
             trimmedLine.startsWith("enum ") ||
             trimmedLine.startsWith("export ")) {
+
             return StatementType.Declaration;
         }
         // Everything else (expressions, calls, etc.)
         return StatementType.Expression;
     }
 
-    apply(source: string): string {
+    apply(source: string, filePath?: string): string {
+
         if (!this.config.betweenStatementTypes) {
+
             return source;
         }
 
@@ -104,6 +112,7 @@ export class BetweenStatementTypesRule implements ISpacingRule {
         let inImportSection = true;
 
         for (let i = 0; i < lines.length; i++) {
+
             const line = lines[i];
             const trimmedLine = line.trim();
             const isBlankLine = trimmedLine === "";
@@ -116,11 +125,13 @@ export class BetweenStatementTypesRule implements ISpacingRule {
             // Check if we've left the import section
 
             if (inImportSection && !isImport && !isBlankLine && !isComment) {
+
                 inImportSection = false;
             }
             // Skip import section
 
             if (inImportSection || isBlankLine || isComment) {
+
                 result.push(line);
                 continue;
             }

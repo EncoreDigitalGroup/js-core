@@ -4,7 +4,7 @@
 */
 
 import { CodeStyleConfig } from "../../../../config/types";
-import { IStyleRule } from "../IStyleRule";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
@@ -13,14 +13,17 @@ import { IStyleRule } from "../IStyleRule";
 * of comments and whitespace
 */
 
-export class IndentationRule implements IStyleRule {
+export class IndentationRule implements IFormattingRule {
+
     readonly name = "IndentationRule";
 
     constructor(private config: CodeStyleConfig) {
     }
 
-    apply(source: string): string {
+    apply(source: string, filePath?: string): string {
+
         if (!this.config.indentStyle || !this.config.indentWidth) {
+
             return source;
         }
 
@@ -36,6 +39,7 @@ export class IndentationRule implements IStyleRule {
             // Skip empty lines
 
             if (line.trim() === "") {
+
                 result.push(line);
                 continue;
             }
@@ -67,6 +71,7 @@ export class IndentationRule implements IStyleRule {
             let newIndent: string;
 
             if (this.config.indentStyle === "space") {
+
                 newIndent = " ".repeat(indentLevel * indentWidth);
             } else {
                 newIndent = "\t".repeat(indentLevel);

@@ -13,6 +13,7 @@ import { sortTsConfigFile } from "./sortTSConfig";
 */
 async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
     // Get include/exclude patterns
+
     const include = config.sorting?.include || ["**/*.{ts,tsx,js,jsx}"];
     const exclude = config.sorting?.exclude || [];
     // Always exclude these critical directories
@@ -20,12 +21,14 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
     // Find files to format
     const files = include.flatMap(pattern => glob.sync(pattern, {
+
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
 }));
 
     if (files.length === 0) {
+
         console.info("No files found to format.");
         return;
     }
@@ -38,13 +41,17 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     let formattedCount = 0;
 
     for (const file of files) {
+
         try {
+
             const context = await pipeline.formatFile(file, dryRun);
 
             if (context.changed) {
+
                 formattedCount++;
 
                 if (!dryRun) {
+
                     console.log(`✨ Formatted: ${path.relative(targetDir, file)}`);
                 }
             }
@@ -54,6 +61,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     }
 
     if (dryRun) {
+
         console.info(`Would format ${formattedCount} of ${files.length} files.`);
     } else {
         console.info(`Formatted ${formattedCount} of ${files.length} files.`);
@@ -64,6 +72,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
 * Main CLI function
 */
 async function main(): Promise<void> {
+
     const args = process.argv.slice(2);
     // Parse command line arguments
 
@@ -71,9 +80,11 @@ async function main(): Promise<void> {
     let dryRun = false;
 
     for (let i = 0; i < args.length; i++) {
+
         const arg = args[i];
 
         if (arg === "--dry") {
+
             dryRun = true;
         } else if (!arg.startsWith("-")) {
             targetDir = path.resolve(arg);
@@ -90,14 +101,17 @@ async function main(): Promise<void> {
         // Log if custom config is being used
 
         if (hasConfigFile(targetDir)) {
+
             console.log("Using custom configuration from core.config.ts");
         }
         // Sort package.json
 
         if (config.packageJson?.enabled) {
+
             const packagePath = path.join(targetDir, "package.json");
 
             if (fs.existsSync(packagePath)) {
+
                 console.log(`Processing ${packagePath}...`);
                 sortPackageFile(packagePath, {
                     customSortOrder: config.packageJson.customSortOrder,
@@ -109,9 +123,11 @@ async function main(): Promise<void> {
         // Sort tsconfig.json
 
         if (config.tsConfig?.enabled) {
+
             const tsconfigPath = path.join(targetDir, "tsconfig.json");
 
             if (fs.existsSync(tsconfigPath)) {
+
                 console.log(`Processing ${tsconfigPath}...`);
                 sortTsConfigFile(tsconfigPath, {
                     indentation: config.tsConfig.indentation,
@@ -131,6 +147,7 @@ async function main(): Promise<void> {
         }
 
         if (dryRun) {
+
             console.info("Dry run completed. No files were modified.");
         } else {
             console.info("Formatting completed successfully.");

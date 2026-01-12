@@ -8,31 +8,28 @@
 // Pipeline
 export {FormatterPipeline, FormatterError, type PipelineContext, type FormatterExecution} from "./core/pipeline";
 export {FormatterOrder} from "./config/types";
-// Base Formatters
-export {IFormatter} from "./core/formatters/base/IFormatter";
-export {BaseFormatter} from "./core/formatters/base/BaseFormatter";
-// Code Style Formatters
-export {CodeStyleFormatter, IStyleRule, QuoteStyleRule, SemicolonRule, BracketSpacingRule, IndentationRule,} from "./core/formatters/style";
-// Import Formatters
-export {ImportOrganizer} from "./core/formatters/imports";
-// AST Formatters
-export {
-    ASTFormatter,
-    ClassMemberFormatter,
-    FileDeclarationFormatter,
-    MemberType,
-    DeclarationType,
-    type ClassMember,
-    type FileDeclaration,
-    DEFAULT_CLASS_ORDER,
-    DEFAULT_FILE_ORDER,
-} from "./core/formatters/ast";
-// Spacing Formatters
-export {BlankLineFormatter, ISpacingRule, BetweenDeclarationsRule, BeforeReturnsRule, BetweenStatementTypesRule,} from "./core/formatters/spacing";
+// Formatting Rules
+export {IFormattingRule} from "./core/formatters/IFormattingRule";
+// Code Style Rules
+export {QuoteStyleRule} from "./core/formatters/rules/style/QuoteStyleRule";
+export {SemicolonRule} from "./core/formatters/rules/style/SemicolonRule";
+export {BracketSpacingRule} from "./core/formatters/rules/style/BracketSpacingRule";
+export {IndentationRule} from "./core/formatters/rules/style/IndentationRule";
+export {BlockSpacingRule} from "./core/formatters/rules/style/BlockSpacingRule";
+// Import Organization Rules
+export {ImportOrganizationRule} from "./core/formatters/rules/imports/ImportOrganizationRule";
+// AST Sorting Rules
+export {ClassMemberSortingRule, MemberType, type ClassMember, DEFAULT_CLASS_ORDER} from "./core/formatters/rules/ast/ClassMemberSortingRule";
+export {FileDeclarationSortingRule, DeclarationType, type FileDeclaration, DEFAULT_FILE_ORDER} from "./core/formatters/rules/ast/FileDeclarationSortingRule";
+// Spacing Rules
+export {BetweenDeclarationsRule} from "./core/formatters/rules/spacing/BetweenDeclarationsRule";
+export {BeforeReturnsRule} from "./core/formatters/rules/spacing/BeforeReturnsRule";
+export {BetweenStatementTypesRule} from "./core/formatters/rules/spacing/BetweenStatementTypesRule";
 // AST Utilities
 export {ASTAnalyzer, DependencyResolver, ASTTransformer, type ReferenceInfo} from "./core/ast";
 // Configuration
 export {
+
     type CoreConfig,
     type CodeStyleConfig,
     type ImportConfig,
@@ -43,11 +40,13 @@ export {
     type ClassMemberConfig,
     type ReactComponentConfig,
     type FileDeclarationConfig,
+
     defaultConfig,
     loadConfig,
     hasConfigFile,
     CONFIG_FILE_NAME,
 } from "./config";
 // ===== LEGACY EXPORTS (Backward Compatibility) =====
+
 export {sortPackageFile, sortPackageJson} from "./sortPackage";
 export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig"

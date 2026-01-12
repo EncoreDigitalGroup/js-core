@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { IStyleRule } from "../IStyleRule";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
@@ -12,14 +12,18 @@ import { IStyleRule } from "../IStyleRule";
 * - JSDoc comments stick to what they describe (no blank line after)
 * - Single blank line between members/properties
 */
-export class BlockSpacingRule implements IStyleRule {
+
+export class BlockSpacingRule implements IFormattingRule {
+
     readonly name = "BlockSpacingRule";
 
-    apply(source: string): string {
+    apply(source: string, filePath?: string): string {
+
         let result = source;
 
         // Remove blank lines after opening braces of interfaces, classes, enums, functions
         // Pattern: { followed by newlines and whitespace before content
+
         result = result.replace(/\{\n\n+(\s*(?:\/\*\*|[a-zA-Z_]))/g, "{\n$1");
 
         // Remove blank lines between JSDoc comments and what they describe

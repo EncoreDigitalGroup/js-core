@@ -4,16 +4,18 @@
 */
 
 import * as ts from "typescript";
-import { ClassMemberConfig } from "../../../config/types";
-import { ASTAnalyzer } from "../../ast/ASTAnalyzer";
-import { DependencyResolver } from "../../ast/DependencyResolver";
-import { ASTFormatter } from "./ASTFormatter";
+import { ClassMemberConfig } from "../../../../config/types";
+import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
+import { DependencyResolver } from "../../../ast/DependencyResolver";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
 * Types of class members
 */
+
 export enum MemberType {
+
     StaticProperty = "static_property",
     InstanceProperty = "instance_property",
     Constructor = "constructor",
@@ -28,6 +30,7 @@ export enum MemberType {
 */
 
 export interface ClassMember {
+
     node: ts.ClassElement;
     type: MemberType;
     name: string;
@@ -57,49 +60,56 @@ export const DEFAULT_CLASS_ORDER: MemberType[] = [
 ];
 
 /**
-* Formats class members by sorting them according to configured order
+* Sorts class members according to configured order
 */
 
-export class ClassMemberFormatter extends ASTFormatter {
-    readonly name = "ClassMemberFormatter";
+export class ClassMemberSortingRule implements IFormattingRule {
 
-    constructor(private readonly config: ClassMemberConfig) {
-        super();
+readonly name = "ClassMemberSortingRule";
+
+constructor(private readonly config: ClassMemberConfig) {
     }
 
-    /**
+/**
     * Determine the type of a class member
     */
     private getMemberType(member: ts.ClassElement): MemberType {
+
         if (ts.isConstructorDeclaration(member)) {
+
             return MemberType.Constructor;
         }
 
         const isStatic = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.StaticKeyword);
 
         if (ts.isPropertyDeclaration(member)) {
+
             return isStatic ? MemberType.StaticProperty : MemberType.InstanceProperty;
         }
 
         if (ts.isGetAccessorDeclaration(member)) {
+
             return MemberType.GetAccessor;
         }
 
         if (ts.isSetAccessorDeclaration(member)) {
+
             return MemberType.SetAccessor;
         }
 
         if (ts.isMethodDeclaration(member)) {
+
             return isStatic ? MemberType.StaticMethod : MemberType.InstanceMethod;
         }
 
         return MemberType.InstanceMethod;
     }
 
-    /**
+/**
     * Analyze a class member to extract metadata
     */
     private analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile, index: number, allMemberNames: Set<string>): ClassMember {
+
         const type = this.getMemberType(member);
         const name = ASTAnalyzer.getClassMemberName(member);
         const isStatic = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.StaticKeyword);
@@ -135,13 +145,19 @@ export class ClassMemberFormatter extends ASTFormatter {
 };
     }
 
-    /**
+private createSourceFile(source: string, filePath: string): ts.SourceFile {
+
+        return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+    }
+
+/**
     * Compare two class members for sorting
     */
     private compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: number, bTypeIndex: number): number {
         // First, sort by member type according to the defined order
 
         if (aTypeIndex !== bTypeIndex) {
+
             return aTypeIndex - bTypeIndex;
         }
         // Within the same type, sort by visibility if configured
@@ -163,13 +179,15 @@ export class ClassMemberFormatter extends ASTFormatter {
         return a.name.localeCompare(b.name);
     }
 
-    /**
+/**
     * Sort class members according to configuration
     */
     private sortClassMembers(members: ClassMember[]): ClassMember[] {
+
         const order = this.config.order || DEFAULT_CLASS_ORDER;
 
         return [...members].sort((a, b) => {
+
             const aTypeIndex = order.indexOf(a.type);
             const bTypeIndex = order.indexOf(b.type);
 
@@ -177,18 +195,24 @@ export class ClassMemberFormatter extends ASTFormatter {
         });
     }
 
-    async format(source: string, filePath: string): Promise<string> {
+apply(source: string, filePath?: string): string {
+
         if (!this.config.enabled) {
+
             return source;
         }
 
-        const sourceFile = this.createSourceFile(source, filePath);
+        const sourceFile = this.createSourceFile(source, filePath || "temp.ts");
+
         let formatted = source;
 
         // Find all class declarations and reorder their members
+
         const classes: ts.ClassDeclaration[] = [];
         const visit = (node: ts.Node) => {
+
             if (ts.isClassDeclaration(node)) {
+
                 classes.push(node);
             }
             ts.forEachChild(node, visit);
@@ -196,34 +220,46 @@ export class ClassMemberFormatter extends ASTFormatter {
         visit(sourceFile);
 
         // Process classes in reverse order to maintain correct positions
+
         for (let i = classes.length - 1; i >= 0; i--) {
+
             const classNode = classes[i];
 
             if (!classNode.members || classNode.members.length === 0) {
+
                 continue;
             }
 
             // Analyze and sort members
+
             const allMemberNames = new Set<string>(classNode.members
+
                 .map(m => ASTAnalyzer.getClassMemberName(m))
                 .filter(n => n && n !== "constructor"));
+
             const analyzedMembers = classNode.members.map((member, index) =>
+
                 this.analyzeClassMember(member, sourceFile, index, allMemberNames)
             );
+
             let sortedMembers = this.sortClassMembers(analyzedMembers);
 
             if (this.config.respectDependencies !== false) {
+
                 sortedMembers = DependencyResolver.reorderWithDependencies(sortedMembers, m => m.name);
             }
 
             // Check if reordering is needed
+
             const orderChanged = sortedMembers.some((member, index) => member.originalIndex !== index);
 
             if (!orderChanged) {
+
                 continue;
             }
 
             // Reconstruct class body with reordered members using original text
+
             const firstMember = classNode.members[0];
             const lastMember = classNode.members[classNode.members.length - 1];
             const classBodyStart = firstMember.getFullStart();
@@ -234,13 +270,12 @@ export class ClassMemberFormatter extends ASTFormatter {
             const newClassBody = memberTexts.join("\n\n");
 
             // Replace the class body (add leading newline for proper spacing)
+
             formatted = formatted.substring(0, classBodyStart) + "\n" + newClassBody + formatted.substring(classBodyEnd);
         }
 
         // Remove trailing semicolons that TypeScript printer adds after closing braces
         formatted = formatted.replace(/(\n;)+\s*$/, "\n");
-
-        this.logFormat(filePath, formatted !== source);
 
         return formatted;
     }

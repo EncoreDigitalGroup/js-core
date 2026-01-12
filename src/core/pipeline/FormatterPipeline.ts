@@ -6,33 +6,26 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { CoreConfig, FormatterOrder } from "../../config/types";
-import { ClassMemberFormatter } from "../formatters/ast/ClassMemberFormatter";
-import { FileDeclarationFormatter } from "../formatters/ast/FileDeclarationFormatter";
-import { IFormatter } from "../formatters/base/IFormatter";
-import { ImportOrganizer } from "../formatters/imports/ImportOrganizer";
-import { BlankLineFormatter } from "../formatters/spacing/BlankLineFormatter";
-import { CodeStyleFormatter } from "../formatters/style/CodeStyleFormatter";
+import { IFormattingRule } from "../formatters/IFormattingRule";
+import { ClassMemberSortingRule } from "../formatters/rules/ast/ClassMemberSortingRule";
+import { FileDeclarationSortingRule } from "../formatters/rules/ast/FileDeclarationSortingRule";
+import { ImportOrganizationRule } from "../formatters/rules/imports/ImportOrganizationRule";
+import { BeforeReturnsRule } from "../formatters/rules/spacing/BeforeReturnsRule";
+import { BetweenDeclarationsRule } from "../formatters/rules/spacing/BetweenDeclarationsRule";
+import { BetweenStatementTypesRule } from "../formatters/rules/spacing/BetweenStatementTypesRule";
+import { BlockSpacingRule } from "../formatters/rules/style/BlockSpacingRule";
+import { BracketSpacingRule } from "../formatters/rules/style/BracketSpacingRule";
+import { IndentationRule } from "../formatters/rules/style/IndentationRule";
+import { QuoteStyleRule } from "../formatters/rules/style/QuoteStyleRule";
+import { SemicolonRule } from "../formatters/rules/style/SemicolonRule";
 
-
-/*
-* Tracks the state of a single formatter execution
-*/
-
-
-/*
-* Tracks the state of a single formatter execution
-*/
-
-
-/*
-* Tracks the state of a single formatter execution
-*/
 
 /*
 * Tracks the state of a single formatter execution
 */
 
 export interface FormatterExecution {
+
     formatterName: string;
     order: FormatterOrder;
     changed: boolean;
@@ -44,6 +37,7 @@ export interface FormatterExecution {
 */
 
 export interface PipelineContext {
+
     filePath: string;
     originalSource: string;
     currentSource: string;
@@ -57,6 +51,7 @@ export interface PipelineContext {
 */
 
 export class FormatterError extends Error {
+
     constructor(public readonly formatterName: string, public readonly filePath: string, public readonly originalError: Error) {
         super(`Formatter '${formatterName}' failed for file '${filePath}': ${originalError.message}`);
         this.name = "FormatterError";
@@ -69,8 +64,9 @@ export class FormatterError extends Error {
 */
 
 export class FormatterPipeline {
+
     private formatterOrder: FormatterOrder[];
-    private formatters: Map<FormatterOrder, IFormatter[]> = new Map();
+    private rules: Map<FormatterOrder, IFormattingRule[]> = new Map();
 
     constructor(private readonly config: CoreConfig) {
         this.formatterOrder = config.formatterOrder || [
@@ -79,32 +75,37 @@ export class FormatterPipeline {
             FormatterOrder.ASTTransformation,
             FormatterOrder.Spacing,
         ];
-        this.initializeFormatters();
+        this.initializeRules();
     }
 
     /**
-    * Add a formatter to the pipeline at a specific order position
+    * Add a rule to the pipeline at a specific order position
     */
-    private addFormatter(order: FormatterOrder, formatter: IFormatter): void {
-        if (!this.formatters.has(order)) {
-            this.formatters.set(order, []);
+    private addRule(order: FormatterOrder, rule: IFormattingRule): void {
+
+        if (!this.rules.has(order)) {
+
+            this.rules.set(order, []);
         }
-        this.formatters.get(order)!.push(formatter);
+        this.rules.get(order)!.push(rule);
     }
 
     /**
     * Get all files in a directory recursively
     */
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
+
         const files: string[] = [];
         const entries = await fs.readdir(dirPath, {withFileTypes: true});
 
         for (const entry of entries) {
+
             const fullPath = path.join(dirPath, entry.name);
 
             if (entry.isDirectory()) {
                 // Skip node_modules and other common directories
                 if (["node_modules", ".git", "dist", "build"].includes(entry.name)) {
+
                     continue;
                 }
 
@@ -112,7 +113,9 @@ export class FormatterPipeline {
 
                 files.push(...subFiles);
             } else if (entry.isFile()) {
+
                 if (extensions.some(ext => entry.name.endsWith(ext))) {
+
                     files.push(fullPath);
                 }
             }
@@ -132,8 +135,10 @@ export class FormatterPipeline {
         // Read original source
 
         const originalSource = await fs.readFile(filePath, "utf-8");
+
         // Initialize pipeline context
         const context: PipelineContext = {
+
             filePath,
             originalSource,
             currentSource: originalSource,
@@ -141,55 +146,58 @@ export class FormatterPipeline {
             changed: false,
             dryRun,
 };
-        // Execute formatters in order
+
+        // Execute rules in order
 
         for (const order of this.formatterOrder) {
-            const formattersAtOrder = this.formatters.get(order);
 
-            if (!formattersAtOrder || formattersAtOrder.length === 0) {
+            const rulesAtOrder = this.rules.get(order);
+
+            if (!rulesAtOrder || rulesAtOrder.length === 0) {
+
                 continue;
             }
 
-            for (const formatter of formattersAtOrder) {
-                // Skip if formatter doesn't support this file type
-
-                if (!formatter.shouldFormat(filePath)) {
-                    continue;
-                }
+            for (const rule of rulesAtOrder) {
 
                 const execution: FormatterExecution = {
-                    formatterName: formatter.name,
+
+                    formatterName: rule.name,
                     order,
                     changed: false,
 };
 
                 try {
-                    // Execute formatter
+                    // Execute rule
 
                     const beforeSource = context.currentSource;
-                    const afterSource = await formatter.format(context.currentSource, filePath, this.config);
+                    const afterSource = rule.apply(context.currentSource, filePath);
+
                     // Track changes
 
                     execution.changed = beforeSource !== afterSource;
                     context.currentSource = afterSource;
 
                     if (execution.changed) {
+
                         context.changed = true;
                     }
                     context.executions.push(execution);
                 } catch (error) {
                     // Fail-fast: stop pipeline immediately on error
-
                     execution.error = error as Error;
                     context.executions.push(execution);
 
-                    throw new FormatterError(formatter.name, filePath, error as Error);
+                    throw new FormatterError(rule.name, filePath, error as Error);
+
                 }
             }
         }
+
         // Write to disk if changes were made and not in dry-run mode
 
         if (context.changed && !dryRun) {
+
             await fs.writeFile(filePath, context.currentSource, "utf-8");
         }
 
@@ -204,9 +212,11 @@ export class FormatterPipeline {
     * @throws FormatterError if any formatter fails for any file
     */
     async formatFiles(filePaths: string[], dryRun = false): Promise<PipelineContext[]> {
+
         const results: PipelineContext[] = [];
 
         for (const filePath of filePaths) {
+
             const context = await this.formatFile(filePath, dryRun);
 
             results.push(context);
@@ -223,6 +233,7 @@ export class FormatterPipeline {
     * @returns Array of pipeline contexts for each file
     */
     async formatDirectory(dirPath: string, dryRun = false, extensions: string[] = [".ts", ".tsx", ".js", ".jsx"]): Promise<PipelineContext[]> {
+
         const files = await this.getFilesRecursively(dirPath, extensions);
 
         return this.formatFiles(files, dryRun);
@@ -232,54 +243,69 @@ export class FormatterPipeline {
     * Get the list of formatters in execution order
     */
     getFormatterOrder(): FormatterOrder[] {
+
         return [...this.formatterOrder];
     }
 
     /**
-    * Get all formatters at a specific order position
+    * Get all rules at a specific order position
     */
-    getFormattersAtOrder(order: FormatterOrder): IFormatter[] {
-        return this.formatters.get(order) || [];
+    getRulesAtOrder(order: FormatterOrder): IFormattingRule[] {
+
+        return this.rules.get(order) || [];
     }
 
     /**
-    * Check if any formatters are configured
+    * Check if any rules are configured
     */
-    hasFormatters(): boolean {
-        return this.formatters.size > 0;
+    hasRules(): boolean {
+
+        return this.rules.size > 0;
     }
 
     /**
-    * Initialize formatters based on configuration
+    * Initialize rules based on configuration
     */
-    private initializeFormatters(): void {
-        // Code Style Formatter
+    private initializeRules(): void {
+        // Code Style Rules
 
-        if (this.config.codeStyle?.enabled) {
-            this.addFormatter(FormatterOrder.CodeStyle, new CodeStyleFormatter(this.config.codeStyle));
+        if (this.config.codeStyle) {
+
+            this.addRule(FormatterOrder.CodeStyle, new QuoteStyleRule(this.config.codeStyle));
+            this.addRule(FormatterOrder.CodeStyle, new SemicolonRule(this.config.codeStyle));
+            this.addRule(FormatterOrder.CodeStyle, new BracketSpacingRule(this.config.codeStyle));
+            this.addRule(FormatterOrder.CodeStyle, new IndentationRule(this.config.codeStyle));
+            this.addRule(FormatterOrder.CodeStyle, new BlockSpacingRule());
         }
-        // Import Organizer
 
-        if (this.config.imports?.enabled) {
-            this.addFormatter(FormatterOrder.ImportOrganization, new ImportOrganizer(this.config.imports));
+        // Import Organization Rule
+
+        if (this.config.imports) {
+
+            this.addRule(FormatterOrder.ImportOrganization, new ImportOrganizationRule(this.config.imports));
         }
-        // AST Formatters
 
-        if (this.config.sorting?.enabled) {
-            // Class Member Formatter
-            if (this.config.sorting.classMembers?.enabled) {
-                this.addFormatter(FormatterOrder.ASTTransformation, new ClassMemberFormatter(this.config.sorting.classMembers));
+        // AST Transformation Rules
+
+        if (this.config.sorting) {
+            if (this.config.sorting.classMembers) {
+
+                this.addRule(FormatterOrder.ASTTransformation, new ClassMemberSortingRule(this.config.sorting.classMembers));
             }
-            // File Declaration Formatter
 
-            if (this.config.sorting.fileDeclarations?.enabled) {
-                this.addFormatter(FormatterOrder.ASTTransformation, new FileDeclarationFormatter(this.config.sorting.fileDeclarations));
+            if (this.config.sorting.fileDeclarations) {
+
+                this.addRule(FormatterOrder.ASTTransformation, new FileDeclarationSortingRule(this.config.sorting.fileDeclarations));
             }
         }
-        // Spacing Formatters
 
-        if (this.config.spacing?.enabled) {
-            this.addFormatter(FormatterOrder.Spacing, new BlankLineFormatter(this.config.spacing));
+        // Spacing Rules
+
+        if (this.config.spacing) {
+
+            this.addRule(FormatterOrder.Spacing, new BetweenDeclarationsRule(this.config.spacing));
+            this.addRule(FormatterOrder.Spacing, new BetweenStatementTypesRule(this.config.spacing));
+            this.addRule(FormatterOrder.Spacing, new BeforeReturnsRule(this.config.spacing));
         }
     }
 }

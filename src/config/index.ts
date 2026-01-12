@@ -5,6 +5,7 @@
 
 
 export {
+
     type CoreConfig,
     type PrettierConfig,
     type PackageJsonConfig,
@@ -17,7 +18,9 @@ export {
     type ImportConfig,
     type SortingConfig,
     type SpacingConfig,
+
     defaultConfig,
     mergeConfig,
 } from "./types";
+
 export {loadConfig, hasConfigFile, CONFIG_FILE_NAME} from "./loader"

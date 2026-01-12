@@ -3,17 +3,21 @@
 * All Rights Reserved.
 */
 
-import { DeclarationType, DEFAULT_FILE_ORDER, DEFAULT_CLASS_ORDER, MemberType } from "../core/formatters/ast";
+import { DEFAULT_CLASS_ORDER, MemberType } from "../core/formatters/rules/ast/ClassMemberSortingRule";
+import { DeclarationType, DEFAULT_FILE_ORDER } from "../core/formatters/rules/ast/FileDeclarationSortingRule";
 import { DefaultSortOptions } from "../shared/types";
 
 
 /**
 * Configuration for class member sorting
 */
+
 export interface ClassMemberConfig {
+
     /**
     * Whether to sort class members (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -35,10 +39,13 @@ export interface ClassMemberConfig {
 /**
 * Configuration for code style formatting
 */
+
 export interface CodeStyleConfig {
+
     /**
     * Whether to run code style formatting (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -85,10 +92,13 @@ export interface CodeStyleConfig {
 /**
 * Configuration for import organization
 */
+
 export interface ImportConfig {
+
     /**
     * Whether to organize imports (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -125,10 +135,13 @@ export interface ImportConfig {
 /**
 * Configuration for React component member sorting
 */
+
 export interface ReactComponentConfig {
+
     /**
     * Whether to sort React component members (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -150,10 +163,13 @@ export interface ReactComponentConfig {
 /**
 * Configuration for file-level declaration sorting
 */
+
 export interface FileDeclarationConfig {
+
     /**
     * Whether to sort file-level declarations (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -170,10 +186,13 @@ export interface FileDeclarationConfig {
 /**
 * Configuration for AST-based sorting (class members, file declarations)
 */
+
 export interface SortingConfig {
+
     /**
     * Whether to enable AST-based sorting (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -205,10 +224,13 @@ export interface SortingConfig {
 /**
 * Configuration for spacing rules
 */
+
 export interface SpacingConfig {
+
     /**
     * Whether to apply spacing rules (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -230,10 +252,13 @@ export interface SpacingConfig {
 /**
 * Configuration for package.json sorting
 */
+
 export interface PackageJsonConfig {
+
     /**
     * Whether to sort package.json (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -250,10 +275,13 @@ export interface PackageJsonConfig {
 /**
 * Configuration for tsconfig.json sorting
 */
+
 export interface TsConfigConfig {
+
     /**
     * Whether to sort tsconfig.json (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -265,7 +293,9 @@ export interface TsConfigConfig {
 /**
 * Represents the execution order of formatters in the pipeline
 */
+
 export enum FormatterOrder {
+
     CodeStyle = "CodeStyle",
     ImportOrganization = "ImportOrganization",
     ASTTransformation = "ASTTransformation",
@@ -275,16 +305,21 @@ export enum FormatterOrder {
 /**
 * @deprecated Use SortingConfig instead
 */
+
 export interface SortersConfig extends SortingConfig {
+
 }
 
 /**
 * Configuration for Prettier formatting
 */
+
 export interface PrettierConfig {
+
     /**
     * Whether to run Prettier (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -324,10 +359,13 @@ export interface PrettierConfig {
 /**
 * Main configuration interface for @encoredigitalgroup/core
 */
+
 export interface CoreConfig {
+
     /**
     * Configuration for code style formatting (quotes, semicolons, spacing)
     */
+
     codeStyle?: CodeStyleConfig;
 
     /**
@@ -376,10 +414,13 @@ export interface CoreConfig {
 /**
 * Deep merges two configuration objects
 */
+
 function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+
     const result = {...target};
 
     for (const key in source) {
+
         if (source[key] !== undefined) {
             if (typeof source[key] === "object" &&
 
@@ -401,7 +442,9 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
 /**
 * Default configuration
 */
+
 export const defaultConfig: CoreConfig = {
+
     codeStyle: {
         enabled: true,
         quoteStyle: "double",
@@ -507,6 +550,8 @@ export const defaultConfig: CoreConfig = {
 /**
 * Merges user configuration with default configuration
 */
+
 export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
+
     return deepMerge(defaultConfig, userConfig);
 }
