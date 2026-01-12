@@ -18,7 +18,6 @@ import { IFormattingRule } from "../../IFormattingRule";
 */
 
 export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
-
     readonly name = "BlankLineBetweenDeclarationsRule";
 
     constructor(private config: SpacingConfig) {
@@ -28,49 +27,39 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
     * Extracts the keyword from a declaration line
     */
     private getDeclarationKeyword(trimmedLine: string): string | null {
-
         if (trimmedLine.startsWith("export ")) {
-
             return "export";
         }
 
         if (trimmedLine.startsWith("function ")) {
-
             return "function";
         }
 
         if (trimmedLine.startsWith("const ")) {
-
             return "const";
         }
 
         if (trimmedLine.startsWith("let ")) {
-
             return "let";
         }
 
         if (trimmedLine.startsWith("var ")) {
-
             return "var";
         }
 
         if (trimmedLine.startsWith("enum ")) {
-
             return "enum";
         }
 
         if (trimmedLine.startsWith("interface ")) {
-
             return "interface";
         }
 
         if (trimmedLine.startsWith("type ")) {
-
             return "type";
         }
 
         if (trimmedLine.startsWith("class ")) {
-
             return "class";
         }
 
@@ -78,9 +67,7 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-
         if (!this.config.betweenDeclarations) {
-
             return source;
         }
 
@@ -93,7 +80,6 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
         let lastDeclarationKeyword: string | null = null;
 
         for (let i = 0; i < lines.length; i++) {
-
             const line = lines[i];
             const trimmedLine = line.trim();
             // Track brace depth
@@ -117,7 +103,6 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
             // Check if we've left the import section
 
             if (inImportSection && !isImport && !isBlankLine && !isComment) {
-
                 inImportSection = false;
             }
             // KEY ENHANCEMENT: Removed "braceDepth === 0" check
@@ -156,23 +141,19 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
             const isJustClosingBraces = /^[\s});]*$/.test(trimmedLine);
 
             if (!isBlankLine && hasClosingElement) {
-
                 lastNonBlankLineWasDeclarationEnd = true;
                 // Update the last declaration keyword when a declaration ends
 
                 if (isDeclarationStart) {
-
                     lastDeclarationKeyword = declarationKeyword;
                 }
             } else if (!isBlankLine && !isComment) {
                 // Don't reset if the line is just closing braces
 
                 if (!isBlockCommentStart && trimmedLine !== "" && !isJustClosingBraces) {
-
                     lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
 
                     if (isDeclarationStart) {
-
                         lastDeclarationKeyword = declarationKeyword;
                     }
                 }
@@ -181,7 +162,6 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
             braceDepth += openBraces - closeBraces;
 
             if (braceDepth < 0) {
-
                 braceDepth = 0;
             }
         }

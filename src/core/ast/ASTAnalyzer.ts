@@ -25,7 +25,6 @@ import * as ts from "typescript";
 */
 
 export interface ReferenceInfo {
-
     identifiers: Set<string>;
     thisReferences: Set<string>;
     directCalls: Set<string>;
@@ -36,14 +35,11 @@ export interface ReferenceInfo {
 */
 
 export class ASTAnalyzer {
-
     /**
     * Extracts all identifier references from a node
     * This is the core traversal function that recursively visits the AST
     */
-
     static extractReferences(node: ts.Node, scopeFilter?: (name: string) => boolean): ReferenceInfo {
-
         const identifiers = new Set<string>();
         const thisReferences = new Set<string>();
         const directCalls = new Set<string>();
@@ -53,11 +49,9 @@ export class ASTAnalyzer {
 
             if (ts.isPropertyAccessExpression(currentNode)) {
                 if (currentNode.expression.kind === ts.SyntaxKind.ThisKeyword) {
-
                     const propName = currentNode.name.text;
 
                     if (!scopeFilter || scopeFilter(propName)) {
-
                         thisReferences.add(propName);
                         identifiers.add(propName);
                     }
@@ -66,18 +60,15 @@ export class ASTAnalyzer {
             // Handle direct identifier references
 
             if (ts.isIdentifier(currentNode)) {
-
                 const name = currentNode.text;
 
                 if (!scopeFilter || scopeFilter(name)) {
-
                     identifiers.add(name);
                     // Check if it's a call expression
 
                     const parent = currentNode.parent;
 
                     if (parent && ts.isCallExpression(parent) && parent.expression === currentNode) {
-
                         directCalls.add(name);
                     }
                 }
@@ -87,11 +78,9 @@ export class ASTAnalyzer {
             if (ts.isElementAccessExpression(currentNode)) {
                 if (currentNode.expression.kind === ts.SyntaxKind.ThisKeyword) {
                     if (ts.isStringLiteral(currentNode.argumentExpression)) {
-
                         const propName = currentNode.argumentExpression.text;
 
                         if (!scopeFilter || scopeFilter(propName)) {
-
                             thisReferences.add(propName);
                             identifiers.add(propName);
                         }
@@ -114,7 +103,6 @@ export class ASTAnalyzer {
         // Don't analyze constructor - it can reference anything
 
         if (ts.isConstructorDeclaration(member)) {
-
             return new Set();
         }
 
@@ -136,7 +124,6 @@ export class ASTAnalyzer {
 
             ts.isImportEqualsDeclaration(declaration) ||
             ts.isExportDeclaration(declaration)) {
-
             return new Set();
         }
 
@@ -151,9 +138,7 @@ export class ASTAnalyzer {
     * Get the name of a class member
     */
     static getClassMemberName(member: ts.ClassElement): string {
-
         if (ts.isConstructorDeclaration(member)) {
-
             return "constructor";
         }
 
@@ -162,14 +147,11 @@ export class ASTAnalyzer {
             ts.isMethodDeclaration(member) ||
             ts.isGetAccessorDeclaration(member) ||
             ts.isSetAccessorDeclaration(member)) {
-
             if (ts.isIdentifier(member.name)) {
-
                 return member.name.text;
             }
 
             if (ts.isStringLiteral(member.name)) {
-
                 return member.name.text;
             }
         }
@@ -181,23 +163,19 @@ export class ASTAnalyzer {
     * Get the name of a file-level declaration
     */
     static getDeclarationName(declaration: ts.Statement): string {
-
         if (ts.isInterfaceDeclaration(declaration) ||
 
             ts.isTypeAliasDeclaration(declaration) ||
             ts.isEnumDeclaration(declaration) ||
             ts.isFunctionDeclaration(declaration) ||
             ts.isClassDeclaration(declaration)) {
-
             return declaration.name?.text || "";
         }
 
         if (ts.isVariableStatement(declaration)) {
-
             const firstDecl = declaration.declarationList.declarations[0];
 
             if (ts.isIdentifier(firstDecl.name)) {
-
                 return firstDecl.name.text;
             }
         }
@@ -209,7 +187,6 @@ export class ASTAnalyzer {
     * Check if a node has a specific modifier
     */
     static hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
-
         const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
 
         return modifiers?.some(m => m.kind === kind) || false;
@@ -219,9 +196,7 @@ export class ASTAnalyzer {
     * Check if a statement is a default export
     */
     static isDefaultExport(node: ts.Statement): boolean {
-
         if (ts.isExportAssignment(node)) {
-
             return true;
         }
 
@@ -232,9 +207,7 @@ export class ASTAnalyzer {
     * Check if a statement has an export modifier
     */
     static isExported(node: ts.Statement): boolean {
-
         if (ts.isExportAssignment(node)) {
-
             return true;
         }
 
