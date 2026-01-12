@@ -8,9 +8,7 @@ import { sortPackageFile } from "./sortPackage";
 import { sortTsConfigFile } from "./sortTSConfig";
 
 
-/**
-* Format files using the FormatterPipeline
-*/
+/** Format files using the FormatterPipeline */
 async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
     // Get include/exclude patterns
 
@@ -61,9 +59,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     }
 }
 
-/**
-* Main CLI function
-*/
+/** Main CLI function */
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
     // Parse command line arguments

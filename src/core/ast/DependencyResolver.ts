@@ -2,9 +2,7 @@
 * Copyright (c) 2026. Encore Digital Group.
 * All Rights Reserved.
 */
-/**
-* Represents a node in the dependency graph
-*/
+/** Represents a node in the dependency graph */
 
 
 export interface DependencyNode {
@@ -14,9 +12,7 @@ export interface DependencyNode {
     sortedIndex: number;
 }
 
-/**
-* Dependency graph with circular dependency detection
-*/
+/** Dependency graph with circular dependency detection */
 
 export interface DependencyGraph {
     nodes: Map<string, DependencyNode>;
@@ -87,9 +83,7 @@ export class DependencyResolver {
         return sccs;
     }
 
-    /**
-    * Builds a dependency graph from a list of items
-    */
+    /** Builds a dependency graph from a list of items */
     static buildGraph<T>(items: T[], getName: (item: T) => string, getDependencies: (item: T) => Set<string>): DependencyGraph {
         const nodes = new Map<string, DependencyNode>();
         // Create nodes

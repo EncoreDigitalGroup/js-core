@@ -6,23 +6,15 @@
 import { CoreConfig } from "../../config/types";
 
 
-/**
-* Validation result containing errors and warnings
-*/
+/** Validation result containing errors and warnings */
 
 
-/**
-* Validation result containing errors and warnings
-*/
+/** Validation result containing errors and warnings */
 
 
-/**
-* Validation result containing errors and warnings
-*/
+/** Validation result containing errors and warnings */
 
-/**
-* Validation result containing errors and warnings
-*/
+/** Validation result containing errors and warnings */
 
 export interface ValidationResult {
     valid: boolean;
@@ -30,9 +22,7 @@ export interface ValidationResult {
     warnings: string[];
 }
 
-/**
-* Validates CoreConfig configuration objects
-*/
+/** Validates CoreConfig configuration objects */
 
 export class ConfigValidator {
     /**

@@ -23,9 +23,7 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
     constructor(private config: SpacingConfig) {
     }
 
-    /**
-    * Extracts the keyword from a declaration line
-    */
+    /** Extracts the keyword from a declaration line */
     private getDeclarationKeyword(trimmedLine: string): string | null {
         if (trimmedLine.startsWith("export ")) {
             return "export";

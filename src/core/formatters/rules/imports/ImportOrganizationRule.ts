@@ -17,9 +17,7 @@ interface ImportInfo {
     group: "external" | "internal" | "relative";
 }
 
-/**
-* Organizes and formats import statements
-*/
+/** Organizes and formats import statements */
 
 export class ImportOrganizationRule implements IFormattingRule {
     readonly name = "ImportOrganizationRule";

@@ -6,23 +6,15 @@
 import * as ts from "typescript";
 
 
-/**
-* Information about references found in AST nodes
-*/
+/** Information about references found in AST nodes */
 
 
-/**
-* Information about references found in AST nodes
-*/
+/** Information about references found in AST nodes */
 
 
-/**
-* Information about references found in AST nodes
-*/
+/** Information about references found in AST nodes */
 
-/**
-* Information about references found in AST nodes
-*/
+/** Information about references found in AST nodes */
 
 export interface ReferenceInfo {
     identifiers: Set<string>;
@@ -30,9 +22,7 @@ export interface ReferenceInfo {
     directCalls: Set<string>;
 }
 
-/**
-* Analyzes TypeScript AST nodes to extract references and dependencies
-*/
+/** Analyzes TypeScript AST nodes to extract references and dependencies */
 
 export class ASTAnalyzer {
     /**
@@ -134,9 +124,7 @@ export class ASTAnalyzer {
         return refs.identifiers;
     }
 
-    /**
-    * Get the name of a class member
-    */
+    /** Get the name of a class member */
     static getClassMemberName(member: ts.ClassElement): string {
         if (ts.isConstructorDeclaration(member)) {
             return "constructor";
@@ -159,9 +147,7 @@ export class ASTAnalyzer {
         return "";
     }
 
-    /**
-    * Get the name of a file-level declaration
-    */
+    /** Get the name of a file-level declaration */
     static getDeclarationName(declaration: ts.Statement): string {
         if (ts.isInterfaceDeclaration(declaration) ||
 
@@ -183,18 +169,14 @@ export class ASTAnalyzer {
         return "";
     }
 
-    /**
-    * Check if a node has a specific modifier
-    */
+    /** Check if a node has a specific modifier */
     static hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
         const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
 
         return modifiers?.some(m => m.kind === kind) || false;
     }
 
-    /**
-    * Check if a statement is a default export
-    */
+    /** Check if a statement is a default export */
     static isDefaultExport(node: ts.Statement): boolean {
         if (ts.isExportAssignment(node)) {
             return true;
@@ -203,9 +185,7 @@ export class ASTAnalyzer {
         return this.hasModifier(node, ts.SyntaxKind.DefaultKeyword);
     }
 
-    /**
-    * Check if a statement has an export modifier
-    */
+    /** Check if a statement has an export modifier */
     static isExported(node: ts.Statement): boolean {
         if (ts.isExportAssignment(node)) {
             return true;

@@ -8,9 +8,7 @@ import { CodeStyleConfig } from "../../../../config/types";
 import { IFormattingRule } from "../../IFormattingRule";
 
 
-/**
-* Adds or removes semicolons based on configuration using AST
-*/
+/** Adds or removes semicolons based on configuration using AST */
 
 export class SemicolonRule implements IFormattingRule {
     readonly name = "SemicolonRule";
