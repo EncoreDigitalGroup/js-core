@@ -35,9 +35,9 @@ jobs:
                     repository: ${{ github.repository }}
                     token: ${{ secrets.GITHUB_TOKEN }}
 
-    BundleAsset:
+    TSFMT:
         needs: GitStatusCheck
-        name: BundleAsset
+        name: TSFMT
         if: needs.GitStatusCheck.outputs.shouldRun == 'true'
         runs-on: ubuntu-latest
         steps:
@@ -49,10 +49,10 @@ jobs:
             -   name: Set Up Node.js
                 uses: actions/setup-node@v4
                 with:
-                    node-version: "20"
+                    node-version: "22"
 
             -   name: Install Dependencies
-                run: npm install
+                run: npm ci
 
             -   name: Set execute permissions
                 shell: bash
@@ -63,6 +63,6 @@ jobs:
                 run: $GITHUB_WORKSPACE/bin/ci_build.sh
 
     AutoMerge:
-        needs: [ BundleAsset ]
+        needs: [ TSFMT ]
         name: Auto-Merge
         uses: EncoreDigitalGroup/ci-workflows/.github/workflows/github_dependabotAutoMerge.yml@v2

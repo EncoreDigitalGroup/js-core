@@ -12,7 +12,6 @@ import { IFormattingRule } from "../../IFormattingRule";
 */
 
 enum StatementType {
-
     Declaration = "declaration",// const, let, var, function, class, etc.
     Control = "control",// if, else, switch, case
     Loop = "loop",// for, while, do
@@ -30,7 +29,6 @@ enum StatementType {
 */
 
 export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
-
     readonly name = "BlankLineBetweenStatementTypesRule";
 
     constructor(private config: SpacingConfig) {
@@ -51,7 +49,6 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
             trimmedLine.startsWith("switch(") ||
             trimmedLine.startsWith("case ") ||
             trimmedLine.startsWith("default:")) {
-
             return StatementType.Control;
         }
         // Loops
@@ -63,7 +60,6 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
             trimmedLine.startsWith("while(") ||
             trimmedLine.startsWith("do ") ||
             trimmedLine.startsWith("do{")) {
-
             return StatementType.Loop;
         }
         // Exceptions
@@ -76,7 +72,6 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
             trimmedLine.startsWith("finally ") ||
             trimmedLine.startsWith("finally{") ||
             trimmedLine.startsWith("throw ")) {
-
             return StatementType.Exception;
         }
         // Declarations
@@ -91,7 +86,6 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
             trimmedLine.startsWith("type ") ||
             trimmedLine.startsWith("enum ") ||
             trimmedLine.startsWith("export ")) {
-
             return StatementType.Declaration;
         }
         // Everything else (expressions, calls, etc.)
@@ -99,9 +93,7 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-
         if (!this.config.betweenStatementTypes) {
-
             return source;
         }
 
@@ -112,7 +104,6 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
         let inImportSection = true;
 
         for (let i = 0; i < lines.length; i++) {
-
             const line = lines[i];
             const trimmedLine = line.trim();
             const isBlankLine = trimmedLine === "";
@@ -125,13 +116,11 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
             // Check if we've left the import section
 
             if (inImportSection && !isImport && !isBlankLine && !isComment) {
-
                 inImportSection = false;
             }
             // Skip import section
 
             if (inImportSection || isBlankLine || isComment) {
-
                 result.push(line);
                 continue;
             }

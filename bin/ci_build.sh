@@ -13,16 +13,6 @@ cd "$GITHUB_WORKSPACE" || {
   exit 1
 }
 
-# Run build and capture exit code
-npm run format
-BUILD_EXIT_CODE=$?
-
-# If build failed, exit with the same code
-if [ $BUILD_EXIT_CODE -ne 0 ]; then
-  echo "Build failed with exit code $BUILD_EXIT_CODE"
-  exit $BUILD_EXIT_CODE
-fi
-
 # Run format and capture exit code
 npm run format
 FORMAT_EXIT_CODE=$?
@@ -48,3 +38,5 @@ else
   # Push changes to origin
   git push origin --force
 fi
+
+npm test
