@@ -50,6 +50,35 @@ export class IndexGenerationRule implements IFormattingRule {
 
     constructor(private readonly config: IndexGenerationConfig) {}
 
+    private isTestFile(fileName: string): boolean {
+        // Common test file patterns (not configurable)
+        const testPatterns = [
+            /\.test\.(ts|tsx|js|jsx)$/,
+            /\.spec\.(ts|tsx|js|jsx)$/,
+            /\.(test|spec)\.(ts|tsx|js|jsx)$/,
+            /__tests__/,
+            /\.stories\.(ts|tsx|js|jsx)$/,
+        ];
+
+        return testPatterns.some(pattern => pattern.test(fileName));
+    }
+
+    private isTestDirectory(dirName: string): boolean {
+        // Common test directory patterns (not configurable)
+        const testDirectories = [
+            "__tests__",
+            "tests",
+            "test",
+            "__mocks__",
+            "__fixtures__",
+            ".storybook",
+        ];
+
+        return testDirectories.includes(dirName.toLowerCase()) ||
+               dirName.endsWith(".test") ||
+               dirName.endsWith(".spec");
+    }
+
     apply(source: string, filePath?: string): string {
         if (!this.config.enabled || !filePath) {
             return source;
@@ -122,6 +151,10 @@ export class IndexGenerationRule implements IFormattingRule {
 
             for (const entry of entries) {
                 if (entry.isDirectory()) {
+                    // Always skip test directories (not configurable)
+                    if (this.isTestDirectory(entry.name)) {
+                        continue;
+                    }
                     const subDir = path.join(dir, entry.name);
                     this.generateIndexExportRecursive(subDir, options);
                 }
@@ -144,6 +177,10 @@ export class IndexGenerationRule implements IFormattingRule {
                 }
 
                 if (entry.isDirectory()) {
+                    // Always skip test directories (not configurable)
+                    if (this.isTestDirectory(entry.name)) {
+                        continue;
+                    }
                     // Check if subdirectory has an index file
                     const subIndexPath = path.join(dir, entry.name, options.indexFileName);
                     if (fs.existsSync(subIndexPath)) {
@@ -152,6 +189,10 @@ export class IndexGenerationRule implements IFormattingRule {
                 } else if (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) {
                     // Skip .d.ts files when processing regular .ts files
                     if (entry.name.endsWith(".d.ts")) {
+                        continue;
+                    }
+                    // Always skip test files (not configurable)
+                    if (this.isTestFile(entry.name)) {
                         continue;
                     }
                     const exportName = entry.name.replace(/\.(ts|tsx)$/, "");
@@ -196,6 +237,10 @@ ${exports.join("\n")}
 
                 // Check for directories with index.ts
                 if (entry.isDirectory()) {
+                    // Always skip test directories (not configurable)
+                    if (this.isTestDirectory(entry.name)) {
+                        continue;
+                    }
                     const indexPath = path.join(srcDir, entry.name, "index.ts");
                     if (fs.existsSync(indexPath)) {
                         modules.push(entry.name);
