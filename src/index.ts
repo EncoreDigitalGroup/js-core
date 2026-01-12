@@ -50,4 +50,4 @@ export {
 } from "./config";
 // ===== LEGACY EXPORTS (Backward Compatibility) =====
 export {sortPackageFile, sortPackageJson} from "./sortPackage";
-export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig";
+export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig"
