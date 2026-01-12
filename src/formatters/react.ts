@@ -13,7 +13,6 @@ import { reorderWithDependencies } from "../shared/dependencyAnalysis";
 // React-specific member types
 
 export enum ReactMemberType {
-
     StaticProperty = "static_property",
     State = "state",
     InstanceProperty = "instance_property",
@@ -36,19 +35,15 @@ export enum ReactMemberType {
 }
 
 function isEventHandler(name: string): boolean {
-
     return /^(handle|on)[A-Z]/.test(name);
 }
 
 function isRenderHelper(name: string): boolean {
-
     return /^render[A-Z]/.test(name) && name !== "render";
 }
 
 function getReactMemberType(member: ts.ClassElement): ReactMemberType {
-
     if (ts.isConstructorDeclaration(member)) {
-
         return ReactMemberType.Constructor;
     }
 
@@ -57,12 +52,10 @@ function getReactMemberType(member: ts.ClassElement): ReactMemberType {
 
     if (ts.isPropertyDeclaration(member)) {
         if (isStatic) {
-
             return ReactMemberType.StaticProperty;
         }
 
         if (name === "state") {
-
             return ReactMemberType.State;
         }
 
@@ -70,12 +63,10 @@ function getReactMemberType(member: ts.ClassElement): ReactMemberType {
     }
 
     if (ts.isGetAccessorDeclaration(member)) {
-
         return ReactMemberType.GetAccessor;
     }
 
     if (ts.isSetAccessorDeclaration(member)) {
-
         return ReactMemberType.SetAccessor;
     }
 
@@ -83,12 +74,10 @@ function getReactMemberType(member: ts.ClassElement): ReactMemberType {
         if (isStatic) {
             // Check for static lifecycle methods
             if (name === "getDerivedStateFromProps") {
-
                 return ReactMemberType.GetDerivedStateFromProps;
             }
 
             if (name === "getDerivedStateFromError") {
-
                 return ReactMemberType.GetDerivedStateFromError;
             }
 
@@ -142,7 +131,6 @@ function getReactMemberType(member: ts.ClassElement): ReactMemberType {
 }
 
 function analyzeReactMember(member: ts.ClassElement, sourceFile: ts.SourceFile, index: number, allMemberNames: Set<string>): ClassMember {
-
     const type = getReactMemberType(member) as unknown as MemberType;
     const name = getMemberName(member);
     const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
@@ -177,18 +165,13 @@ function analyzeReactMember(member: ts.ClassElement, sourceFile: ts.SourceFile, 
 }
 
 export function isReactComponent(classNode: ts.ClassDeclaration): boolean {
-
     if (!classNode.heritageClauses) {
-
         return false;
     }
 
     for (const clause of classNode.heritageClauses) {
-
         if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
-
             for (const type of clause.types) {
-
                 const typeName = type.expression.getText();
 
                 if (typeName === "Component" ||
@@ -196,7 +179,6 @@ export function isReactComponent(classNode: ts.ClassDeclaration): boolean {
                     typeName === "PureComponent" ||
                     typeName === "React.Component" ||
                     typeName === "React.PureComponent") {
-
                     return true;
                 }
             }
@@ -230,11 +212,9 @@ export const DEFAULT_REACT_ORDER: ReactMemberType[] = [
 ];
 
 export function sortReactMembers(members: ClassMember[], config: SortConfig = {}): ClassMember[] {
-
     const order = (config.order as unknown as ReactMemberType[]) || DEFAULT_REACT_ORDER;
 
     return [...members].sort((a, b) => {
-
         const aTypeIndex = order.indexOf(a.type as unknown as ReactMemberType);
         const bTypeIndex = order.indexOf(b.type as unknown as ReactMemberType);
 
@@ -243,9 +223,7 @@ export function sortReactMembers(members: ClassMember[], config: SortConfig = {}
 }
 
 export function transformReactComponent(classNode: ts.ClassDeclaration, sourceFile: ts.SourceFile, config: SortConfig): ts.ClassDeclaration {
-
     if (!classNode.members || classNode.members.length === 0) {
-
         return classNode;
     }
     // Collect all member names first
@@ -259,7 +237,6 @@ export function transformReactComponent(classNode: ts.ClassDeclaration, sourceFi
     // Apply dependency reordering if enabled
 
     if (config.respectDependencies !== false) {
-
         sortedMembers = reorderWithDependencies(sortedMembers, m => m.name);
     }
     // Create new class with sorted members

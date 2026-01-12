@@ -11,25 +11,20 @@ import * as ts from "typescript";
 */
 
 export function getMemberName(member: ts.ClassElement): string {
-
     if (ts.isConstructorDeclaration(member)) {
-
         return "constructor";
     }
 
     if ("name" in member && member.name) {
         if (ts.isIdentifier(member.name)) {
-
             return member.name.text;
         }
 
         if (ts.isStringLiteral(member.name)) {
-
             return member.name.text;
         }
 
         if (ts.isComputedPropertyName(member.name)) {
-
             return "[computed]";
         }
     }
@@ -43,9 +38,7 @@ export function getMemberName(member: ts.ClassElement): string {
 */
 
 export function hasModifier(node: ts.Node, kind: ts.SyntaxKind): boolean {
-
     if (!ts.canHaveModifiers(node)) {
-
         return false;
     }
 

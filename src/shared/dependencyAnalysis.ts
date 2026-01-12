@@ -1,6 +1,5 @@
 
 export interface DependencyInfo {
-
     name: string;
     dependencies: Set<string>;
     originalIndex: number;
@@ -13,7 +12,6 @@ export interface DependencyInfo {
 */
 
 export interface DependencyGraph {
-
     nodes: Map<string, DependencyInfo>;
     circularGroups: Set<string>[];
 }
@@ -24,7 +22,6 @@ export interface DependencyGraph {
 */
 
 function findStronglyConnectedComponents(nodes: Map<string, DependencyInfo>): Set<string>[] {
-
     const index = new Map<string, number>();
     const lowLink = new Map<string, number>();
     const onStack = new Set<string>();
@@ -34,7 +31,6 @@ function findStronglyConnectedComponents(nodes: Map<string, DependencyInfo>): Se
     let currentIndex = 0;
 
     function strongConnect(nodeName: string) {
-
         index.set(nodeName, currentIndex);
         lowLink.set(nodeName, currentIndex);
         currentIndex++;
@@ -44,25 +40,20 @@ function findStronglyConnectedComponents(nodes: Map<string, DependencyInfo>): Se
         const node = nodes.get(nodeName)!;
 
         for (const dep of node.dependencies) {
-
             if (!index.has(dep)) {
-
                 strongConnect(dep);
                 lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, lowLink.get(dep)!));
             } else if (onStack.has(dep)) {
-
                 lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, index.get(dep)!));
             }
         }
 
         if (lowLink.get(nodeName) === index.get(nodeName)) {
-
             const scc = new Set<string>();
 
             let w: string;
 
             do {
-
                 w = stack.pop()!;
                 onStack.delete(w);
                 scc.add(w);
@@ -70,16 +61,13 @@ function findStronglyConnectedComponents(nodes: Map<string, DependencyInfo>): Se
             // Only add if it's a real cycle (size > 1) or self-referential
 
             if (scc.size > 1 || node.dependencies.has(nodeName)) {
-
                 sccs.push(scc);
             }
         }
     }
 
     for (const nodeName of nodes.keys()) {
-
         if (!index.has(nodeName)) {
-
             strongConnect(nodeName);
         }
     }
@@ -92,12 +80,10 @@ function findStronglyConnectedComponents(nodes: Map<string, DependencyInfo>): Se
 */
 
 export function buildDependencyGraph<T>(items: T[], getName: (item: T) => string, getDependencies: (item: T) => Set<string>): DependencyGraph {
-
     const nodes = new Map<string, DependencyInfo>();
     // Create nodes
 
     items.forEach((item, index) => {
-
         const name = getName(item);
 
         if (!name)
@@ -130,7 +116,6 @@ export function buildDependencyGraph<T>(items: T[], getName: (item: T) => string
 */
 
 export function topologicalSort(graph: DependencyGraph, sortedNames: string[]): string[] {
-
     const result: string[] = [];
     const visited = new Set<string>();
     const visiting = new Set<string>(); // For cycle detection
@@ -142,7 +127,6 @@ export function topologicalSort(graph: DependencyGraph, sortedNames: string[]): 
     });
 
     function visit(name: string): boolean {
-
         if (visited.has(name))
 
             return true;
@@ -165,12 +149,10 @@ export function topologicalSort(graph: DependencyGraph, sortedNames: string[]): 
             // Skip circular dependencies - we'll handle them specially
 
             if (circularNodes.has(dep) && circularNodes.has(name)) {
-
                 continue;
             }
 
             if (!visit(dep)) {
-
                 return false;
             }
         }
@@ -185,7 +167,6 @@ export function topologicalSort(graph: DependencyGraph, sortedNames: string[]): 
     // This ensures that within valid orderings, we respect the type/visibility/name sort
 
     for (const name of sortedNames) {
-
         visit(name);
     }
 
@@ -215,7 +196,6 @@ export function reorderWithDependencies<T>(items: T[], getName: (item: T) => str
     const nameToItem = new Map<string, T>();
 
     items.forEach(item => {
-
         const name = getName(item);
 
         if (name)
@@ -227,19 +207,15 @@ export function reorderWithDependencies<T>(items: T[], getName: (item: T) => str
     const result: T[] = [];
 
     for (const name of dependencyOrder) {
-
         const item = nameToItem.get(name);
 
         if (item) {
-
             result.push(item);
         }
     }
     // Add any items that weren't in the graph (shouldn't happen, but safety)
     items.forEach(item => {
-
         if (!result.includes(item)) {
-
             result.push(item);
         }
     });

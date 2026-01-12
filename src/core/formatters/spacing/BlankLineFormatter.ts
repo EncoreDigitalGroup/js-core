@@ -17,7 +17,6 @@ import { BetweenStatementTypesRule } from "./rules/BetweenStatementTypesRule";
 */
 
 export class BlankLineFormatter extends BaseFormatter {
-
     readonly name = "BlankLineFormatter";
     private rules: ISpacingRule[] = [];
 
@@ -27,9 +26,7 @@ export class BlankLineFormatter extends BaseFormatter {
     }
 
     async format(source: string, filePath: string): Promise<string> {
-
         if (!this.config.enabled) {
-
             return source;
         }
 
@@ -37,7 +34,6 @@ export class BlankLineFormatter extends BaseFormatter {
         // Apply all spacing rules in sequence
 
         for (const rule of this.rules) {
-
             formatted = rule.apply(formatted);
         }
         this.logFormat(filePath, formatted !== source);
@@ -46,7 +42,6 @@ export class BlankLineFormatter extends BaseFormatter {
     }
 
     protected getSupportedExtensions(): string[] {
-
         return [".ts", ".tsx", ".js", ".jsx"];
     }
 
@@ -58,19 +53,16 @@ export class BlankLineFormatter extends BaseFormatter {
         // 1. Between declarations (same keyword = no blank line, different keyword = blank line)
 
         if (this.config.betweenDeclarations) {
-
             this.rules.push(new BetweenDeclarationsRule(this.config));
         }
         // 2. Between statement types (declaration vs control flow vs loops, etc.)
 
         if (this.config.betweenStatementTypes) {
-
             this.rules.push(new BetweenStatementTypesRule(this.config));
         }
         // 3. Before return statements
 
         if (this.config.beforeReturns) {
-
             this.rules.push(new BeforeReturnsRule(this.config));
         }
     }

@@ -13,13 +13,10 @@ import { BaseFormatter } from "../base/BaseFormatter";
 */
 
 export abstract class ASTFormatter extends BaseFormatter {
-
     /**
     * Create a TypeScript source file from source code
     */
-
     protected createSourceFile(source: string, filePath: string): ts.SourceFile {
-
         return ASTTransformer.createSourceFile(source, filePath);
     }
 
@@ -27,7 +24,6 @@ export abstract class ASTFormatter extends BaseFormatter {
     * Default implementation uses TypeScript AST
     */
     protected getSupportedExtensions(): string[] {
-
         return [".ts", ".tsx"];
     }
 
@@ -35,7 +31,6 @@ export abstract class ASTFormatter extends BaseFormatter {
     * Print a node to string
     */
     protected printNode(node: ts.Node, sourceFile: ts.SourceFile): string {
-
         return ASTTransformer.printNode(node, sourceFile);
     }
 
@@ -43,7 +38,6 @@ export abstract class ASTFormatter extends BaseFormatter {
     * Print a source file back to string
     */
     protected printSourceFile(sourceFile: ts.SourceFile): string {
-
         return ASTTransformer.printSourceFile(sourceFile);
     }
 
@@ -51,7 +45,6 @@ export abstract class ASTFormatter extends BaseFormatter {
     * Transform source file with a visitor function
     */
     protected transformSourceFile(sourceFile: ts.SourceFile, visitor: (node: ts.Node) => ts.Node | undefined): ts.SourceFile {
-
         return ASTTransformer.transformSourceFile(sourceFile, visitor);
     }
 }

@@ -30,7 +30,6 @@ import { SortConfig } from "./shared/classMemberTypes";
 */
 
 export interface SortClassMembersConfig {
-
     dryRun?: boolean;
     classConfig?: SortConfig | null;
     reactConfig?: SortConfig | null;
@@ -44,12 +43,10 @@ export interface SortClassMembersConfig {
 */
 
 function addBlankLinesBeforeReturns(code: string): string {
-
     const lines = code.split("\n");
     const result: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
-
         const currentLine = lines[i];
         const trimmedCurrentLine = currentLine.trim();
         const previousLine = i > 0 ? lines[i - 1] : "";
@@ -71,7 +68,6 @@ function addBlankLinesBeforeReturns(code: string): string {
         // - We have at least one line before
 
         if (isReturnStatement && !previousIsBlank && !previousIsComment && i > 0) {
-
             result.push("");
         }
         result.push(currentLine);
@@ -85,49 +81,39 @@ function addBlankLinesBeforeReturns(code: string): string {
 */
 
 function getDeclarationKeyword(trimmedLine: string): string | null {
-
     if (trimmedLine.startsWith("export ")) {
-
         return "export";
     }
 
     if (trimmedLine.startsWith("function ")) {
-
         return "function";
     }
 
     if (trimmedLine.startsWith("const ")) {
-
         return "const";
     }
 
     if (trimmedLine.startsWith("let ")) {
-
         return "let";
     }
 
     if (trimmedLine.startsWith("var ")) {
-
         return "var";
     }
 
     if (trimmedLine.startsWith("enum ")) {
-
         return "enum";
     }
 
     if (trimmedLine.startsWith("interface ")) {
-
         return "interface";
     }
 
     if (trimmedLine.startsWith("type ")) {
-
         return "type";
     }
 
     if (trimmedLine.startsWith("class ")) {
-
         return "class";
     }
 
@@ -139,7 +125,6 @@ function getDeclarationKeyword(trimmedLine: string): string | null {
 */
 
 function addBlankLinesBetweenDeclarations(code: string): string {
-
     const lines = code.split("\n");
     const result: string[] = [];
 
@@ -151,7 +136,6 @@ function addBlankLinesBetweenDeclarations(code: string): string {
     const DEBUG = false; // Set to true to enable debugging
 
     for (let i = 0; i < lines.length; i++) {
-
         const line = lines[i];
         const trimmedLine = line.trim();
         // Track brace depth
@@ -159,7 +143,6 @@ function addBlankLinesBetweenDeclarations(code: string): string {
         const closeBraces = (line.match(/}/g) || []).length;
 
         if (DEBUG) {
-
             console.log(`Line ${i}: "${trimmedLine.substring(0, 50)}${trimmedLine.length > 50 ? "..." : ""}"`);
             console.log(`  open:${openBraces} close:${closeBraces} depth:${braceDepth}->${braceDepth + openBraces - closeBraces}`);
         }
@@ -173,7 +156,6 @@ function addBlankLinesBetweenDeclarations(code: string): string {
         // Check if we've left the import section
 
         if (inImportSection && !isImport && !isBlankLine && !isComment) {
-
             inImportSection = false;
         }
         // Add blank line before declaration if needed
@@ -209,23 +191,19 @@ function addBlankLinesBetweenDeclarations(code: string): string {
         const isJustClosingBraces = /^[\s});]*$/.test(trimmedLine);
 
         if (!isBlankLine && willBeAtDepthZero && hasClosingElement) {
-
             lastNonBlankLineWasDeclarationEnd = true;
             // Update the last declaration keyword when a declaration ends
 
             if (isDeclarationStart) {
-
                 lastDeclarationKeyword = declarationKeyword;
             }
         } else if (!isBlankLine && !isComment) {
             // Don't reset if we're at depth 0 and the line is just closing braces
             // (this handles cases like }; }; } where multiple closes happen at top level)
             if (!isBlockCommentStart && trimmedLine !== "" && !(braceDepth === 0 && isJustClosingBraces)) {
-
                 lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
 
                 if (isDeclarationStart) {
-
                     lastDeclarationKeyword = declarationKeyword;
                 }
             }
@@ -234,7 +212,6 @@ function addBlankLinesBetweenDeclarations(code: string): string {
         braceDepth += openBraces - closeBraces;
 
         if (braceDepth < 0) {
-
             braceDepth = 0;
         }
     }
@@ -243,18 +220,13 @@ function addBlankLinesBetweenDeclarations(code: string): string {
 }
 
 function createTransformer(classConfig: SortConfig | null | undefined, reactConfig: SortConfig | null | undefined): ts.TransformerFactory<ts.SourceFile> {
-
     return (context: ts.TransformationContext) => {
-
         return (sourceFile: ts.SourceFile) => {
-
             function visit(node: ts.Node): ts.Node {
-
                 if (ts.isClassDeclaration(node)) {
                     // Check if it's a React component
                     if (isReactComponent(node)) {
                         if (reactConfig) {
-
                             return transformReactComponent(node, sourceFile, reactConfig);
                         }
                     } else if (classConfig) {
@@ -277,13 +249,10 @@ function createTransformer(classConfig: SortConfig | null | undefined, reactConf
 */
 
 function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
-
     let hasClass = false;
 
     function visit(node: ts.Node): void {
-
         if (ts.isClassDeclaration(node)) {
-
             hasClass = true;
             return;
         }
@@ -300,7 +269,6 @@ function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
 */
 
 function sortFileInternal(filePath: string, classConfig: SortConfig | null | undefined, reactConfig: SortConfig | null | undefined, fileConfig: FileSortConfig | null | undefined, dryRun: boolean = false): string {
-
     const sourceCode = fs.readFileSync(filePath, "utf8");
     const sourceFile = ts.createSourceFile(filePath, sourceCode, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     // STEP 1: Sort top-level file declarations
@@ -308,13 +276,11 @@ function sortFileInternal(filePath: string, classConfig: SortConfig | null | und
     let transformedSourceFile = sourceFile;
 
     if (fileConfig) {
-
         transformedSourceFile = transformFile(sourceFile, fileConfig);
     }
     // STEP 2: Sort class members (if any classes exist and configs provided)
 
     if (hasClassDeclarations(sourceFile) && (classConfig || reactConfig)) {
-
         const result = ts.transform(transformedSourceFile, [createTransformer(classConfig, reactConfig)]);
 
         transformedSourceFile = result.transformed[0];
@@ -323,7 +289,6 @@ function sortFileInternal(filePath: string, classConfig: SortConfig | null | und
     // STEP 3: Convert AST back to source code string
 
     const printer = ts.createPrinter({
-
         newLine: ts.NewLineKind.LineFeed,
         removeComments: false,
 });
@@ -336,7 +301,6 @@ function sortFileInternal(filePath: string, classConfig: SortConfig | null | und
     // Only write if the output is different from the source
 
     if (output !== sourceCode && !dryRun) {
-
         fs.writeFileSync(filePath, output, "utf8");
         console.log(`✨ Sorted declarations in: ${filePath}`);
     }
@@ -345,7 +309,6 @@ function sortFileInternal(filePath: string, classConfig: SortConfig | null | und
 }
 
 export function sortClassMembersInDirectory(targetDir: string, config: SortConfig | SortClassMembersConfig = {}): void {
-
     const glob = require("glob");
     // Handle both old and new config formats
 
@@ -384,7 +347,6 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
     const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
     const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
     const files = include.flatMap(pattern => glob.sync(pattern, {
-
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
@@ -392,12 +354,9 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
     console.info(`Sorting class members in ${files.length} files...`);
 
     for (const file of files) {
-
         try {
-
             sortFileInternal(file, classConfig, reactConfig, fileConfig, dryRun);
         } catch (error) {
-
             console.error(`Error sorting file ${file}:`, (error as Error).message);
         }
     }
@@ -409,7 +368,6 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
 */
 
 export function sortClassMembersInFile(filePath: string, config: SortConfig = {}): string {
-
     return sortFileInternal(filePath, config, config, undefined, config.dryRun);
 }
 

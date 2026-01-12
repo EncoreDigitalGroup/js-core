@@ -7,7 +7,6 @@ import * as ts from "typescript";
 
 
 export interface ReferenceInfo {
-
     identifiers: Set<string>;
     thisReferences: Set<string>;
     directCalls: Set<string>;
@@ -19,7 +18,6 @@ export interface ReferenceInfo {
 */
 
 export function extractReferences(node: ts.Node, scopeFilter?: (name: string) => boolean): ReferenceInfo {
-
     const identifiers = new Set<string>();
     const thisReferences = new Set<string>();
     const directCalls = new Set<string>();
@@ -29,11 +27,9 @@ export function extractReferences(node: ts.Node, scopeFilter?: (name: string) =>
 
         if (ts.isPropertyAccessExpression(currentNode)) {
             if (currentNode.expression.kind === ts.SyntaxKind.ThisKeyword) {
-
                 const propName = currentNode.name.text;
 
                 if (!scopeFilter || scopeFilter(propName)) {
-
                     thisReferences.add(propName);
                     identifiers.add(propName);
                 }
@@ -42,18 +38,15 @@ export function extractReferences(node: ts.Node, scopeFilter?: (name: string) =>
         // Handle direct identifier references
 
         if (ts.isIdentifier(currentNode)) {
-
             const name = currentNode.text;
 
             if (!scopeFilter || scopeFilter(name)) {
-
                 identifiers.add(name);
                 // Check if it's a call expression
 
                 const parent = currentNode.parent;
 
                 if (parent && ts.isCallExpression(parent) && parent.expression === currentNode) {
-
                     directCalls.add(name);
                 }
             }
@@ -63,11 +56,9 @@ export function extractReferences(node: ts.Node, scopeFilter?: (name: string) =>
         if (ts.isElementAccessExpression(currentNode)) {
             if (currentNode.expression.kind === ts.SyntaxKind.ThisKeyword) {
                 if (ts.isStringLiteral(currentNode.argumentExpression)) {
-
                     const propName = currentNode.argumentExpression.text;
 
                     if (!scopeFilter || scopeFilter(propName)) {
-
                         thisReferences.add(propName);
                         identifiers.add(propName);
                     }
@@ -91,7 +82,6 @@ export function extractClassMemberReferences(member: ts.ClassElement, availableM
     // Don't analyze constructor - it can reference anything
 
     if (ts.isConstructorDeclaration(member)) {
-
         return new Set();
     }
 
@@ -114,7 +104,6 @@ export function extractFileDeclarationReferences(declaration: ts.Statement, avai
 
         ts.isImportEqualsDeclaration(declaration) ||
         ts.isExportDeclaration(declaration)) {
-
         return new Set();
     }
 

@@ -14,7 +14,6 @@ import { ASTFormatter } from "./ASTFormatter";
 * Types of class members
 */
 export enum MemberType {
-
     StaticProperty = "static_property",
     InstanceProperty = "instance_property",
     Constructor = "constructor",
@@ -29,7 +28,6 @@ export enum MemberType {
 */
 
 export interface ClassMember {
-
     node: ts.ClassElement;
     type: MemberType;
     name: string;
@@ -73,31 +71,25 @@ export class ClassMemberFormatter extends ASTFormatter {
     * Determine the type of a class member
     */
     private getMemberType(member: ts.ClassElement): MemberType {
-
         if (ts.isConstructorDeclaration(member)) {
-
             return MemberType.Constructor;
         }
 
         const isStatic = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.StaticKeyword);
 
         if (ts.isPropertyDeclaration(member)) {
-
             return isStatic ? MemberType.StaticProperty : MemberType.InstanceProperty;
         }
 
         if (ts.isGetAccessorDeclaration(member)) {
-
             return MemberType.GetAccessor;
         }
 
         if (ts.isSetAccessorDeclaration(member)) {
-
             return MemberType.SetAccessor;
         }
 
         if (ts.isMethodDeclaration(member)) {
-
             return isStatic ? MemberType.StaticMethod : MemberType.InstanceMethod;
         }
 
@@ -108,7 +100,6 @@ export class ClassMemberFormatter extends ASTFormatter {
     * Analyze a class member to extract metadata
     */
     private analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile, index: number, allMemberNames: Set<string>): ClassMember {
-
         const type = this.getMemberType(member);
         const name = ASTAnalyzer.getClassMemberName(member);
         const isStatic = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.StaticKeyword);
@@ -151,7 +142,6 @@ export class ClassMemberFormatter extends ASTFormatter {
         // First, sort by member type according to the defined order
 
         if (aTypeIndex !== bTypeIndex) {
-
             return aTypeIndex - bTypeIndex;
         }
         // Within the same type, sort by visibility if configured
@@ -177,11 +167,9 @@ export class ClassMemberFormatter extends ASTFormatter {
     * Sort class members according to configuration
     */
     private sortClassMembers(members: ClassMember[]): ClassMember[] {
-
         const order = this.config.order || DEFAULT_CLASS_ORDER;
 
         return [...members].sort((a, b) => {
-
             const aTypeIndex = order.indexOf(a.type);
             const bTypeIndex = order.indexOf(b.type);
 
@@ -190,9 +178,7 @@ export class ClassMemberFormatter extends ASTFormatter {
     }
 
     async format(source: string, filePath: string): Promise<string> {
-
         if (!this.config.enabled) {
-
             return source;
         }
 

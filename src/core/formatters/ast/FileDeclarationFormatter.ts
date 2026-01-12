@@ -14,7 +14,6 @@ import { ASTFormatter } from "./ASTFormatter";
 * Types of top-level declarations in a file
 */
 export enum DeclarationType {
-
     Interface = "interface",
     TypeAlias = "type_alias",
     Enum = "enum",
@@ -32,7 +31,6 @@ export enum DeclarationType {
 */
 
 export interface FileDeclaration {
-
     node: ts.Statement;
     type: DeclarationType;
     name: string;
@@ -76,47 +74,38 @@ export class FileDeclarationFormatter extends ASTFormatter {
     * Determine the type of a top-level declaration
     */
     private getDeclarationType(node: ts.Statement): DeclarationType {
-
         const exported = ASTAnalyzer.isExported(node);
         const defaultExp = ASTAnalyzer.isDefaultExport(node);
 
         if (defaultExp) {
-
             return DeclarationType.DefaultExport;
         }
 
         if (ts.isInterfaceDeclaration(node)) {
-
             return DeclarationType.Interface;
         }
 
         if (ts.isTypeAliasDeclaration(node)) {
-
             return DeclarationType.TypeAlias;
         }
 
         if (ts.isEnumDeclaration(node)) {
-
             return DeclarationType.Enum;
         }
 
         if (ts.isFunctionDeclaration(node)) {
-
             return exported ? DeclarationType.ExportedFunction : DeclarationType.HelperFunction;
         }
 
         if (ts.isVariableStatement(node)) {
-
             return exported ? DeclarationType.ExportedVariable : DeclarationType.HelperVariable;
         }
 
         if (ts.isClassDeclaration(node)) {
-
             return exported ? DeclarationType.ExportedClass : DeclarationType.Other;
         }
 
         if (ts.isExportAssignment(node)) {
-
             return DeclarationType.DefaultExport;
         }
 
@@ -127,7 +116,6 @@ export class FileDeclarationFormatter extends ASTFormatter {
     * Analyze a top-level statement
     */
     private analyzeDeclaration(node: ts.Statement, sourceFile: ts.SourceFile, index: number, allDeclarationNames: Set<string>): FileDeclaration {
-
         const type = this.getDeclarationType(node);
         const name = ASTAnalyzer.getDeclarationName(node);
         const isExported = ASTAnalyzer.isExported(node);
@@ -154,17 +142,14 @@ export class FileDeclarationFormatter extends ASTFormatter {
     * Sort file declarations according to configuration
     */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
-
         const order = this.config.order || DEFAULT_FILE_ORDER;
 
         return [...declarations].sort((a, b) => {
-
             const aTypeIndex = order.indexOf(a.type);
             const bTypeIndex = order.indexOf(b.type);
             // Sort by type first
 
             if (aTypeIndex !== bTypeIndex) {
-
                 return aTypeIndex - bTypeIndex;
             }
             // Within the same type, sort alphabetically by name
@@ -173,9 +158,7 @@ export class FileDeclarationFormatter extends ASTFormatter {
     }
 
     async format(source: string, filePath: string): Promise<string> {
-
         if (!this.config.enabled) {
-
             return source;
         }
 
@@ -237,6 +220,5 @@ export class FileDeclarationFormatter extends ASTFormatter {
 
         return formatted;
     }
-
 }
 

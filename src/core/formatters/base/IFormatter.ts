@@ -8,11 +8,9 @@
 
 
 export interface IFormatter {
-
     /**
     * Unique identifier for this formatter
     */
-
     readonly name: string;
 
     /**

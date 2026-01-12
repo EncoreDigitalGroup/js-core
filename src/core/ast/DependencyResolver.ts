@@ -7,9 +7,7 @@
 * Represents a node in the dependency graph
 */
 
-
 export interface DependencyNode {
-
     name: string;
     dependencies: Set<string>;
     originalIndex: number;
@@ -21,7 +19,6 @@ export interface DependencyNode {
 */
 
 export interface DependencyGraph {
-
     nodes: Map<string, DependencyNode>;
     circularGroups: Set<string>[];
 }
@@ -32,14 +29,11 @@ export interface DependencyGraph {
 */
 
 export class DependencyResolver {
-
     /**
     * Find strongly connected components (circular dependency groups)
     * Using Tarjan's algorithm
     */
-
     private static findStronglyConnectedComponents(nodes: Map<string, DependencyNode>): Set<string>[] {
-
         const index = new Map<string, number>();
         const lowLink = new Map<string, number>();
         const onStack = new Set<string>();
@@ -49,7 +43,6 @@ export class DependencyResolver {
         let currentIndex = 0;
 
         function strongConnect(nodeName: string) {
-
             index.set(nodeName, currentIndex);
             lowLink.set(nodeName, currentIndex);
             currentIndex++;
@@ -59,25 +52,20 @@ export class DependencyResolver {
             const node = nodes.get(nodeName)!;
 
             for (const dep of node.dependencies) {
-
                 if (!index.has(dep)) {
-
                     strongConnect(dep);
                     lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, lowLink.get(dep)!));
                 } else if (onStack.has(dep)) {
-
                     lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, index.get(dep)!));
                 }
             }
 
             if (lowLink.get(nodeName) === index.get(nodeName)) {
-
                 const scc = new Set<string>();
 
                 let w: string;
 
                 do {
-
                     w = stack.pop()!;
                     onStack.delete(w);
                     scc.add(w);
@@ -85,16 +73,13 @@ export class DependencyResolver {
                 // Only add if it's a real cycle (size > 1) or self-referential
 
                 if (scc.size > 1 || node.dependencies.has(nodeName)) {
-
                     sccs.push(scc);
                 }
             }
         }
 
         for (const nodeName of nodes.keys()) {
-
             if (!index.has(nodeName)) {
-
                 strongConnect(nodeName);
             }
         }
@@ -106,12 +91,10 @@ export class DependencyResolver {
     * Builds a dependency graph from a list of items
     */
     static buildGraph<T>(items: T[], getName: (item: T) => string, getDependencies: (item: T) => Set<string>): DependencyGraph {
-
         const nodes = new Map<string, DependencyNode>();
         // Create nodes
 
         items.forEach((item, index) => {
-
             const name = getName(item);
 
             if (!name)
@@ -143,7 +126,6 @@ export class DependencyResolver {
     * Returns array of names in dependency-aware order
     */
     static topologicalSort(graph: DependencyGraph, sortedNames: string[]): string[] {
-
         const result: string[] = [];
         const visited = new Set<string>();
         const visiting = new Set<string>(); // For cycle detection
@@ -155,7 +137,6 @@ export class DependencyResolver {
         });
 
         function visit(name: string): boolean {
-
             if (visited.has(name))
 
                 return true;
@@ -178,12 +159,10 @@ export class DependencyResolver {
                 // Skip circular dependencies - we'll handle them specially
 
                 if (circularNodes.has(dep) && circularNodes.has(name)) {
-
                     continue;
                 }
 
                 if (!visit(dep)) {
-
                     return false;
                 }
             }
@@ -198,7 +177,6 @@ export class DependencyResolver {
         // This ensures that within valid orderings, we respect the type/visibility/name sort
 
         for (const name of sortedNames) {
-
             visit(name);
         }
 
@@ -227,7 +205,6 @@ export class DependencyResolver {
         const nameToItem = new Map<string, T>();
 
         items.forEach(item => {
-
             const name = getName(item);
 
             if (name)
@@ -239,19 +216,15 @@ export class DependencyResolver {
         const result: T[] = [];
 
         for (const name of dependencyOrder) {
-
             const item = nameToItem.get(name);
 
             if (item) {
-
                 result.push(item);
             }
         }
         // Add any items that weren't in the graph (shouldn't happen, but safety)
         items.forEach(item => {
-
             if (!result.includes(item)) {
-
                 result.push(item);
             }
         });

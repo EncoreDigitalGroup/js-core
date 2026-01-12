@@ -8,11 +8,9 @@
 
 
 export interface IStyleRule {
-
     /**
     * Name of the rule
     */
-
     readonly name: string;
 
     /**

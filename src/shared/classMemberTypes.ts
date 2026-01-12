@@ -7,7 +7,6 @@ import * as ts from "typescript";
 
 
 export enum MemberType {
-
     StaticProperty = "static_property",
     InstanceProperty = "instance_property",
     Constructor = "constructor",
@@ -18,7 +17,6 @@ export enum MemberType {
 }
 
 export interface ClassMember {
-
     node: ts.ClassElement;
     type: MemberType;
     name: string;
@@ -33,7 +31,6 @@ export interface ClassMember {
 }
 
 export interface SortConfig {
-
     order?: MemberType[];
     groupByVisibility?: boolean;
     dryRun?: boolean;
@@ -49,7 +46,6 @@ export function compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: numbe
     // First, sort by member type according to the defined order
 
     if (aTypeIndex !== bTypeIndex) {
-
         return aTypeIndex - bTypeIndex;
     }
     // Within the same type, sort by visibility if configured

@@ -11,31 +11,25 @@ import { reorderWithDependencies } from "../shared/dependencyAnalysis";
 
 
 function getMemberType(member: ts.ClassElement): MemberType {
-
     if (ts.isConstructorDeclaration(member)) {
-
         return MemberType.Constructor;
     }
 
     const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
 
     if (ts.isPropertyDeclaration(member)) {
-
         return isStatic ? MemberType.StaticProperty : MemberType.InstanceProperty;
     }
 
     if (ts.isGetAccessorDeclaration(member)) {
-
         return MemberType.GetAccessor;
     }
 
     if (ts.isSetAccessorDeclaration(member)) {
-
         return MemberType.SetAccessor;
     }
 
     if (ts.isMethodDeclaration(member)) {
-
         return isStatic ? MemberType.StaticMethod : MemberType.InstanceMethod;
     }
 
@@ -43,7 +37,6 @@ function getMemberType(member: ts.ClassElement): MemberType {
 }
 
 function analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile, index: number, allMemberNames: Set<string>): ClassMember {
-
     const type = getMemberType(member);
     const name = getMemberName(member);
     const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
@@ -78,11 +71,9 @@ function analyzeClassMember(member: ts.ClassElement, sourceFile: ts.SourceFile, 
 }
 
 export function sortClassMembers(members: ClassMember[], config: SortConfig = {}): ClassMember[] {
-
     const order = config.order || DEFAULT_CLASS_ORDER;
 
     return [...members].sort((a, b) => {
-
         const aTypeIndex = order.indexOf(a.type);
         const bTypeIndex = order.indexOf(b.type);
 
@@ -91,9 +82,7 @@ export function sortClassMembers(members: ClassMember[], config: SortConfig = {}
 }
 
 export function transformClass(classNode: ts.ClassDeclaration, sourceFile: ts.SourceFile, config: SortConfig): ts.ClassDeclaration {
-
     if (!classNode.members || classNode.members.length === 0) {
-
         return classNode;
     }
     // Collect all member names first
@@ -107,7 +96,6 @@ export function transformClass(classNode: ts.ClassDeclaration, sourceFile: ts.So
     // Apply dependency reordering if enabled
 
     if (config.respectDependencies !== false) {
-
         sortedMembers = reorderWithDependencies(sortedMembers, m => m.name);
     }
     // Create new class with sorted members

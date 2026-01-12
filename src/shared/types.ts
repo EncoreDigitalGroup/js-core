@@ -4,9 +4,7 @@
 * All Rights Reserved.
 */
 
-
 export interface SortOptions {
-
     customSortOrder?: string[];
     indentation?: number;
     filePath?: string;
@@ -14,7 +12,6 @@ export interface SortOptions {
 }
 
 export const DefaultSortOptions: SortOptions = {
-
     customSortOrder: [
         "name",
         "type",

@@ -11,7 +11,6 @@ import { IFormatter } from "./IFormatter";
 */
 
 export abstract class BaseFormatter implements IFormatter {
-
     abstract readonly name: string;
 
     /**
@@ -31,9 +30,7 @@ export abstract class BaseFormatter implements IFormatter {
     * @param changed - Whether the file was changed
     */
     protected logFormat(filePath: string, changed: boolean): void {
-
         if (changed) {
-
             console.log(`✨ [${this.name}] Formatted: ${filePath}`);
         }
     }
@@ -42,7 +39,6 @@ export abstract class BaseFormatter implements IFormatter {
     * Check if this formatter should process the given file based on extension
     */
     shouldFormat(filePath: string): boolean {
-
         const supportedExtensions = this.getSupportedExtensions();
 
         return supportedExtensions.some(ext => filePath.endsWith(ext));
@@ -53,7 +49,6 @@ export abstract class BaseFormatter implements IFormatter {
     */
     // @ts-ignore
     validateConfig(config: any): boolean {
-
         return true;
     }
 }

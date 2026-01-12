@@ -8,11 +8,9 @@
 
 
 export interface ISpacingRule {
-
     /**
     * Name of the spacing rule
     */
-
     readonly name: string;
 
     /**

@@ -11,20 +11,16 @@ import { CoreConfig, defaultConfig } from "../../config/types";
 */
 
 export class ConfigMerger {
-
     /**
     * Deep merge two configuration objects
     * @param target - Target configuration (defaults)
     * @param source - Source configuration (user overrides)
     * @returns Merged configuration
     */
-
     private static deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-
         const result = {...target};
 
         for (const key in source) {
-
             if (source[key] !== undefined) {
                 if (typeof source[key] === "object" &&
 
@@ -35,7 +31,6 @@ export class ConfigMerger {
                     !Array.isArray(result[key])) {
                     result[key] = this.deepMerge(result[key] as any, source[key] as any);
                 } else {
-
                     result[key] = source[key] as T[Extract<keyof T, string>];
                 }
             }
@@ -50,7 +45,6 @@ export class ConfigMerger {
     * @returns Complete merged configuration
     */
     static merge(userConfig: Partial<CoreConfig>): CoreConfig {
-
         return this.deepMerge(defaultConfig, userConfig);
     }
 
@@ -60,11 +54,9 @@ export class ConfigMerger {
     * @returns Merged configuration
     */
     static mergeMultiple(...configs: Partial<CoreConfig>[]): CoreConfig {
-
         let result = defaultConfig;
 
         for (const config of configs) {
-
             result = this.deepMerge(result, config);
         }
 
