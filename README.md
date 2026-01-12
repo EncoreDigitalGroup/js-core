@@ -1,118 +1,106 @@
-# @encoredigitalgroup/core
+# tsfmt
 
-Opinionated code formatting and configuration standards for Encore Digital Group NPM packages.
+**Opinionated TypeScript and JavaScript code formatter with AST-based transformations**
 
-## Overview
+An advanced code formatting tool that goes beyond traditional pretty-printing to enforce structural consistency across TypeScript and JavaScript codebases. Built by
+Encore Digital Group, tsfmt combines configurable formatting rules with intelligent AST analysis to automatically organize imports, sort class members, arrange file
+declarations, and apply consistent code style patterns.
 
-This package enforces company-wide standards for JavaScript and TypeScript projects. It automatically formats `package.json` and `tsconfig.json` files and applies
-consistent Prettier settings across all source files. This tool is designed to run as part of your build process and is not meant to be configured on a per-project basis.
+## What tsfmt Does
 
-## Key Principles
+tsfmt is a comprehensive code formatter that operates on multiple levels:
 
-- **Opinionated**: Provides non-configurable, company-wide formatting standards
-- **Build-time Tool**: Designed to run in prebuild scripts, not used in runtime code
-- **Zero Configuration**: No per-project configuration needed - install and use
-- **Automatic**: Ensures consistent formatting across all Encore Digital Group projects
+**AST-Based Sorting & Organization**
 
-## Installation
+- Intelligently sorts class members (properties, constructors, methods, accessors) with dependency awareness
+- Organizes file-level declarations (interfaces, types, enums, functions, classes) in logical order
+- Handles React component lifecycle methods with specialized sorting rules
+- Respects code dependencies to prevent breaking changes during reorganization
 
-Install as a development dependency:
+**Import Management**
 
-```bash
-npm install --save-dev @encoredigitalgroup/core
-```
+- Automatically organizes and groups imports (external, internal, relative)
+- Removes unused imports while preserving side-effect imports
+- Sorts import statements alphabetically within groups
+- Configurable import grouping and separation
 
-## Usage
+**Code Style Formatting**
 
-### Recommended: Prebuild Script
+- Enforces consistent quote styles, semicolon usage, and bracket spacing
+- Manages indentation (spaces vs tabs) and line width constraints
+- Controls trailing comma placement and arrow function parentheses
+- Applies spacing rules for blank lines between declarations and before returns
 
-Add to your `package.json` scripts:
+**Configuration File Formatting**
 
-```json
-{
-    "scripts": {
-        "prebuild": "node node_modules/@encoredigitalgroup/core/bin/cli.js",
-        "build": "tsc"
-    }
-}
-```
+- Sorts `package.json` fields according to company standards
+- Alphabetically sorts all keys in `tsconfig.json` files
+- Maintains consistent JSON indentation and structure
 
-This ensures your code is formatted before every build. The formatter will:
+## Core Formatting Opinions
 
-1. Sort your `package.json` fields in the standard company order
-2. Alphabetically sort all keys in `tsconfig.json`
-3. Format all `.js`, `.ts`, `.jsx`, and `.tsx` files with Prettier (unless you have a custom Prettier config)
+tsfmt enforces these opinionated defaults designed for enterprise-grade codebases:
 
-### Manual Execution
+**Code Style Standards**
 
-Run the formatter directly:
+- Double quotes for all string literals
+- Semicolons always required
+- No bracket spacing in object literals (`{key: value}` not `{ key: value }`)
+- 4-space indentation (no tabs)
+- 120-character line width limit
+- Trailing commas everywhere possible
+- Arrow function parentheses omitted when possible (`x => x` not `(x) => x`)
 
-```bash
-npx @encoredigitalgroup/core
-```
+**Structural Organization**
 
-Preview changes without modifying files:
+- Class members ordered by type: static properties, instance properties, constructor, accessors, static methods, instance methods
+- File declarations ordered by importance: interfaces, types, enums, helper functions, exported functions, classes, default exports
+- Import groups separated by origin: external packages, internal modules, relative imports
+- Blank lines enforced between different declaration types and before return statements
 
-```bash
-npx @encoredigitalgroup/core --dry
-```
+**Package & Config Files**
 
-Format a specific directory:
+- `package.json` fields ordered by company standard: name, type, author, version, description, publishConfig, keywords, homepage, engines, dependencies, devDependencies,
+  scripts, types, main, module, exports, files, repository, bugs
+- `tsconfig.json` keys sorted alphabetically at all nesting levels
+- Consistent 4-space JSON indentation throughout
 
-```bash
-npx @encoredigitalgroup/core /path/to/project
-```
+## Architecture
 
-## Company Standards
+tsfmt uses a sophisticated pipeline-based architecture:
 
-### Package.json Formatting
+**Formatter Pipeline**
 
-All `package.json` files are automatically sorted according to company standards in the following order:
+- Executes formatters in a specific order: CodeStyle → ImportOrganization → ASTTransformation → Spacing
+- Each formatter can be independently enabled/disabled
+- Pipeline maintains context and tracks changes across transformations
 
-1. `name`
-2. `type`
-3. `author`
-4. `version`
-5. `description`
-6. `publishConfig`
-7. `keywords`
-8. `homepage`
-9. `engines`
-10. `dependencies`
-11. `devDependencies`
-12. `scripts`
-13. `types`
-14. `main`
-15. `module`
-16. `exports`
-17. `files`
-18. `repository`
-19. `bugs`
+**AST Analysis Engine**
 
-The `exports` field receives special handling to ensure consistent key ordering within the field itself.
+- Built on TypeScript compiler API for accurate parsing
+- Dependency resolution prevents breaking member/declaration relationships
+- Handles complex scenarios like method dependencies and forward references
 
-### TSConfig.json Formatting
+**Configuration System**
 
-All keys in `tsconfig.json` files are sorted alphabetically, including nested objects. This ensures consistent configuration files across all projects.
+- Zero-configuration by default with sensible opinions
+- Optional `core.config.ts` file for project-specific customization
+- Deep merging of user configuration with defaults
 
-### Prettier Configuration
+## Key Features
 
-When no Prettier configuration exists in your project, the following company-standard settings are applied:
+- **Dependency-Aware Sorting**: Analyzes code relationships to prevent breaking changes during reorganization
+- **React-Specific Rules**: Specialized handling for React component lifecycle methods and patterns
+- **Configurable Pipeline**: Modular formatter system allows granular control over formatting operations
+- **Incremental Processing**: Only modifies files that need changes, preserving unchanged content
+- **TypeScript-Native**: Built on TypeScript compiler API for maximum compatibility and accuracy
+- **Enterprise-Ready**: Designed for large codebases with consistent, non-negotiable formatting standards
 
-```javascript
-const config = {
-    plugins: ["@trivago/prettier-plugin-sort-imports"],
-    bracketSpacing: false,
-    trailingComma: "all",
-    arrowParens: "avoid",
-    tabWidth: 4,
-    editorconfig: true,
-    useTabs: false,
-    printWidth: 120,
-    importOrderSeparation: true,
-    singleQuote: false,
-    semi: true
-}
-```
+## Philosophy
 
-If your project already has a Prettier configuration file, this package will respect it and skip automatic Prettier formatting.
+tsfmt is built on the principle that code formatting should not just make code look consistent, but should also impose logical structure that improves maintainability. By
+combining traditional pretty-printing with intelligent AST transformations, tsfmt ensures that codebases follow not just visual consistency, but also structural patterns
+that make code easier to navigate, understand, and modify.
+
+The tool is intentionally opinionated to eliminate formatting debates and establish company-wide standards that prioritize readability, consistency, and maintainability
+over individual preferences.

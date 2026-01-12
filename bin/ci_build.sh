@@ -14,7 +14,7 @@ cd "$GITHUB_WORKSPACE" || {
 }
 
 # Run build and capture exit code
-npm run build
+npm run format
 BUILD_EXIT_CODE=$?
 
 # If build failed, exit with the same code
@@ -42,7 +42,7 @@ else
   git add .
 
   # Commit changes
-  commit_message="Build Assets Using Vite"
+  commit_message="Apply Formatting"
   git commit -m "$commit_message"
 
   # Push changes to origin

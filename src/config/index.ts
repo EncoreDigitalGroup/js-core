@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2025. Encore Digital Group.
- * All Rights Reserved.
- */
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
+
 export {
     type CoreConfig,
     type PrettierConfig,
@@ -11,6 +12,11 @@ export {
     type ReactComponentConfig,
     type FileDeclarationConfig,
     type SortersConfig,
+    type CodeStyleConfig,
+    type ImportConfig,
+    type SortingConfig,
+    type SpacingConfig,
+
     defaultConfig,
     mergeConfig,
 } from "./types";
