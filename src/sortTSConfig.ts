@@ -36,7 +36,6 @@ export function sortTsConfigFile(filePath?: string, options: SortOptions = {}): 
 
         if (!options.dryRun) {
             fs.writeFileSync(tsConfigPath, JSON.stringify(sortedTsConfig, null, indentation) + "\n");
-            console.log(`✨ ${tsConfigPath} has been sorted alphabetically!`);
         }
 
         return sortedTsConfig;
