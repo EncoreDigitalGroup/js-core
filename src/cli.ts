@@ -3,7 +3,7 @@ import * as glob from "glob";
 import * as path from "path";
 import type { CoreConfig } from "./config";
 import { hasConfigFile, loadConfig } from "./config";
-import { FormatterPipeline } from "./core/pipeline/FormatterPipeline";
+import { FormatterPipeline } from "./core";
 import { sortPackageFile } from "./sortPackage";
 import { sortTsConfigFile } from "./sortTSConfig";
 

@@ -236,13 +236,8 @@ private updateMainIndex(indexPath: string, modules: string[]): void {
         try {
             const exports = modules.map(mod => `export * from "./${mod}";`).join("\n");
 
-            const content = `/*
-* Copyright (c) ${new Date().getFullYear()}. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-// Auto-generated exports - do not edit manually
-// Run build to regenerate
+            const content = `// Auto-generated exports - do not edit manually
+// Run tsfmt to regenerate
 
 ${exports}
 `;
