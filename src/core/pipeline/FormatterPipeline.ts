@@ -271,14 +271,14 @@ export class FormatterPipeline {
     private initializeRules(): void {
         // Index Generation Rule
 
-        if (this.config.indexGeneration) {
+        if (this.config.indexGeneration?.enabled) {
 
             this.addRule(FormatterOrder.IndexGeneration, new IndexGenerationRule(this.config.indexGeneration));
         }
 
         // Code Style Rules
 
-        if (this.config.codeStyle) {
+        if (this.config.codeStyle?.enabled) {
 
             this.addRule(FormatterOrder.CodeStyle, new QuoteStyleRule(this.config.codeStyle));
             this.addRule(FormatterOrder.CodeStyle, new SemicolonRule(this.config.codeStyle));
@@ -289,20 +289,20 @@ export class FormatterPipeline {
 
         // Import Organization Rule
 
-        if (this.config.imports) {
+        if (this.config.imports?.enabled) {
 
             this.addRule(FormatterOrder.ImportOrganization, new ImportOrganizationRule(this.config.imports));
         }
 
         // AST Transformation Rules
 
-        if (this.config.sorting) {
-            if (this.config.sorting.classMembers) {
+        if (this.config.sorting?.enabled) {
+            if (this.config.sorting.classMembers?.enabled) {
 
                 this.addRule(FormatterOrder.ASTTransformation, new ClassMemberSortingRule(this.config.sorting.classMembers));
             }
 
-            if (this.config.sorting.fileDeclarations) {
+            if (this.config.sorting.fileDeclarations?.enabled) {
 
                 this.addRule(FormatterOrder.ASTTransformation, new FileDeclarationSortingRule(this.config.sorting.fileDeclarations));
             }
@@ -310,7 +310,7 @@ export class FormatterPipeline {
 
         // Spacing Rules
 
-        if (this.config.spacing) {
+        if (this.config.spacing?.enabled) {
 
             this.addRule(FormatterOrder.Spacing, new BlankLineBetweenDeclarationsRule(this.config.spacing));
             this.addRule(FormatterOrder.Spacing, new BlankLineBetweenStatementTypesRule(this.config.spacing));

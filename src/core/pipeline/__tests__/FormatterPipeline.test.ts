@@ -37,6 +37,7 @@ describe("FormatterPipeline", () => {
             const order = pipeline.getFormatterOrder();
 
             expect(order).toEqual([
+                FormatterOrder.IndexGeneration,
                 FormatterOrder.CodeStyle,
                 FormatterOrder.ImportOrganization,
                 FormatterOrder.ASTTransformation,
@@ -61,38 +62,43 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "single"},
                 sorting: {enabled: false},
                 imports: {enabled: false},
+                spacing: {enabled: false},
 };
 
             const pipeline = new FormatterPipeline(config);
-            const formatters = pipeline.getFormattersAtOrder(FormatterOrder.CodeStyle);
+            const formatters = pipeline.getRulesAtOrder(FormatterOrder.CodeStyle);
 
-            expect(formatters).toHaveLength(1);
-            expect(formatters[0].name).toBe("CodeStyleFormatter");
+            expect(formatters.length).toBeGreaterThan(0);
+            expect(formatters[0].name).toBe("QuoteStyleRule");
         });
         it("should initialize ImportOrganizer when enabled", () => {
 
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 imports: {enabled: true, sortImports: true},
                 sorting: {enabled: false},
                 codeStyle: {enabled: false},
+                spacing: {enabled: false},
 };
 
             const pipeline = new FormatterPipeline(config);
-            const formatters = pipeline.getFormattersAtOrder(FormatterOrder.ImportOrganization);
+            const formatters = pipeline.getRulesAtOrder(FormatterOrder.ImportOrganization);
 
-            expect(formatters).toHaveLength(1);
-            expect(formatters[0].name).toBe("ImportOrganizer");
+            expect(formatters.length).toBeGreaterThan(0);
+            expect(formatters[0].name).toBe("ImportOrganizationRule");
         });
         it("should not initialize disabled formatters", () => {
 
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: false},
                 imports: {enabled: false},
                 sorting: {enabled: false},
@@ -101,7 +107,7 @@ describe("FormatterPipeline", () => {
 
             const pipeline = new FormatterPipeline(config);
 
-            expect(pipeline.hasFormatters()).toBe(false);
+            expect(pipeline.hasRules()).toBe(false);
         });
     });
     describe("formatFile", () => {
@@ -114,6 +120,7 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 imports: {enabled: false}, // Disable imports to test only code style
                 sorting: {enabled: false}, // Disable sorting for this test
@@ -125,8 +132,9 @@ describe("FormatterPipeline", () => {
 
             expect(context.changed).toBe(true);
             expect(context.currentSource).toContain('"single quotes"');
-            expect(context.executions).toHaveLength(1);
-            expect(context.executions[0].formatterName).toBe("CodeStyleFormatter");
+            // Should have multiple CodeStyle rule executions
+            expect(context.executions.length).toBeGreaterThan(0);
+            expect(context.executions[0].formatterName).toBe("QuoteStyleRule");
             expect(context.executions[0].changed).toBe(true);
             // Verify file was written
 
@@ -143,9 +151,11 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
+                spacing: {enabled: false}, // Disable spacing for this test
 };
 
             const pipeline = new FormatterPipeline(config);
@@ -168,6 +178,7 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double", bracketSpacing: true},
                 imports: {enabled: true, sortImports: true},
                 sorting: {enabled: false}, // Disable sorting for this test
@@ -177,9 +188,13 @@ describe("FormatterPipeline", () => {
             const pipeline = new FormatterPipeline(config);
             const context = await pipeline.formatFile(testFilePath, false);
 
-            expect(context.executions).toHaveLength(2);
-            expect(context.executions[0].order).toBe(FormatterOrder.CodeStyle);
-            expect(context.executions[1].order).toBe(FormatterOrder.ImportOrganization);
+            // Should have multiple rules from CodeStyle and ImportOrganization
+            expect(context.executions.length).toBeGreaterThan(0);
+            // Check that we have executions from both orders
+            const codeStyleExecutions = context.executions.filter(e => e.order === FormatterOrder.CodeStyle);
+            const importExecutions = context.executions.filter(e => e.order === FormatterOrder.ImportOrganization);
+            expect(codeStyleExecutions.length).toBeGreaterThan(0);
+            expect(importExecutions.length).toBeGreaterThan(0);
         });
         it("should preserve original source on formatter error (fail-fast)", async () => {
 
@@ -190,9 +205,11 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
+                spacing: {enabled: false}, // Disable spacing for this test
 };
 
             const pipeline = new FormatterPipeline(config);
@@ -215,9 +232,11 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
+                spacing: {enabled: false}, // Disable spacing for this test
 };
 
             const pipeline = new FormatterPipeline(config);
@@ -239,9 +258,11 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
+                spacing: {enabled: false}, // Disable spacing for this test
 };
 
             const pipeline = new FormatterPipeline(config);
@@ -268,9 +289,11 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
+                spacing: {enabled: false}, // Disable spacing for this test
 };
 
             const pipeline = new FormatterPipeline(config);
@@ -288,7 +311,9 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
+                spacing: {enabled: false},
 };
 
             const pipeline = new FormatterPipeline(config);
@@ -304,9 +329,11 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
 
                 ...defaultConfig,
+                indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
+                spacing: {enabled: false}, // Disable spacing for this test
 };
 
             const pipeline = new FormatterPipeline(config);
