@@ -35,7 +35,6 @@ export function sortPackageFile(filePath?: string, options: SortOptions = {}): R
 
         if (!options.dryRun) {
             fs.writeFileSync(packagePath, JSON.stringify(sortedPackageJson, null, indentation) + "\n");
-            console.log(`✨ ${packagePath} has been sorted successfully!`);
         }
 
         return sortedPackageJson;

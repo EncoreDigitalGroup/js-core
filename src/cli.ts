@@ -44,7 +44,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
                 formattedCount++;
 
                 if (!dryRun) {
-                    console.log(`✨ Formatted: ${path.relative(targetDir, file)}`);
+                    console.log(`📊  Formatted: ${path.relative(targetDir, file)}`);
                 }
             }
         } catch (error) {
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
             const packagePath = path.join(targetDir, "package.json");
 
             if (fs.existsSync(packagePath)) {
-                console.log(`Processing ${packagePath}...`);
+                console.log(`📦  Processing ${packagePath}...`);
                 sortPackageFile(packagePath, {
                     customSortOrder: config.packageJson.customSortOrder,
                     indentation: config.packageJson.indentation,
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
             const tsconfigPath = path.join(targetDir, "tsconfig.json");
 
             if (fs.existsSync(tsconfigPath)) {
-                console.log(`Processing ${tsconfigPath}...`);
+                console.log(`🔧  Processing ${tsconfigPath}...`);
                 sortTsConfigFile(tsconfigPath, {
                     indentation: config.tsConfig.indentation,
                     dryRun,
