@@ -27,7 +27,8 @@
     "scripts": {
         "build": "tsc",
         "build:format": "npm run build && npm run format",
-        "format": "node bin/cli.js"
+        "format": "node bin/cli.js",
+        "test": "jest"
     },
     "types": "dist/index.d.ts",
     "main": "dist/index.js",

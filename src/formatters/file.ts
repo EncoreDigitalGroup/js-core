@@ -1,16 +1,28 @@
 /*
- * Copyright (c) 2025. Encore Digital Group.
- * All Rights Reserved.
- */
-import {extractFileDeclarationReferences} from "../shared/astTraversal";
-import {reorderWithDependencies} from "../shared/dependencyAnalysis";
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
+/*
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
+/*
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
 import * as ts from "typescript";
-
+/*
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
+import { extractFileDeclarationReferences } from "../shared/astTraversal";
+import { reorderWithDependencies } from "../shared/dependencyAnalysis";
 /**
- * Types of top-level declarations in a file
- */
+* Types of top-level declarations in a file
+*/
 
 export enum DeclarationType {
+
     Interface = "interface",
     TypeAlias = "type_alias",
     Enum = "enum",
@@ -20,36 +32,51 @@ export enum DeclarationType {
     ExportedVariable = "exported_variable",
     ExportedClass = "exported_class",
     DefaultExport = "default_export",
-    Other = "other",
+    Other = "other"
 }
 
 /**
- * Checks if a statement has an export modifier
- */
+* Checks if a statement has an export modifier
+*/
+
 function isExported(node: ts.Statement): boolean {
+
     if (ts.isExportAssignment(node)) {
+
         return true;
     }
+
     const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
-    if (!modifiers) return false;
+
+    if (!modifiers)
+
+        return false;
 
     return modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword);
 }
 
 /**
- * Checks if a statement is a default export
- */
+* Checks if a statement is a default export
+*/
+
 function isDefaultExport(node: ts.Statement): boolean {
+
     if (ts.isExportAssignment(node)) {
+
         return true;
     }
+
     const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
-    if (!modifiers) return false;
+
+    if (!modifiers)
+
+        return false;
 
     return modifiers.some(m => m.kind === ts.SyntaxKind.DefaultKeyword);
 }
 
 export interface FileDeclaration {
+
     node: ts.Statement;
     type: DeclarationType;
     name: string;
@@ -61,38 +88,57 @@ export interface FileDeclaration {
 }
 
 export interface FileSortConfig {
+
     order?: DeclarationType[];
     respectDependencies?: boolean;
 }
 
 /**
- * Determines the type of a top-level declaration
- */
+* Determines the type of a top-level declaration
+*/
+
 function getDeclarationType(node: ts.Statement): DeclarationType {
+
     const exported = isExported(node);
     const defaultExp = isDefaultExport(node);
+
     if (defaultExp) {
+
         return DeclarationType.DefaultExport;
     }
+
     if (ts.isInterfaceDeclaration(node)) {
+
         return DeclarationType.Interface;
     }
+
     if (ts.isTypeAliasDeclaration(node)) {
+
         return DeclarationType.TypeAlias;
     }
+
     if (ts.isEnumDeclaration(node)) {
+
         return DeclarationType.Enum;
     }
+
     if (ts.isFunctionDeclaration(node)) {
+
         return exported ? DeclarationType.ExportedFunction : DeclarationType.HelperFunction;
     }
+
     if (ts.isVariableStatement(node)) {
+
         return exported ? DeclarationType.ExportedVariable : DeclarationType.HelperVariable;
     }
+
     if (ts.isClassDeclaration(node)) {
+
         return exported ? DeclarationType.ExportedClass : DeclarationType.Other;
     }
+
     if (ts.isExportAssignment(node)) {
+
         return DeclarationType.DefaultExport;
     }
 
@@ -100,31 +146,48 @@ function getDeclarationType(node: ts.Statement): DeclarationType {
 }
 
 /**
- * Gets the name of a declaration
- */
+* Gets the name of a declaration
+*/
+
 function getDeclarationName(node: ts.Statement): string {
+
     if (ts.isFunctionDeclaration(node) && node.name) {
+
         return node.name.text;
     }
+
     if (ts.isVariableStatement(node)) {
+
         const declaration = node.declarationList.declarations[0];
+
         if (declaration && ts.isIdentifier(declaration.name)) {
+
             return declaration.name.text;
         }
     }
+
     if (ts.isInterfaceDeclaration(node)) {
+
         return node.name.text;
     }
+
     if (ts.isTypeAliasDeclaration(node)) {
+
         return node.name.text;
     }
+
     if (ts.isEnumDeclaration(node)) {
+
         return node.name.text;
     }
+
     if (ts.isClassDeclaration(node) && node.name) {
+
         return node.name.text;
     }
+
     if (ts.isExportAssignment(node)) {
+
         return "default";
     }
 
@@ -132,14 +195,11 @@ function getDeclarationName(node: ts.Statement): string {
 }
 
 /**
- * Analyzes a top-level statement
- */
-function analyzeDeclaration(
-    node: ts.Statement,
-    sourceFile: ts.SourceFile,
-    index: number,
-    allDeclarationNames: Set<string>,
-): FileDeclaration {
+* Analyzes a top-level statement
+*/
+
+function analyzeDeclaration(node: ts.Statement, sourceFile: ts.SourceFile, index: number, allDeclarationNames: Set<string>): FileDeclaration {
+
     const type = getDeclarationType(node);
     const name = getDeclarationName(node);
     const exported = isExported(node);
@@ -162,9 +222,11 @@ function analyzeDeclaration(
 }
 
 /**
- * Default order for top-level declarations
- */
+* Default order for top-level declarations
+*/
+
 export const DEFAULT_FILE_ORDER: DeclarationType[] = [
+
     DeclarationType.Interface,
     DeclarationType.TypeAlias,
     DeclarationType.Enum,
@@ -178,16 +240,21 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 ];
 
 /**
- * Sorts top-level declarations according to the specified order
- */
+* Sorts top-level declarations according to the specified order
+*/
+
 export function sortFileDeclarations(declarations: FileDeclaration[], config: FileSortConfig = {}): FileDeclaration[] {
+
     const order = config.order || DEFAULT_FILE_ORDER;
 
     return [...declarations].sort((a, b) => {
+
         const aTypeIndex = order.indexOf(a.type);
         const bTypeIndex = order.indexOf(b.type);
         // Sort by type first
+
         if (aTypeIndex !== bTypeIndex) {
+
             return aTypeIndex - bTypeIndex;
         }
         // Within the same type, sort alphabetically by name
@@ -196,32 +263,50 @@ export function sortFileDeclarations(declarations: FileDeclaration[], config: Fi
 }
 
 /**
- * Transforms a source file by sorting its top-level declarations
- */
+* Transforms a source file by sorting its top-level declarations
+*/
+
 export function transformFile(sourceFile: ts.SourceFile, config: FileSortConfig = {}): ts.SourceFile {
     // Separate import statements from other declarations
+
     const imports: ts.Statement[] = [];
     const otherStatements: ts.Statement[] = [];
+
     sourceFile.statements.forEach(statement => {
+
         if (ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement)) {
+
             imports.push(statement);
-        } else {
+        }
+
+        else {
+
             otherStatements.push(statement);
         }
     });
     // Collect all declaration names first
+
     const allDeclarationNames = new Set<string>(otherStatements.map(stmt => getDeclarationName(stmt)).filter(n => n));
     // Analyze and sort non-import declarations
-    const analyzedDeclarations = otherStatements.map((stmt, index) =>
-        analyzeDeclaration(stmt, sourceFile, index, allDeclarationNames),
-    );
+    const analyzedDeclarations = otherStatements.map((stmt, index) => analyzeDeclaration(stmt, sourceFile, index, allDeclarationNames));
+
     let sortedDeclarations = sortFileDeclarations(analyzedDeclarations, config);
     // Apply dependency reordering if enabled
+
     if (config.respectDependencies !== false) {
+
         sortedDeclarations = reorderWithDependencies(sortedDeclarations, d => d.name);
     }
     // Combine imports with sorted declarations
+
     const sortedStatements = [...imports, ...sortedDeclarations.map(d => d.node)];
     // Create new source file with sorted statements
+
     return ts.factory.updateSourceFile(sourceFile, sortedStatements);
 }
+;
+;
+;
+;
+;
+;

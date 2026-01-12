@@ -1,16 +1,28 @@
 /*
- * Copyright (c) 2025. Encore Digital Group.
- * All Rights Reserved.
- */
-import {extractClassMemberReferences} from "../shared/astTraversal";
-import {ClassMember, compareMembers, MemberType, SortConfig} from "../shared/classMemberTypes";
-import {getMemberName, hasModifier} from "../shared/classMemberUtils";
-import {reorderWithDependencies} from "../shared/dependencyAnalysis";
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
+/*
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
+/*
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
 import * as ts from "typescript";
-
+/*
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
+import { extractClassMemberReferences } from "../shared/astTraversal";
+import { ClassMember, compareMembers, MemberType, SortConfig } from "../shared/classMemberTypes";
+import { getMemberName, hasModifier } from "../shared/classMemberUtils";
+import { reorderWithDependencies } from "../shared/dependencyAnalysis";
 // React-specific member types
 
 export enum ReactMemberType {
+
     StaticProperty = "static_property",
     State = "state",
     InstanceProperty = "instance_property",
@@ -29,64 +41,108 @@ export enum ReactMemberType {
     StaticMethod = "static_method",
     InstanceMethod = "instance_method",
     GetAccessor = "get_accessor",
-    SetAccessor = "set_accessor",
+    SetAccessor = "set_accessor"
 }
 
 function isEventHandler(name: string): boolean {
+
     return /^(handle|on)[A-Z]/.test(name);
 }
 
 function isRenderHelper(name: string): boolean {
+
     return /^render[A-Z]/.test(name) && name !== "render";
 }
 
 function getReactMemberType(member: ts.ClassElement): ReactMemberType {
+
     if (ts.isConstructorDeclaration(member)) {
+
         return ReactMemberType.Constructor;
     }
+
     const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
     const name = getMemberName(member);
+
     if (ts.isPropertyDeclaration(member)) {
         if (isStatic) {
+
             return ReactMemberType.StaticProperty;
         }
+
         if (name === "state") {
+
             return ReactMemberType.State;
         }
 
         return ReactMemberType.InstanceProperty;
     }
+
     if (ts.isGetAccessorDeclaration(member)) {
+
         return ReactMemberType.GetAccessor;
     }
+
     if (ts.isSetAccessorDeclaration(member)) {
+
         return ReactMemberType.SetAccessor;
     }
+
     if (ts.isMethodDeclaration(member)) {
         if (isStatic) {
             // Check for static lifecycle methods
             if (name === "getDerivedStateFromProps") {
+
                 return ReactMemberType.GetDerivedStateFromProps;
             }
+
             if (name === "getDerivedStateFromError") {
+
                 return ReactMemberType.GetDerivedStateFromError;
             }
 
             return ReactMemberType.StaticMethod;
         }
         // Check for lifecycle methods
-        if (name === "componentDidMount") return ReactMemberType.ComponentDidMount;
-        if (name === "shouldComponentUpdate") return ReactMemberType.ShouldComponentUpdate;
-        if (name === "getSnapshotBeforeUpdate") return ReactMemberType.GetSnapshotBeforeUpdate;
-        if (name === "componentDidUpdate") return ReactMemberType.ComponentDidUpdate;
-        if (name === "componentWillUnmount") return ReactMemberType.ComponentWillUnmount;
-        if (name === "componentDidCatch") return ReactMemberType.ComponentDidCatch;
+
+        if (name === "componentDidMount")
+
+            return ReactMemberType.ComponentDidMount;
+
+        if (name === "shouldComponentUpdate")
+
+            return ReactMemberType.ShouldComponentUpdate;
+
+        if (name === "getSnapshotBeforeUpdate")
+
+            return ReactMemberType.GetSnapshotBeforeUpdate;
+
+        if (name === "componentDidUpdate")
+
+            return ReactMemberType.ComponentDidUpdate;
+
+        if (name === "componentWillUnmount")
+
+            return ReactMemberType.ComponentWillUnmount;
+
+        if (name === "componentDidCatch")
+
+            return ReactMemberType.ComponentDidCatch;
         // Check for render
-        if (name === "render") return ReactMemberType.Render;
+
+        if (name === "render")
+
+            return ReactMemberType.Render;
         // Check for event handlers
-        if (isEventHandler(name)) return ReactMemberType.EventHandler;
+
+        if (isEventHandler(name))
+
+            return ReactMemberType.EventHandler;
         // Check for render helpers
-        if (isRenderHelper(name)) return ReactMemberType.RenderHelper;
+
+        if (isRenderHelper(name))
+
+            return ReactMemberType.RenderHelper;
 
         return ReactMemberType.InstanceMethod;
     }
@@ -94,18 +150,15 @@ function getReactMemberType(member: ts.ClassElement): ReactMemberType {
     return ReactMemberType.InstanceMethod;
 }
 
-function analyzeReactMember(
-    member: ts.ClassElement,
-    sourceFile: ts.SourceFile,
-    index: number,
-    allMemberNames: Set<string>,
-): ClassMember {
+function analyzeReactMember(member: ts.ClassElement, sourceFile: ts.SourceFile, index: number, allMemberNames: Set<string>): ClassMember {
+
     const type = getReactMemberType(member) as unknown as MemberType;
     const name = getMemberName(member);
     const isStatic = hasModifier(member, ts.SyntaxKind.StaticKeyword);
-    const isPublic =
-        hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
+    const isPublic = hasModifier(member, ts.SyntaxKind.PublicKeyword) ||
+
         (!hasModifier(member, ts.SyntaxKind.PrivateKeyword) && !hasModifier(member, ts.SyntaxKind.ProtectedKeyword));
+
     const isProtected = hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
     const isPrivate = hasModifier(member, ts.SyntaxKind.PrivateKeyword);
     // Check for decorators using ts.getDecorators
@@ -133,19 +186,26 @@ function analyzeReactMember(
 }
 
 export function isReactComponent(classNode: ts.ClassDeclaration): boolean {
+
     if (!classNode.heritageClauses) {
+
         return false;
     }
+
     for (const clause of classNode.heritageClauses) {
+
         if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
+
             for (const type of clause.types) {
+
                 const typeName = type.expression.getText();
-                if (
-                    typeName === "Component" ||
+
+                if (typeName === "Component" ||
+
                     typeName === "PureComponent" ||
                     typeName === "React.Component" ||
-                    typeName === "React.PureComponent"
-                ) {
+                    typeName === "React.PureComponent") {
+
                     return true;
                 }
             }
@@ -156,6 +216,7 @@ export function isReactComponent(classNode: ts.ClassDeclaration): boolean {
 }
 
 export const DEFAULT_REACT_ORDER: ReactMemberType[] = [
+
     ReactMemberType.StaticProperty,
     ReactMemberType.State,
     ReactMemberType.InstanceProperty,
@@ -178,9 +239,11 @@ export const DEFAULT_REACT_ORDER: ReactMemberType[] = [
 ];
 
 export function sortReactMembers(members: ClassMember[], config: SortConfig = {}): ClassMember[] {
+
     const order = (config.order as unknown as ReactMemberType[]) || DEFAULT_REACT_ORDER;
 
     return [...members].sort((a, b) => {
+
         const aTypeIndex = order.indexOf(a.type as unknown as ReactMemberType);
         const bTypeIndex = order.indexOf(b.type as unknown as ReactMemberType);
 
@@ -188,35 +251,26 @@ export function sortReactMembers(members: ClassMember[], config: SortConfig = {}
     });
 }
 
-export function transformReactComponent(
-    classNode: ts.ClassDeclaration,
-    sourceFile: ts.SourceFile,
-    config: SortConfig,
-): ts.ClassDeclaration {
+export function transformReactComponent(classNode: ts.ClassDeclaration, sourceFile: ts.SourceFile, config: SortConfig): ts.ClassDeclaration {
+
     if (!classNode.members || classNode.members.length === 0) {
+
         return classNode;
     }
     // Collect all member names first
-    const allMemberNames = new Set<string>(
-        classNode.members.map(m => getMemberName(m)).filter(n => n && n !== "constructor"),
-    );
+
+    const allMemberNames = new Set<string>(classNode.members.map(m => getMemberName(m)).filter(n => n && n !== "constructor"));
     // Analyze all members
-    const analyzedMembers = classNode.members.map((member, index) =>
-        analyzeReactMember(member, sourceFile, index, allMemberNames),
-    );
+    const analyzedMembers = classNode.members.map((member, index) => analyzeReactMember(member, sourceFile, index, allMemberNames));
     // Sort members
+
     let sortedMembers = sortReactMembers(analyzedMembers, config);
     // Apply dependency reordering if enabled
+
     if (config.respectDependencies !== false) {
+
         sortedMembers = reorderWithDependencies(sortedMembers, m => m.name);
     }
     // Create new class with sorted members
-    return ts.factory.updateClassDeclaration(
-        classNode,
-        ts.getModifiers(classNode),
-        classNode.name,
-        classNode.typeParameters,
-        classNode.heritageClauses,
-        sortedMembers.map(m => m.node),
-    );
+    return ts.factory.updateClassDeclaration(classNode, ts.getModifiers(classNode), classNode.name, classNode.typeParameters, classNode.heritageClauses, sortedMembers.map(m => m.node));
 }

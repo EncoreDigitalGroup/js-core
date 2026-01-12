@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2025. Encore Digital Group.
- * All Rights Reserved.
- */
+* Copyright (c) 2025. Encore Digital Group.
+* All Rights Reserved.
+*/
 export interface SortOptions {
+
     customSortOrder?: string[];
     indentation?: number;
     filePath?: string;
@@ -10,6 +11,7 @@ export interface SortOptions {
 }
 
 export const DefaultSortOptions: SortOptions = {
+
     customSortOrder: [
         "name",
         "type",
@@ -34,3 +36,6 @@ export const DefaultSortOptions: SortOptions = {
     indentation: 4,
     dryRun: false,
 };
+;
+;
+;

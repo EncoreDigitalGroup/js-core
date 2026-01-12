@@ -1,18 +1,18 @@
-import {type CoreConfig, MemberType, ReactMemberType, DeclarationType} from "@encoredigitalgroup/core";
-
+import { type CoreConfig, MemberType, ReactMemberType, DeclarationType } from "@encoredigitalgroup/core";
 /**
- * Example configuration file for @encoredigitalgroup/core
- *
- * To use this configuration:
- * 1. Copy this file to your project root as `core.config.ts`
- * 2. Customize the settings to match your project's needs
- * 3. The package will automatically detect and use your configuration
- *
- * All configuration options are optional. If omitted, the default behavior will be used.
- */
+* Example configuration file for @encoredigitalgroup/core
+*
+* To use this configuration:
+* 1. Copy this file to your project root as `core.config.ts`
+* 2. Customize the settings to match your project's needs
+* 3. The package will automatically detect and use your configuration
+*
+* All configuration options are optional. If omitted, the default behavior will be used.
+*/
 
 const config: CoreConfig = {
     // Prettier configuration
+
     prettier: {
         // Whether to run Prettier (default: true)
         enabled: true,
