@@ -8,24 +8,10 @@ import { DEFAULT_REACT_ORDER, ReactMemberType } from "../formatters/react";
 import { DEFAULT_CLASS_ORDER, MemberType } from "../shared/classMemberTypes";
 import { DefaultSortOptions } from "../shared/types";
 
-/**
-* Configuration for class member sorting
-*/
-
 
 /**
 * Configuration for class member sorting
 */
-
-
-/**
-* Configuration for class member sorting
-*/
-
-/**
-* Configuration for class member sorting
-*/
-
 export interface ClassMemberConfig {
 
     /**
@@ -570,26 +556,3 @@ export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
 
     return deepMerge(defaultConfig, userConfig);
 }
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-
-;
-

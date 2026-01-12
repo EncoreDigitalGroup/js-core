@@ -9,6 +9,7 @@ import { ASTAnalyzer } from "../../ast/ASTAnalyzer";
 import { DependencyResolver } from "../../ast/DependencyResolver";
 import { ASTFormatter } from "./ASTFormatter";
 
+
 /**
 * Types of top-level declarations in a file
 */
@@ -187,7 +188,8 @@ export class FileDeclarationFormatter extends ASTFormatter {
         sourceFile.statements.forEach(statement => {
             if (ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement)) {
                 imports.push(statement);
-            } else {
+            } else if (!ts.isEmptyStatement(statement)) {
+                // Filter out empty statements (standalone semicolons)
                 otherStatements.push(statement);
             }
         });

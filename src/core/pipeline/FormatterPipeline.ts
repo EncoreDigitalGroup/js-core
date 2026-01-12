@@ -13,6 +13,7 @@ import { ImportOrganizer } from "../formatters/imports/ImportOrganizer";
 import { BlankLineFormatter } from "../formatters/spacing/BlankLineFormatter";
 import { CodeStyleFormatter } from "../formatters/style/CodeStyleFormatter";
 
+
 /*
 * Tracks the state of a single formatter execution
 */
@@ -312,5 +313,4 @@ export class FormatterPipeline {
     }
 }
 
-;
 

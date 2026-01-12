@@ -5,6 +5,7 @@
 
 import * as ts from "typescript";
 
+
 /**
 * Information about references found in AST nodes
 */

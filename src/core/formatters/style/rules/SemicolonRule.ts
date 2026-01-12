@@ -35,6 +35,7 @@ export class SemicolonRule implements IStyleRule {
 
         const visit = (node: ts.Node) => {
             // Check statements that should have semicolons
+            // NOTE: Interfaces, classes, and enums should NOT have semicolons after their closing braces
 
             if (ts.isVariableStatement(node) ||
 
@@ -45,8 +46,7 @@ export class SemicolonRule implements IStyleRule {
                 ts.isContinueStatement(node) ||
                 ts.isImportDeclaration(node) ||
                 ts.isExportDeclaration(node) ||
-                ts.isTypeAliasDeclaration(node) ||
-                ts.isInterfaceDeclaration(node)) {
+                ts.isTypeAliasDeclaration(node)) {
 
                 const nodeEnd = node.getEnd();
                 const fullText = sourceFile.getFullText();
@@ -62,6 +62,21 @@ export class SemicolonRule implements IStyleRule {
                     changes.push({pos: nodeEnd - 1, type: "remove"});
                 }
             }
+
+            // Remove incorrect semicolons from interfaces, classes, and enums
+            if (ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) {
+
+                const nodeEnd = node.getEnd();
+                const fullText = sourceFile.getFullText();
+                const hasSemicolon = fullText[nodeEnd] === ";";
+
+                if (hasSemicolon) {
+                    // Remove the incorrect semicolon after the closing brace
+
+                    changes.push({pos: nodeEnd, type: "remove"});
+                }
+            }
+
             ts.forEachChild(node, visit);
         };
         visit(sourceFile);

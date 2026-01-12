@@ -5,6 +5,7 @@
 
 import * as ts from "typescript";
 
+
 export enum MemberType {
 
     StaticProperty = "static_property",
@@ -80,6 +81,3 @@ export const DEFAULT_CLASS_ORDER: MemberType[] = [
         MemberType.StaticMethod,
         MemberType.InstanceMethod,
     ]
-
-;
-

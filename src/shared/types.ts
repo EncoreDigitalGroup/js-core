@@ -1,5 +1,4 @@
 
-
 /*
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
@@ -40,4 +39,3 @@ export const DefaultSortOptions: SortOptions = {
     indentation: 4,
     dryRun: false,
 }
-

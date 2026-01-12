@@ -10,6 +10,7 @@ import { FileSortConfig, transformFile } from "./formatters/file";
 import { isReactComponent, transformReactComponent } from "./formatters/react";
 import { SortConfig } from "./shared/classMemberTypes";
 
+
 /**
 * Configuration for sorting class members in a directory
 */

@@ -9,6 +9,7 @@ import { ASTAnalyzer } from "../../ast/ASTAnalyzer";
 import { DependencyResolver } from "../../ast/DependencyResolver";
 import { ASTFormatter } from "./ASTFormatter";
 
+
 /**
 * Types of class members
 */

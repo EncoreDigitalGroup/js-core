@@ -1,5 +1,4 @@
 
-
 export interface DependencyInfo {
 
     name: string;
@@ -248,5 +247,4 @@ export function reorderWithDependencies<T>(items: T[], getName: (item: T) => str
     return result;
 }
 
-;
 

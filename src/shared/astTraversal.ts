@@ -5,6 +5,7 @@
 
 import * as ts from "typescript";
 
+
 export interface ReferenceInfo {
 
     identifiers: Set<string>;

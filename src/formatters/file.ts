@@ -7,6 +7,7 @@ import * as ts from "typescript";
 import { extractFileDeclarationReferences } from "../shared/astTraversal";
 import { reorderWithDependencies } from "../shared/dependencyAnalysis";
 
+
 /**
 * Types of top-level declarations in a file
 */
@@ -307,5 +308,4 @@ export function transformFile(sourceFile: ts.SourceFile, config: FileSortConfig 
     return ts.factory.updateSourceFile(sourceFile, sortedStatements);
 }
 
-;
 

@@ -5,6 +5,7 @@
 
 import { CoreConfig } from "../../config/types";
 
+
 /**
 * Validation result containing errors and warnings
 */
