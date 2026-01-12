@@ -1,7 +1,5 @@
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
+// Auto-generated exports - do not edit manually
+// Run tsfmt to regenerate
 
-export {ConfigValidator, type ValidationResult} from "./ConfigValidator";
-export {ConfigMerger} from "./ConfigMerger";
+export * from "./ConfigMerger";
+export * from "./ConfigValidator";

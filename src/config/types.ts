@@ -3,9 +3,10 @@
 * All Rights Reserved.
 */
 
-import {DEFAULT_CLASS_ORDER, MemberType} from "../core/formatters/rules/ast/ClassMemberSortingRule";
-import {DeclarationType, DEFAULT_FILE_ORDER} from "../core/formatters/rules/ast/FileDeclarationSortingRule";
-import {DefaultSortOptions} from "../shared/types";
+import { DEFAULT_CLASS_ORDER, MemberType } from "../core/formatters/rules/ast/ClassMemberSortingRule";
+import { DeclarationType, DEFAULT_FILE_ORDER } from "../core/formatters/rules/ast/FileDeclarationSortingRule";
+import { IndexGenerationConfig } from "../core/formatters/rules/index/IndexGenerationRule";
+import { DefaultSortOptions } from "../shared/types";
 
 
 /**
@@ -13,9 +14,11 @@ import {DefaultSortOptions} from "../shared/types";
 */
 
 export interface ClassMemberConfig {
+
     /**
     * Whether to sort class members (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -39,9 +42,11 @@ export interface ClassMemberConfig {
 */
 
 export interface CodeStyleConfig {
+
     /**
     * Whether to run code style formatting (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -90,9 +95,11 @@ export interface CodeStyleConfig {
 */
 
 export interface ImportConfig {
+
     /**
     * Whether to organize imports (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -131,9 +138,11 @@ export interface ImportConfig {
 */
 
 export interface ReactComponentConfig {
+
     /**
     * Whether to sort React component members (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -157,9 +166,11 @@ export interface ReactComponentConfig {
 */
 
 export interface FileDeclarationConfig {
+
     /**
     * Whether to sort file-level declarations (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -178,9 +189,11 @@ export interface FileDeclarationConfig {
 */
 
 export interface SortingConfig {
+
     /**
     * Whether to enable AST-based sorting (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -214,9 +227,11 @@ export interface SortingConfig {
 */
 
 export interface SpacingConfig {
+
     /**
     * Whether to apply spacing rules (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -240,9 +255,11 @@ export interface SpacingConfig {
 */
 
 export interface PackageJsonConfig {
+
     /**
     * Whether to sort package.json (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -261,9 +278,11 @@ export interface PackageJsonConfig {
 */
 
 export interface TsConfigConfig {
+
     /**
     * Whether to sort tsconfig.json (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -277,6 +296,8 @@ export interface TsConfigConfig {
 */
 
 export enum FormatterOrder {
+
+    IndexGeneration = "IndexGeneration",
     CodeStyle = "CodeStyle",
     ImportOrganization = "ImportOrganization",
     ASTTransformation = "ASTTransformation",
@@ -288,6 +309,7 @@ export enum FormatterOrder {
 */
 
 export interface SortersConfig extends SortingConfig {
+
 }
 
 /**
@@ -295,9 +317,11 @@ export interface SortersConfig extends SortingConfig {
 */
 
 export interface PrettierConfig {
+
     /**
     * Whether to run Prettier (default: true)
     */
+
     enabled?: boolean;
 
     /**
@@ -339,6 +363,13 @@ export interface PrettierConfig {
 */
 
 export interface CoreConfig {
+
+    /**
+    * Configuration for automatic index.ts file generation
+    */
+
+    indexGeneration?: IndexGenerationConfig;
+
     /**
     * Configuration for code style formatting (quotes, semicolons, spacing)
     */
@@ -370,7 +401,7 @@ export interface CoreConfig {
     tsConfig?: TsConfigConfig;
 
     /**
-    * Custom order for formatter execution (default: CodeStyle, ImportOrganization, ASTTransformation, Spacing)
+    * Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing)
     */
     formatterOrder?: FormatterOrder[];
 
@@ -392,9 +423,11 @@ export interface CoreConfig {
 */
 
 function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+
     const result = {...target};
 
     for (const key in source) {
+
         if (source[key] !== undefined) {
             if (typeof source[key] === "object" &&
 
@@ -418,6 +451,17 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
 */
 
 export const defaultConfig: CoreConfig = {
+
+    indexGeneration: {
+        enabled: true,
+        directories: ["src/", "packages/"],
+        options: {
+            fileExtension: ".ts",
+            indexFileName: "index.ts",
+            recursive: true
+},
+        updateMainIndex: true,
+},
     codeStyle: {
         enabled: true,
         quoteStyle: "double",
@@ -525,5 +569,6 @@ export const defaultConfig: CoreConfig = {
 */
 
 export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
+
     return deepMerge(defaultConfig, userConfig);
 }

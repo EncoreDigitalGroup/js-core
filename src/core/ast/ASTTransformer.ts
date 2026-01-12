@@ -11,10 +11,13 @@ import * as ts from "typescript";
 */
 
 export class ASTTransformer {
+
     /**
     * Create a source file from source code
     */
+
     static createSourceFile(source: string, filePath: string): ts.SourceFile {
+
         const scriptKind = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
 
             ? ts.ScriptKind.TSX
@@ -27,7 +30,9 @@ export class ASTTransformer {
     * Print a node to string using TypeScript printer
     */
     static printNode(node: ts.Node, sourceFile: ts.SourceFile, removeComments = false): string {
+
         const printer = ts.createPrinter({
+
             newLine: ts.NewLineKind.LineFeed,
             removeComments,
 });
@@ -40,6 +45,7 @@ export class ASTTransformer {
     * Extracts and deduplicates leading comments to prevent duplication during formatting
     */
     static printSourceFile(sourceFile: ts.SourceFile): string {
+
         const fullText = sourceFile.getFullText();
 
         // Extract ALL leading block comments (not just the first one)
@@ -50,6 +56,7 @@ export class ASTTransformer {
         // Deduplicate consecutive identical block comments (fixes copyright duplication)
 
         if (leadingComments) {
+
             const commentBlocks = leadingComments.match(/\/\*[\s\S]*?\*\//g) || [];
             const uniqueBlocks = new Set(commentBlocks.map(block => block.trim()));
 
@@ -57,6 +64,7 @@ export class ASTTransformer {
         }
 
         const printer = ts.createPrinter({
+
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
 });
@@ -86,6 +94,7 @@ export class ASTTransformer {
     * Create a new class declaration with reordered members
     */
     static reorderClassMembers(classNode: ts.ClassDeclaration, orderedMembers: ts.ClassElement[]): ts.ClassDeclaration {
+
         return ts.factory.updateClassDeclaration(classNode, classNode.modifiers, classNode.name, classNode.typeParameters, classNode.heritageClauses, orderedMembers);
     }
 
@@ -93,6 +102,7 @@ export class ASTTransformer {
     * Create a new source file with reordered statements
     */
     static reorderSourceFileStatements(sourceFile: ts.SourceFile, orderedStatements: ts.Statement[]): ts.SourceFile {
+
         return ts.factory.updateSourceFile(sourceFile, orderedStatements, sourceFile.isDeclarationFile, sourceFile.referencedFiles, sourceFile.typeReferenceDirectives, sourceFile.hasNoDefaultLib, sourceFile.libReferenceDirectives);
     }
 
@@ -100,6 +110,7 @@ export class ASTTransformer {
     * Transform a source file by visiting all nodes
     */
     static transformSourceFile(sourceFile: ts.SourceFile, visitor: (node: ts.Node) => ts.Node | undefined): ts.SourceFile {
+
         const transformer: ts.TransformerFactory<ts.SourceFile> = context => {
             const visit = (node: ts.Node): ts.Node => {
                 const result = visitor(node);

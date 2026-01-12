@@ -4,10 +4,10 @@
 */
 
 import * as ts from "typescript";
-import {FileDeclarationConfig} from "../../../../config/types";
-import {ASTAnalyzer} from "../../../ast/ASTAnalyzer";
-import {DependencyResolver} from "../../../ast/DependencyResolver";
-import {IFormattingRule} from "../../IFormattingRule";
+import { FileDeclarationConfig } from "../../../../config/types";
+import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
+import { DependencyResolver } from "../../../ast/DependencyResolver";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
@@ -15,6 +15,7 @@ import {IFormattingRule} from "../../IFormattingRule";
 */
 
 export enum DeclarationType {
+
     Interface = "interface",
     TypeAlias = "type_alias",
     Enum = "enum",
@@ -32,6 +33,7 @@ export enum DeclarationType {
 */
 
 export interface FileDeclaration {
+
     node: ts.Statement;
     type: DeclarationType;
     name: string;
@@ -65,6 +67,7 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 */
 
 export class FileDeclarationSortingRule implements IFormattingRule {
+
     readonly name = "FileDeclarationSortingRule";
 
     constructor(private readonly config: FileDeclarationConfig) {
@@ -74,38 +77,47 @@ export class FileDeclarationSortingRule implements IFormattingRule {
     * Determine the type of a top-level declaration
     */
     private getDeclarationType(node: ts.Statement): DeclarationType {
+
         const exported = ASTAnalyzer.isExported(node);
         const defaultExp = ASTAnalyzer.isDefaultExport(node);
 
         if (defaultExp) {
+
             return DeclarationType.DefaultExport;
         }
 
         if (ts.isInterfaceDeclaration(node)) {
+
             return DeclarationType.Interface;
         }
 
         if (ts.isTypeAliasDeclaration(node)) {
+
             return DeclarationType.TypeAlias;
         }
 
         if (ts.isEnumDeclaration(node)) {
+
             return DeclarationType.Enum;
         }
 
         if (ts.isFunctionDeclaration(node)) {
+
             return exported ? DeclarationType.ExportedFunction : DeclarationType.HelperFunction;
         }
 
         if (ts.isVariableStatement(node)) {
+
             return exported ? DeclarationType.ExportedVariable : DeclarationType.HelperVariable;
         }
 
         if (ts.isClassDeclaration(node)) {
+
             return exported ? DeclarationType.ExportedClass : DeclarationType.Other;
         }
 
         if (ts.isExportAssignment(node)) {
+
             return DeclarationType.DefaultExport;
         }
 
@@ -116,6 +128,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
     * Analyze a top-level statement
     */
     private analyzeDeclaration(node: ts.Statement, sourceFile: ts.SourceFile, index: number, allDeclarationNames: Set<string>): FileDeclaration {
+
         const type = this.getDeclarationType(node);
         const name = ASTAnalyzer.getDeclarationName(node);
         const isExported = ASTAnalyzer.isExported(node);
@@ -139,6 +152,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
     }
 
     private createSourceFile(source: string, filePath: string): ts.SourceFile {
+
         return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     }
 
@@ -146,14 +160,17 @@ export class FileDeclarationSortingRule implements IFormattingRule {
     * Sort file declarations according to configuration
     */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
+
         const order = this.config.order || DEFAULT_FILE_ORDER;
 
         return [...declarations].sort((a, b) => {
+
             const aTypeIndex = order.indexOf(a.type);
             const bTypeIndex = order.indexOf(b.type);
             // Sort by type first
 
             if (aTypeIndex !== bTypeIndex) {
+
                 return aTypeIndex - bTypeIndex;
             }
             // Within the same type, sort alphabetically by name
@@ -162,7 +179,9 @@ export class FileDeclarationSortingRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
+
         if (!this.config.enabled) {
+
             return source;
         }
 
@@ -173,7 +192,9 @@ export class FileDeclarationSortingRule implements IFormattingRule {
         const otherStatements: ts.Statement[] = [];
 
         sourceFile.statements.forEach(statement => {
+
             if (ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement)) {
+
                 imports.push(statement);
             } else if (!ts.isEmptyStatement(statement)) {
                 // Filter out empty statements (standalone semicolons)
@@ -182,6 +203,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
         });
 
         if (otherStatements.length === 0) {
+
             return source;
         }
 
@@ -199,6 +221,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
         let sortedDeclarations = this.sortFileDeclarations(analyzedDeclarations);
 
         if (this.config.respectDependencies !== false) {
+
             sortedDeclarations = DependencyResolver.reorderWithDependencies(sortedDeclarations, d => d.name);
         }
 
@@ -207,6 +230,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
         const orderChanged = sortedDeclarations.some((decl, index) => decl.originalIndex !== index);
 
         if (!orderChanged) {
+
             return source;
         }
 

@@ -3,14 +3,16 @@
 * All Rights Reserved.
 */
 
-import {CoreConfig} from "../../../config/types";
-import {ConfigMerger} from "../ConfigMerger";
+import { CoreConfig } from "../../../config/types";
+import { ConfigMerger } from "../ConfigMerger";
 
 
 describe("ConfigMerger", () => {
     describe("merge", () => {
         it("should merge user config with defaults", () => {
+
             const userConfig: Partial<CoreConfig> = {
+
                 codeStyle: {
                     quoteStyle: "single",
 },
@@ -23,7 +25,9 @@ describe("ConfigMerger", () => {
             expect(result.codeStyle?.indentWidth).toBe(4); // From defaults
         });
         it("should deep merge nested objects", () => {
+
             const userConfig: Partial<CoreConfig> = {
+
                 sorting: {
                     classMembers: {
                         groupByVisibility: true,
@@ -38,7 +42,9 @@ describe("ConfigMerger", () => {
             expect(result.sorting?.classMembers?.respectDependencies).toBe(true); // From defaults
         });
         it("should replace arrays instead of merging them", () => {
+
             const userConfig: Partial<CoreConfig> = {
+
                 imports: {
                     groupOrder: ["relative", "external"],
 },
@@ -50,7 +56,9 @@ describe("ConfigMerger", () => {
             expect(result.imports?.groupOrder?.length).toBe(2);
         });
         it("should handle undefined values by keeping defaults", () => {
+
             const userConfig: Partial<CoreConfig> = {
+
                 codeStyle: {
                     quoteStyle: undefined,
 },
@@ -63,19 +71,23 @@ describe("ConfigMerger", () => {
     });
     describe("mergeMultiple", () => {
         it("should merge multiple configs in order", () => {
+
             const config1: Partial<CoreConfig> = {
+
                 codeStyle: {
                     quoteStyle: "single",
 },
 };
 
             const config2: Partial<CoreConfig> = {
+
                 codeStyle: {
                     semicolons: "never",
 },
 };
 
             const config3: Partial<CoreConfig> = {
+
                 codeStyle: {
                     quoteStyle: "double", // Override config1
 },
@@ -88,10 +100,11 @@ describe("ConfigMerger", () => {
             expect(result.codeStyle?.enabled).toBe(true); // From defaults
         });
         it("should handle empty array", () => {
+
             const result = ConfigMerger.mergeMultiple();
 
             expect(result).toBeDefined();
             expect(result.codeStyle?.enabled).toBe(true);
         });
     });
-});
+})

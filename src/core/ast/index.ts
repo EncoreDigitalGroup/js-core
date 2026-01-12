@@ -1,8 +1,6 @@
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
+// Auto-generated exports - do not edit manually
+// Run tsfmt to regenerate
 
-export {ASTAnalyzer, type ReferenceInfo} from "./ASTAnalyzer";
-export {DependencyResolver, type DependencyNode, type DependencyGraph} from "./DependencyResolver";
-export {ASTTransformer} from "./ASTTransformer";
+export * from "./ASTAnalyzer";
+export * from "./ASTTransformer";
+export * from "./DependencyResolver";
