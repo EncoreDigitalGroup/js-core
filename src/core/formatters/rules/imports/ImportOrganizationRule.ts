@@ -4,11 +4,12 @@
 */
 
 import * as ts from "typescript";
-import {ImportConfig} from "../../../../config";
-import {IFormattingRule} from "../../IFormattingRule";
+import { ImportConfig } from "../../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 interface ImportInfo {
+
     statement: ts.ImportDeclaration;
     moduleSpecifier: string;
     importClause?: ts.ImportClause;
@@ -22,21 +23,26 @@ interface ImportInfo {
 */
 
 export class ImportOrganizationRule implements IFormattingRule {
+
     readonly name = "ImportOrganizationRule";
 
     constructor(private readonly config: ImportConfig) {
     }
 
     private createSourceFile(source: string): ts.SourceFile {
+
         return ts.createSourceFile("temp.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     }
 
     private determineImportGroup(moduleSpecifier: string): "external" | "internal" | "relative" {
+
         if (moduleSpecifier.startsWith(".") || moduleSpecifier.startsWith("/")) {
+
             return "relative";
         }
 
         if (moduleSpecifier.startsWith("@/") || moduleSpecifier.startsWith("~/")) {
+
             return "internal";
         }
 
@@ -44,10 +50,13 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private extractImports(sourceFile: ts.SourceFile): ImportInfo[] {
+
         const imports: ImportInfo[] = [];
 
         for (const statement of sourceFile.statements) {
+
             if (ts.isImportDeclaration(statement)) {
+
                 const moduleSpecifier = (statement.moduleSpecifier as ts.StringLiteral).text;
                 const isSideEffect = !statement.importClause;
                 const isTypeOnly = statement.importClause?.isTypeOnly || false;
@@ -68,21 +77,26 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private getImportedIdentifiers(importInfo: ImportInfo): string[] {
+
         const identifiers: string[] = [];
 
         if (!importInfo.importClause) {
+
             return identifiers;
         }
         // Default import
 
         if (importInfo.importClause.name) {
+
             identifiers.push(importInfo.importClause.name.text);
         }
         // Named imports
 
         if (importInfo.importClause.namedBindings) {
             if (ts.isNamedImports(importInfo.importClause.namedBindings)) {
+
                 for (const element of importInfo.importClause.namedBindings.elements) {
+
                     identifiers.push(element.name.text);
                 }
             } else if (ts.isNamespaceImport(importInfo.importClause.namedBindings)) {
@@ -94,9 +108,11 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private isIdentifierUsed(identifier: string, sourceFile: ts.SourceFile): boolean {
+
         let found = false;
 
         const visit = (node: ts.Node): void => {
+
             if (found)
 
                 return;
@@ -107,6 +123,7 @@ export class ImportOrganizationRule implements IFormattingRule {
                 const parent = node.parent;
 
                 if (!ts.isImportSpecifier(parent) && !ts.isImportClause(parent)) {
+
                     found = true;
                 }
             }
@@ -121,10 +138,12 @@ export class ImportOrganizationRule implements IFormattingRule {
         // Side-effect imports are considered "used"
 
         if (importInfo.isSideEffect) {
+
             return true;
         }
 
         if (!importInfo.importClause) {
+
             return true;
         }
 
@@ -134,12 +153,15 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private filterUnusedImports(imports: ImportInfo[], sourceFile: ts.SourceFile): ImportInfo[] {
+
         if (!this.config.removeUnused) {
+
             return imports;
         }
         // Don't remove side-effect imports unless configured
 
         if (!this.config.removeSideEffects) {
+
             return imports.filter(imp => imp.isSideEffect || this.isImportUsed(imp, sourceFile));
         }
 
@@ -147,7 +169,9 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private sortImports(imports: ImportInfo[]): ImportInfo[] {
+
         if (!this.config.sortImports) {
+
             return imports;
         }
 
@@ -158,7 +182,9 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private groupImports(imports: ImportInfo[]): ImportInfo[] {
+
         if (!this.config.groupImports) {
+
             return imports;
         }
 
@@ -166,6 +192,7 @@ export class ImportOrganizationRule implements IFormattingRule {
         const grouped: ImportInfo[] = [];
 
         for (const group of groupOrder) {
+
             const groupImports = imports.filter(imp => imp.group === group);
 
             grouped.push(...groupImports);
@@ -175,6 +202,7 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private reconstructSource(sourceFile: ts.SourceFile, imports: ImportInfo[]): string {
+
         const fullText = sourceFile.getFullText();
 
         // Extract ALL leading block comments (not just the first one)
@@ -185,6 +213,7 @@ export class ImportOrganizationRule implements IFormattingRule {
         // Deduplicate consecutive identical block comments (fixes copyright duplication)
 
         if (leadingComments) {
+
             const commentBlocks = leadingComments.match(/\/\*[\s\S]*?\*\//g) || [];
             const uniqueBlocks = new Set(commentBlocks.map(block => block.trim()));
 
@@ -203,6 +232,7 @@ export class ImportOrganizationRule implements IFormattingRule {
         // Ensure restOfFile starts with a newline
 
         if (restOfFile && !restOfFile.startsWith("\n")) {
+
             restOfFile = "\n" + restOfFile;
         }
         // Remove excessive leading blank lines (more than one newline) but keep at least one
@@ -211,6 +241,7 @@ export class ImportOrganizationRule implements IFormattingRule {
         // Build import section (only reprint imports, not everything else)
 
         const printer = ts.createPrinter({
+
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
 });
@@ -244,14 +275,17 @@ export class ImportOrganizationRule implements IFormattingRule {
         const sections: string[] = [];
 
         if (leadingComments) {
+
             sections.push(leadingComments);
         }
 
         if (importLines.length > 0) {
+
             sections.push(importLines.join("\n"));
         }
 
         if (restOfFile) {
+
             sections.push(restOfFile);
         }
 
@@ -265,7 +299,9 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
+
         if (!this.config.enabled) {
+
             return source;
         }
 

@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import {CodeStyleConfig} from "../../../../config/types";
-import {IFormattingRule} from "../../IFormattingRule";
+import { CodeStyleConfig } from "../../../../config/types";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
@@ -14,13 +14,16 @@ import {IFormattingRule} from "../../IFormattingRule";
 */
 
 export class IndentationRule implements IFormattingRule {
+
     readonly name = "IndentationRule";
 
     constructor(private config: CodeStyleConfig) {
     }
 
     apply(source: string, filePath?: string): string {
+
         if (!this.config.indentStyle || !this.config.indentWidth) {
+
             return source;
         }
 
@@ -36,6 +39,7 @@ export class IndentationRule implements IFormattingRule {
             // Skip empty lines
 
             if (line.trim() === "") {
+
                 result.push(line);
                 continue;
             }
@@ -67,6 +71,7 @@ export class IndentationRule implements IFormattingRule {
             let newIndent: string;
 
             if (this.config.indentStyle === "space") {
+
                 newIndent = " ".repeat(indentLevel * indentWidth);
             } else {
                 newIndent = "\t".repeat(indentLevel);

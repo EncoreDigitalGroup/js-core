@@ -4,8 +4,8 @@
 */
 
 import * as ts from "typescript";
-import {CodeStyleConfig} from "../../../../config/types";
-import {IFormattingRule} from "../../IFormattingRule";
+import { CodeStyleConfig } from "../../../../config/types";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
@@ -13,19 +13,23 @@ import {IFormattingRule} from "../../IFormattingRule";
 */
 
 export class QuoteStyleRule implements IFormattingRule {
+
     readonly name = "QuoteStyleRule";
 
     constructor(private config: CodeStyleConfig) {
     }
 
     apply(source: string, filePath?: string): string {
+
         if (!this.config.quoteStyle) {
+
             return source;
         }
 
         const sourceFile = ts.createSourceFile("temp.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
         // Collect all string literals that need to be changed
         const changes: Array<{
+
             start: number;
             end: number;
             text: string;
@@ -35,6 +39,7 @@ export class QuoteStyleRule implements IFormattingRule {
             // Handle string literals (but not template literals)
 
             if (ts.isStringLiteral(node)) {
+
                 const nodeText = node.getText(sourceFile);
                 const currentQuote = nodeText[0];
                 const desiredQuote = this.config.quoteStyle === "single" ? "'" : '"';
@@ -49,6 +54,7 @@ export class QuoteStyleRule implements IFormattingRule {
                     // If it needs escaping, skip this string literal
 
                     if (!needsEscape) {
+
                         const newText = desiredQuote + content + desiredQuote;
 
                         changes.push({
@@ -68,6 +74,7 @@ export class QuoteStyleRule implements IFormattingRule {
         let result = source;
 
         for (const change of changes) {
+
             result = result.substring(0, change.start) + change.text + result.substring(change.end);
         }
 

@@ -1,5 +1,4 @@
-
 // Auto-generated exports - do not edit manually
-// Run build to regenerate
+// Run tsfmt to regenerate
 
 export * from "./IndexGenerationRule";

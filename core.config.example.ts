@@ -1,4 +1,4 @@
-import {type CoreConfig, MemberType, ReactMemberType, DeclarationType} from "@encoredigitalgroup/core";
+import { type CoreConfig, MemberType, ReactMemberType, DeclarationType } from "@encoredigitalgroup/core";
 
 
 /**
