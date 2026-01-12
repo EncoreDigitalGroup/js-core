@@ -2,23 +2,14 @@
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import * as ts from "typescript";
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
 import { extractClassMemberReferences } from "../shared/astTraversal";
 import { ClassMember, compareMembers, MemberType, SortConfig } from "../shared/classMemberTypes";
 import { getMemberName, hasModifier } from "../shared/classMemberUtils";
 import { reorderWithDependencies } from "../shared/dependencyAnalysis";
+
+
 // React-specific member types
 
 export enum ReactMemberType {
@@ -182,7 +173,7 @@ function analyzeReactMember(member: ts.ClassElement, sourceFile: ts.SourceFile, 
         text,
         dependencies,
         originalIndex: index,
-    };
+};
 }
 
 export function isReactComponent(classNode: ts.ClassDeclaration): boolean {

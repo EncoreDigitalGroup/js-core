@@ -1,7 +1,11 @@
+
+
 /*
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
+
+
 export interface SortOptions {
 
     customSortOrder?: string[];
@@ -35,7 +39,5 @@ export const DefaultSortOptions: SortOptions = {
     ],
     indentation: 4,
     dryRun: false,
-};
-;
-;
-;
+}
+

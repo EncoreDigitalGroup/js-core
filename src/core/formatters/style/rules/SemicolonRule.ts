@@ -6,6 +6,8 @@
 import * as ts from "typescript";
 import { CodeStyleConfig } from "../../../../config/types";
 import { IStyleRule } from "../IStyleRule";
+
+
 /**
 * Adds or removes semicolons based on configuration using AST
 */
@@ -13,7 +15,10 @@ import { IStyleRule } from "../IStyleRule";
 export class SemicolonRule implements IStyleRule {
 
     readonly name = "SemicolonRule";
-    constructor(private config: CodeStyleConfig) { }
+
+    constructor(private config: CodeStyleConfig) {
+    }
+
     apply(source: string): string {
 
         if (!this.config.semicolons) {
@@ -50,13 +55,11 @@ export class SemicolonRule implements IStyleRule {
                 if (this.config.semicolons === "always" && !hasSemicolon) {
                     // Add semicolon
 
-                    changes.push({ pos: nodeEnd, type: "add" });
-                }
-
-                else if (this.config.semicolons === "never" && hasSemicolon) {
+                    changes.push({pos: nodeEnd, type: "add"});
+                } else if (this.config.semicolons === "never" && hasSemicolon) {
                     // Remove semicolon
 
-                    changes.push({ pos: nodeEnd - 1, type: "remove" });
+                    changes.push({pos: nodeEnd - 1, type: "remove"});
                 }
             }
             ts.forEachChild(node, visit);
@@ -72,9 +75,7 @@ export class SemicolonRule implements IStyleRule {
             if (change.type === "add") {
 
                 result = result.substring(0, change.pos) + ";" + result.substring(change.pos);
-            }
-
-            else {
+            } else {
 
                 result = result.substring(0, change.pos) + result.substring(change.pos + 1);
             }

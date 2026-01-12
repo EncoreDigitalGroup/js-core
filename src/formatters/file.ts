@@ -2,21 +2,25 @@
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import * as ts from "typescript";
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
 import { extractFileDeclarationReferences } from "../shared/astTraversal";
 import { reorderWithDependencies } from "../shared/dependencyAnalysis";
+
+/**
+* Types of top-level declarations in a file
+*/
+
+
+/**
+* Types of top-level declarations in a file
+*/
+
+
+/**
+* Types of top-level declarations in a file
+*/
+
 /**
 * Types of top-level declarations in a file
 */
@@ -218,7 +222,7 @@ function analyzeDeclaration(node: ts.Statement, sourceFile: ts.SourceFile, index
         text,
         dependencies,
         originalIndex: index,
-    };
+};
 }
 
 /**
@@ -277,9 +281,7 @@ export function transformFile(sourceFile: ts.SourceFile, config: FileSortConfig 
         if (ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement)) {
 
             imports.push(statement);
-        }
-
-        else {
+        } else {
 
             otherStatements.push(statement);
         }
@@ -304,9 +306,6 @@ export function transformFile(sourceFile: ts.SourceFile, config: FileSortConfig 
 
     return ts.factory.updateSourceFile(sourceFile, sortedStatements);
 }
+
 ;
-;
-;
-;
-;
-;
+

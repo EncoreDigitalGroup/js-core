@@ -6,6 +6,7 @@
 * Interface for spacing rules that add blank lines
 */
 
+
 export interface ISpacingRule {
 
     /**

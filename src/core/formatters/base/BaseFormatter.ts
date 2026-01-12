@@ -4,6 +4,8 @@
 */
 
 import { IFormatter } from "./IFormatter";
+
+
 /**
 * Abstract base class for all formatters providing common functionality
 */

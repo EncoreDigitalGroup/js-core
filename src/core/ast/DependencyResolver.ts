@@ -1,3 +1,5 @@
+
+
 /*
 * Copyright (c) 2026. Encore Digital Group.
 * All Rights Reserved.
@@ -5,6 +7,8 @@
 /**
 * Represents a node in the dependency graph
 */
+
+
 export interface DependencyNode {
 
     name: string;
@@ -61,9 +65,7 @@ export class DependencyResolver {
 
                     strongConnect(dep);
                     lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, lowLink.get(dep)!));
-                }
-
-                else if (onStack.has(dep)) {
+                } else if (onStack.has(dep)) {
 
                     lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, index.get(dep)!));
                 }
@@ -121,7 +123,7 @@ export class DependencyResolver {
                 dependencies: getDependencies(item),
                 originalIndex: index,
                 sortedIndex: index,
-            });
+});
         });
         // Filter dependencies to only include symbols in our scope
 
@@ -134,7 +136,7 @@ export class DependencyResolver {
 
         const circularGroups = this.findStronglyConnectedComponents(nodes);
 
-        return { nodes, circularGroups };
+        return {nodes, circularGroups};
     }
 
     /**
@@ -192,6 +194,7 @@ export class DependencyResolver {
 
             return true;
         }
+
         // Process nodes in their sorted order preference
         // This ensures that within valid orderings, we respect the type/visibility/name sort
 
@@ -257,9 +260,6 @@ export class DependencyResolver {
         return result;
     }
 }
+
 ;
-;
-;
-;
-;
-;
+

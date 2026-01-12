@@ -5,6 +5,8 @@
 
 import { SpacingConfig } from "../../../../config/types";
 import { ISpacingRule } from "../ISpacingRule";
+
+
 /**
 * Adds blank lines between declarations with different keywords
 * KEY ENHANCEMENT: Works at ALL brace depths (not just top level)
@@ -18,6 +20,7 @@ import { ISpacingRule } from "../ISpacingRule";
 export class BetweenDeclarationsRule implements ISpacingRule {
 
     readonly name = "BetweenDeclarationsRule";
+
     constructor(private config: SpacingConfig) {
     }
 
@@ -73,6 +76,7 @@ export class BetweenDeclarationsRule implements ISpacingRule {
 
         return null;
     }
+
     apply(source: string): string {
 
         if (!this.config.betweenDeclarations) {
@@ -160,9 +164,7 @@ export class BetweenDeclarationsRule implements ISpacingRule {
 
                     lastDeclarationKeyword = declarationKeyword;
                 }
-            }
-
-            else if (!isBlankLine && !isComment) {
+            } else if (!isBlankLine && !isComment) {
                 // Don't reset if the line is just closing braces
                 if (!isBlockCommentStart && trimmedLine !== "" && !isJustClosingBraces) {
 

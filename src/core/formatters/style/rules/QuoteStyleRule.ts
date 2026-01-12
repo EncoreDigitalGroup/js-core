@@ -6,6 +6,8 @@
 import * as ts from "typescript";
 import { CodeStyleConfig } from "../../../../config/types";
 import { IStyleRule } from "../IStyleRule";
+
+
 /**
 * Converts quote style between single and double quotes using AST
 */
@@ -13,7 +15,10 @@ import { IStyleRule } from "../IStyleRule";
 export class QuoteStyleRule implements IStyleRule {
 
     readonly name = "QuoteStyleRule";
-    constructor(private config: CodeStyleConfig) { }
+
+    constructor(private config: CodeStyleConfig) {
+    }
+
     apply(source: string): string {
 
         if (!this.config.quoteStyle) {
@@ -56,7 +61,7 @@ export class QuoteStyleRule implements IStyleRule {
                             start: node.getStart(sourceFile),
                             end: node.getEnd(),
                             text: newText,
-                        });
+});
                     }
                 }
             }

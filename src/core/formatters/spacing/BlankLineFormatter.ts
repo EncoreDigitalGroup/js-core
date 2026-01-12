@@ -9,6 +9,8 @@ import { ISpacingRule } from "./ISpacingRule";
 import { BeforeReturnsRule } from "./rules/BeforeReturnsRule";
 import { BetweenDeclarationsRule } from "./rules/BetweenDeclarationsRule";
 import { BetweenStatementTypesRule } from "./rules/BetweenStatementTypesRule";
+
+
 /**
 * Formats blank line spacing using composable rules
 * Rules are applied in sequence
@@ -18,10 +20,12 @@ export class BlankLineFormatter extends BaseFormatter {
 
     readonly name = "BlankLineFormatter";
     private rules: ISpacingRule[] = [];
+
     constructor(private readonly config: SpacingConfig) {
         super();
         this.initializeRules();
     }
+
     async format(source: string, filePath: string): Promise<string> {
 
         if (!this.config.enabled) {
@@ -40,6 +44,7 @@ export class BlankLineFormatter extends BaseFormatter {
 
         return formatted;
     }
+
     protected getSupportedExtensions(): string[] {
 
         return [".ts", ".tsx", ".js", ".jsx"];

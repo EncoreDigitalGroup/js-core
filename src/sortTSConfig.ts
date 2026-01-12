@@ -2,21 +2,11 @@
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import fs from "fs";
 import path from "path";
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
 import { DefaultSortOptions, SortOptions } from "./shared/types";
+
 
 function sortObjectKeysAlphabetically(obj: Record<string, any>): Record<string, any> {
 
@@ -28,10 +18,10 @@ function sortObjectKeysAlphabetically(obj: Record<string, any>): Record<string, 
     return Object.keys(obj)
         .sort()
         .reduce((result, key) => {
-        result[key] = sortObjectKeysAlphabetically(obj[key]);
+            result[key] = sortObjectKeysAlphabetically(obj[key]);
 
-        return result;
-    }, {} as Record<string, any>);
+            return result;
+        }, {} as Record<string, any>);
 }
 
 export function sortTsConfig(tsConfig: Record<string, any>): Record<string, any> {
@@ -56,9 +46,7 @@ export function sortTsConfigFile(filePath?: string, options: SortOptions = {}): 
         }
 
         return sortedTsConfig;
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(`Error processing ${tsConfigPath}:`, error);
 

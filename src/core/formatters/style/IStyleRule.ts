@@ -6,6 +6,7 @@
 * Interface for code style formatting rules
 */
 
+
 export interface IStyleRule {
 
     /**

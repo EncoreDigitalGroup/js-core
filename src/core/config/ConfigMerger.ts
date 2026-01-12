@@ -2,19 +2,10 @@
 * Copyright (c) 2026. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import { CoreConfig, defaultConfig } from "../../config/types";
+
+
 /**
 * Merges user configuration with default configuration
 */
@@ -30,7 +21,7 @@ export class ConfigMerger {
 
     private static deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
 
-        const result = { ...target };
+        const result = {...target};
 
         for (const key in source) {
 
@@ -43,9 +34,7 @@ export class ConfigMerger {
                     result[key] !== null &&
                     !Array.isArray(result[key])) {
                     result[key] = this.deepMerge(result[key] as any, source[key] as any);
-                }
-
-                else {
+                } else {
 
                     result[key] = source[key] as T[Extract<keyof T, string>];
                 }

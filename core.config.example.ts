@@ -1,4 +1,6 @@
 import { type CoreConfig, MemberType, ReactMemberType, DeclarationType } from "@encoredigitalgroup/core";
+
+
 /**
 * Example configuration file for @encoredigitalgroup/core
 *
@@ -29,12 +31,12 @@ const config: CoreConfig = {
             importOrderSeparation: true,
             singleQuote: false,
             semi: true,
-        },
+},
         // File patterns to include
         include: ["**/*.{js,ts,jsx,tsx}"],
         // Additional directories to exclude (critical dirs are always excluded)
         exclude: [],
-    },
+},
     // package.json sorting configuration
     packageJson: {
         // Whether to sort package.json (default: true)
@@ -63,14 +65,14 @@ const config: CoreConfig = {
         ],
         // JSON indentation (default: 4)
         indentation: 4,
-    },
+},
     // tsconfig.json sorting configuration
     tsConfig: {
         // Whether to sort tsconfig.json (default: true)
         enabled: true,
         // JSON indentation (default: 4)
         indentation: 4,
-    },
+},
     // Code sorters configuration
     sorters: {
         // Class member sorting configuration
@@ -91,7 +93,7 @@ const config: CoreConfig = {
             groupByVisibility: false,
             // Respect dependencies between members (default: true)
             respectDependencies: true,
-        },
+},
         // React component member sorting configuration
         reactComponents: {
             // Whether to sort React component members (default: true)
@@ -122,7 +124,7 @@ const config: CoreConfig = {
             groupByVisibility: false,
             // Respect dependencies between members (default: true)
             respectDependencies: true,
-        },
+},
         // File-level declaration sorting configuration
         fileDeclarations: {
             // Whether to sort file-level declarations (default: true)
@@ -142,12 +144,12 @@ const config: CoreConfig = {
             ],
             // Respect dependencies between declarations (default: true)
             respectDependencies: true,
-        },
+},
         // File patterns to include for sorting
         include: ["**/*.{ts,tsx}"],
         // Additional directories to exclude (critical dirs are always excluded)
         exclude: [],
-    },
+},
 };
 
-export default config;
+export default config

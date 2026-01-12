@@ -5,6 +5,8 @@
 
 import { SpacingConfig } from "../../../../config/types";
 import { ISpacingRule } from "../ISpacingRule";
+
+
 /**
 * Adds blank lines before return statements
 * Works at all brace depths (not just top level)
@@ -13,8 +15,10 @@ import { ISpacingRule } from "../ISpacingRule";
 export class BeforeReturnsRule implements ISpacingRule {
 
     readonly name = "BeforeReturnsRule";
+
     constructor(private config: SpacingConfig) {
     }
+
     apply(source: string): string {
 
         if (!this.config.beforeReturns) {

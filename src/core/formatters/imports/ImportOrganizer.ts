@@ -4,11 +4,10 @@
 */
 
 import * as ts from "typescript";
-import {ImportConfig} from "../../../config/types";
-import {BaseFormatter} from "../base/BaseFormatter";
+import { ImportConfig } from "../../../config/types";
+import { BaseFormatter } from "../base/BaseFormatter";
 
 interface ImportInfo {
-
     statement: ts.ImportDeclaration;
     moduleSpecifier: string;
     importClause?: ts.ImportClause;
@@ -18,8 +17,8 @@ interface ImportInfo {
 }
 
 /**
- * Organizes and formats import statements
- */
+* Organizes and formats import statements
+*/
 export class ImportOrganizer extends BaseFormatter {
     readonly name = "ImportOrganizer";
 
@@ -35,24 +34,20 @@ export class ImportOrganizer extends BaseFormatter {
         if (moduleSpecifier.startsWith(".") || moduleSpecifier.startsWith("/")) {
             return "relative";
         }
-
         if (moduleSpecifier.startsWith("@/") || moduleSpecifier.startsWith("~/")) {
             return "internal";
         }
-
         return "external";
     }
 
     private extractImports(sourceFile: ts.SourceFile): ImportInfo[] {
         const imports: ImportInfo[] = [];
-
         for (const statement of sourceFile.statements) {
             if (ts.isImportDeclaration(statement)) {
                 const moduleSpecifier = (statement.moduleSpecifier as ts.StringLiteral).text;
                 const isSideEffect = !statement.importClause;
                 const isTypeOnly = statement.importClause?.isTypeOnly || false;
                 const group = this.determineImportGroup(moduleSpecifier);
-
                 imports.push({
                     statement,
                     moduleSpecifier,
@@ -60,25 +55,21 @@ export class ImportOrganizer extends BaseFormatter {
                     isTypeOnly,
                     isSideEffect,
                     group,
-                });
+});
             }
         }
-
         return imports;
     }
 
     private getImportedIdentifiers(importInfo: ImportInfo): string[] {
         const identifiers: string[] = [];
-
         if (!importInfo.importClause) {
             return identifiers;
         }
-
         // Default import
         if (importInfo.importClause.name) {
             identifiers.push(importInfo.importClause.name.text);
         }
-
         // Named imports
         if (importInfo.importClause.namedBindings) {
             if (ts.isNamedImports(importInfo.importClause.namedBindings)) {
@@ -89,31 +80,24 @@ export class ImportOrganizer extends BaseFormatter {
                 identifiers.push(importInfo.importClause.namedBindings.name.text);
             }
         }
-
         return identifiers;
     }
 
     private isIdentifierUsed(identifier: string, sourceFile: ts.SourceFile): boolean {
         let found = false;
-
         const visit = (node: ts.Node): void => {
             if (found)
                 return;
-
             if (ts.isIdentifier(node) && node.text === identifier) {
                 // Make sure it's not the import declaration itself
                 const parent = node.parent;
-
                 if (!ts.isImportSpecifier(parent) && !ts.isImportClause(parent)) {
                     found = true;
                 }
             }
-
             ts.forEachChild(node, visit);
         };
-
         visit(sourceFile);
-
         return found;
     }
 
@@ -122,13 +106,10 @@ export class ImportOrganizer extends BaseFormatter {
         if (importInfo.isSideEffect) {
             return true;
         }
-
         if (!importInfo.importClause) {
             return true;
         }
-
         const identifiers = this.getImportedIdentifiers(importInfo);
-
         return identifiers.some(id => this.isIdentifierUsed(id, sourceFile));
     }
 
@@ -137,7 +118,6 @@ export class ImportOrganizer extends BaseFormatter {
         if (!this.config.removeSideEffects) {
             return imports.filter(imp => imp.isSideEffect || this.isImportUsed(imp, sourceFile));
         }
-
         return imports.filter(imp => this.isImportUsed(imp, sourceFile));
     }
 
@@ -151,34 +131,48 @@ export class ImportOrganizer extends BaseFormatter {
     private groupImports(imports: ImportInfo[]): ImportInfo[] {
         const groupOrder = this.config.groupOrder || ["external", "internal", "relative"];
         const grouped: ImportInfo[] = [];
-
         for (const group of groupOrder) {
             const groupImports = imports.filter(imp => imp.group === group);
-
             grouped.push(...groupImports);
         }
-
         return grouped;
     }
 
     private reconstructSource(sourceFile: ts.SourceFile, imports: ImportInfo[]): string {
         const fullText = sourceFile.getFullText();
 
-        // Extract and remove leading comments/copyright to avoid duplication
-        const leadingCommentsMatch = fullText.match(/^(\/\*[\s\S]*?\*\/\s*)/);
-        const leadingComments = leadingCommentsMatch ? leadingCommentsMatch[1].trim() : "";
-        const sourceWithoutLeadingComments = leadingCommentsMatch ? fullText.substring(leadingCommentsMatch[0].length) : fullText;
+        // Extract ALL leading block comments (not just the first one)
+        const leadingCommentsMatch = fullText.match(/^((?:\/\*[\s\S]*?\*\/\s*)+)/);
+        let leadingComments = leadingCommentsMatch ? leadingCommentsMatch[1].trim() : "";
 
-        // Create a new source file without leading comments for printing
-        const cleanSourceFile = ts.createSourceFile(sourceFile.fileName, sourceWithoutLeadingComments, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+        // Deduplicate consecutive identical block comments (fixes copyright duplication)
+        if (leadingComments) {
+            const commentBlocks = leadingComments.match(/\/\*[\s\S]*?\*\//g) || [];
+            const uniqueBlocks = new Set(commentBlocks.map(block => block.trim()));
+            leadingComments = Array.from(uniqueBlocks).join("\n");
+        }
+
+        // Find the last import statement position
+        const importStatements = sourceFile.statements.filter(stmt => ts.isImportDeclaration(stmt));
+        const lastImport = importStatements[importStatements.length - 1];
+        const afterImportsPos = lastImport ? lastImport.getEnd() : (leadingCommentsMatch ? leadingCommentsMatch[0].length : 0);
+
+        // Extract everything after imports, preserving original formatting
+        let restOfFile = fullText.substring(afterImportsPos);
+        // Ensure restOfFile starts with a newline
+        if (restOfFile && !restOfFile.startsWith("\n")) {
+            restOfFile = "\n" + restOfFile;
+        }
+        // Remove excessive leading blank lines (more than one newline) but keep at least one
+        restOfFile = restOfFile.replace(/^\n{2,}/, "\n");
+
+        // Build import section (only reprint imports, not everything else)
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
-        });
+});
 
-        // Build import section using original sourceFile for positions
         const importLines: string[] = [];
-
         let lastGroup: string | null = null;
 
         for (const importInfo of imports) {
@@ -198,35 +192,22 @@ export class ImportOrganizer extends BaseFormatter {
             lastGroup = importInfo.group;
         }
 
-        // Build rest of source using clean source file (without leading comments)
-        const nonImportStatements = cleanSourceFile.statements.filter(stmt => !ts.isImportDeclaration(stmt));
-        const restLines: string[] = [];
-
-        for (const statement of nonImportStatements) {
-            const text = printer.printNode(ts.EmitHint.Unspecified, statement, cleanSourceFile);
-
-            restLines.push(text);
-        }
-
-        // Combine with proper spacing
-        const result: string[] = [];
-
+        // Combine sections
+        const sections: string[] = [];
         if (leadingComments) {
-            result.push(leadingComments);
+            sections.push(leadingComments);
         }
-
         if (importLines.length > 0) {
-            result.push(importLines.join("\n"));
+            sections.push(importLines.join("\n"));
+        }
+        if (restOfFile) {
+            sections.push(restOfFile);
         }
 
-        if (restLines.length > 0) {
-            result.push(restLines.join("\n"));
-        }
-
-        let combined = result.join("\n\n");
+        let combined = sections.join("\n\n");
 
         // Remove trailing semicolons that TypeScript printer adds after closing braces
-        combined = combined.replace(/(\n;)+\s*$/, "\n");
+        combined = combined.replace(/(;\n+)+;?\s*$/, "\n");
 
         return combined;
     }
@@ -241,7 +222,6 @@ export class ImportOrganizer extends BaseFormatter {
 
         // Filter unused imports if configured
         let filteredImports = imports;
-
         if (this.config.removeUnused) {
             filteredImports = this.filterUnusedImports(imports, sourceFile);
         }
@@ -268,3 +248,4 @@ export class ImportOrganizer extends BaseFormatter {
         return [".ts", ".tsx", ".js", ".jsx"];
     }
 }
+

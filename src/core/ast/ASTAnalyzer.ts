@@ -2,19 +2,23 @@
 * Copyright (c) 2026. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import * as ts from "typescript";
+
+/**
+* Information about references found in AST nodes
+*/
+
+
+/**
+* Information about references found in AST nodes
+*/
+
+
+/**
+* Information about references found in AST nodes
+*/
+
 /**
 * Information about references found in AST nodes
 */
@@ -95,9 +99,10 @@ export class ASTAnalyzer {
             }
             ts.forEachChild(currentNode, visit);
         }
+
         visit(node);
 
-        return { identifiers, thisReferences, directCalls };
+        return {identifiers, thisReferences, directCalls};
     }
 
     /**
@@ -235,6 +240,4 @@ export class ASTAnalyzer {
         return this.hasModifier(node, ts.SyntaxKind.ExportKeyword);
     }
 }
-;
-;
-;
+

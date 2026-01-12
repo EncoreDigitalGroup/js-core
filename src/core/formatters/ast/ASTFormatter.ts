@@ -6,6 +6,8 @@
 import * as ts from "typescript";
 import { ASTTransformer } from "../../ast/ASTTransformer";
 import { BaseFormatter } from "../base/BaseFormatter";
+
+
 /**
 * Base class for formatters that work with TypeScript AST transformations
 */

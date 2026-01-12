@@ -2,19 +2,23 @@
 * Copyright (c) 2026. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import { CoreConfig } from "../../config/types";
+
+/**
+* Validation result containing errors and warnings
+*/
+
+
+/**
+* Validation result containing errors and warnings
+*/
+
+
+/**
+* Validation result containing errors and warnings
+*/
+
 /**
 * Validation result containing errors and warnings
 */
@@ -118,7 +122,7 @@ export class ConfigValidator {
             valid: errors.length === 0,
             errors,
             warnings,
-        };
+};
     }
 
     /**
@@ -144,6 +148,4 @@ export class ConfigValidator {
         }
     }
 }
-;
-;
-;
+

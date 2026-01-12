@@ -2,19 +2,10 @@
 * Copyright (c) 2026. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import * as ts from "typescript";
+
+
 /**
 * Transforms TypeScript AST nodes by reordering children
 */
@@ -44,7 +35,7 @@ export class ASTTransformer {
 
             newLine: ts.NewLineKind.LineFeed,
             removeComments,
-        });
+});
 
         return printer.printNode(ts.EmitHint.Unspecified, node, sourceFile);
     }
@@ -72,7 +63,7 @@ export class ASTTransformer {
 
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
-        });
+});
 
         // Print the file content
         let printed = printer.printFile(sourceFile);

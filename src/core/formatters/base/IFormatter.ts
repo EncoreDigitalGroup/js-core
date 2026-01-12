@@ -6,6 +6,7 @@
 * Base interface that all formatters must implement
 */
 
+
 export interface IFormatter {
 
     /**

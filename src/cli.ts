@@ -1,22 +1,17 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-import { loadConfig, hasConfigFile } from "./config";
 import type { CoreConfig } from "./config";
+import { hasConfigFile, loadConfig } from "./config";
 import { FormatterPipeline } from "./core/pipeline/FormatterPipeline";
 import { sortPackageFile } from "./sortPackage";
 import { sortTsConfigFile } from "./sortTSConfig";
+
+
 /**
 * Format files using the FormatterPipeline
 */
 async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
-    // Determine which file extensions to process
-
-    const extensions = [".ts", ".tsx", ".js", ".jsx"];
     // Get include/exclude patterns
     const include = config.sorting?.include || ["**/*.{ts,tsx,js,jsx}"];
     const exclude = config.sorting?.exclude || [];
@@ -29,7 +24,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
-    }));
+}));
 
     if (files.length === 0) {
 
@@ -59,9 +54,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
                     console.log(`✨ Formatted: ${path.relative(targetDir, file)}`);
                 }
             }
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(`Error formatting file ${file}:`, (error as Error).message);
         }
@@ -70,9 +63,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     if (dryRun) {
 
         console.info(`Would format ${formattedCount} of ${files.length} files.`);
-    }
-
-    else {
+    } else {
 
         console.info(`Formatted ${formattedCount} of ${files.length} files.`);
     }
@@ -96,14 +87,10 @@ async function main(): Promise<void> {
         if (arg === "--dry") {
 
             dryRun = true;
-        }
-
-        else if (!arg.startsWith("-")) {
+        } else if (!arg.startsWith("-")) {
 
             targetDir = path.resolve(arg);
-        }
-
-        else {
+        } else {
 
             console.error(`Error: Unsupported option "${arg}". Only --dry is supported.`);
             process.exit(1);
@@ -133,7 +120,7 @@ async function main(): Promise<void> {
                     customSortOrder: config.packageJson.customSortOrder,
                     indentation: config.packageJson.indentation,
                     dryRun,
-                });
+});
             }
         }
         // Sort tsconfig.json
@@ -148,7 +135,7 @@ async function main(): Promise<void> {
                 sortTsConfigFile(tsconfigPath, {
                     indentation: config.tsConfig.indentation,
                     dryRun,
-                });
+});
             }
         }
         // Format files using the new pipeline
@@ -165,19 +152,16 @@ async function main(): Promise<void> {
         if (dryRun) {
 
             console.info("Dry run completed. No files were modified.");
-        }
-
-        else {
+        } else {
 
             console.info("Formatting completed successfully.");
         }
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error("Error during formatting:", (error as Error).message);
         process.exit(1);
     }
 }
+
 // Run the CLI
-main();
+main()

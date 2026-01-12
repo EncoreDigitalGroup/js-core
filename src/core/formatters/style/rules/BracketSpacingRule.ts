@@ -6,6 +6,8 @@
 import * as ts from "typescript";
 import { CodeStyleConfig } from "../../../../config/types";
 import { IStyleRule } from "../IStyleRule";
+
+
 /**
 * Adds or removes spacing inside object literals and imports using AST
 * Examples:
@@ -16,7 +18,10 @@ import { IStyleRule } from "../IStyleRule";
 export class BracketSpacingRule implements IStyleRule {
 
     readonly name = "BracketSpacingRule";
-    constructor(private config: CodeStyleConfig) { }
+
+    constructor(private config: CodeStyleConfig) {
+    }
+
     apply(source: string): string {
 
         if (this.config.bracketSpacing === undefined) {
@@ -49,7 +54,7 @@ export class BracketSpacingRule implements IStyleRule {
 
                         if (afterOpenBrace !== " " && afterOpenBrace !== "\n") {
 
-                            changes.push({ pos: openBraceEnd, type: "add", text: " " });
+                            changes.push({pos: openBraceEnd, type: "add", text: " "});
                         }
                         // Add spacing before closing brace
 
@@ -57,18 +62,16 @@ export class BracketSpacingRule implements IStyleRule {
 
                         if (beforeCloseBrace !== " " && beforeCloseBrace !== "\n") {
 
-                            changes.push({ pos: closeBraceStart, type: "add", text: " " });
+                            changes.push({pos: closeBraceStart, type: "add", text: " "});
                         }
-                    }
-
-                    else {
+                    } else {
                         // Remove spacing after opening brace
 
                         let pos = openBraceEnd;
 
                         while (fullText[pos] === " " || fullText[pos] === "\t") {
 
-                            changes.push({ pos, type: "remove" });
+                            changes.push({pos, type: "remove"});
                             pos++;
                         }
                         // Remove spacing before closing brace
@@ -76,7 +79,7 @@ export class BracketSpacingRule implements IStyleRule {
 
                         while (pos >= 0 && (fullText[pos] === " " || fullText[pos] === "\t")) {
 
-                            changes.push({ pos, type: "remove" });
+                            changes.push({pos, type: "remove"});
                             pos--;
                         }
                     }
@@ -101,7 +104,7 @@ export class BracketSpacingRule implements IStyleRule {
 
                             if (afterOpenBrace !== " ") {
 
-                                changes.push({ pos: openBraceEnd, type: "add", text: " " });
+                                changes.push({pos: openBraceEnd, type: "add", text: " "});
                             }
                             // Add spacing before closing brace
 
@@ -109,18 +112,16 @@ export class BracketSpacingRule implements IStyleRule {
 
                             if (beforeCloseBrace !== " ") {
 
-                                changes.push({ pos: closeBraceStart, type: "add", text: " " });
+                                changes.push({pos: closeBraceStart, type: "add", text: " "});
                             }
-                        }
-
-                        else {
+                        } else {
                             // Remove spacing after opening brace
 
                             let pos = openBraceEnd;
 
                             while (fullText[pos] === " " || fullText[pos] === "\t") {
 
-                                changes.push({ pos, type: "remove" });
+                                changes.push({pos, type: "remove"});
                                 pos++;
                             }
                             // Remove spacing before closing brace
@@ -128,7 +129,7 @@ export class BracketSpacingRule implements IStyleRule {
 
                             while (pos >= 0 && (fullText[pos] === " " || fullText[pos] === "\t")) {
 
-                                changes.push({ pos, type: "remove" });
+                                changes.push({pos, type: "remove"});
                                 pos--;
                             }
                         }
@@ -148,9 +149,7 @@ export class BracketSpacingRule implements IStyleRule {
             if (change.type === "add") {
 
                 result = result.substring(0, change.pos) + (change.text || " ") + result.substring(change.pos);
-            }
-
-            else {
+            } else {
 
                 result = result.substring(0, change.pos) + result.substring(change.pos + 1);
             }

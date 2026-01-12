@@ -10,6 +10,8 @@ import { BracketSpacingRule } from "./rules/BracketSpacingRule";
 import { IndentationRule } from "./rules/IndentationRule";
 import { QuoteStyleRule } from "./rules/QuoteStyleRule";
 import { SemicolonRule } from "./rules/SemicolonRule";
+
+
 /**
 * Formats code style (quotes, semicolons, spacing, indentation)
 */
@@ -18,10 +20,12 @@ export class CodeStyleFormatter extends BaseFormatter {
 
     readonly name = "CodeStyleFormatter";
     private rules: IStyleRule[] = [];
+
     constructor(private readonly config: CodeStyleConfig) {
         super();
         this.initializeRules();
     }
+
     async format(source: string, filePath: string): Promise<string> {
 
         if (!this.config.enabled) {
@@ -40,10 +44,12 @@ export class CodeStyleFormatter extends BaseFormatter {
 
         return formatted;
     }
+
     protected getSupportedExtensions(): string[] {
 
         return [".ts", ".tsx", ".js", ".jsx"];
     }
+
     private initializeRules(): void {
         // Add rules in order of execution
 
@@ -67,6 +73,7 @@ export class CodeStyleFormatter extends BaseFormatter {
             this.rules.push(new IndentationRule(this.config));
         }
     }
+
     override validateConfig(config: any): boolean {
 
         if (!config || typeof config !== "object") {

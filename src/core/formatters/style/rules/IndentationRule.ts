@@ -5,6 +5,8 @@
 
 import { CodeStyleConfig } from "../../../../config/types";
 import { IStyleRule } from "../IStyleRule";
+
+
 /**
 * Normalizes indentation (tabs vs spaces, indent width)
 * Note: Uses line-by-line processing rather than AST for better preservation
@@ -14,7 +16,10 @@ import { IStyleRule } from "../IStyleRule";
 export class IndentationRule implements IStyleRule {
 
     readonly name = "IndentationRule";
-    constructor(private config: CodeStyleConfig) { }
+
+    constructor(private config: CodeStyleConfig) {
+    }
+
     apply(source: string): string {
 
         if (!this.config.indentStyle || !this.config.indentWidth) {
@@ -53,9 +58,7 @@ export class IndentationRule implements IStyleRule {
                 const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
 
                 indentLevel = tabCount + Math.floor(spaceCount / indentWidth);
-            }
-
-            else {
+            } else {
                 // Converting to tabs
 
                 const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
@@ -70,9 +73,7 @@ export class IndentationRule implements IStyleRule {
             if (this.config.indentStyle === "space") {
 
                 newIndent = " ".repeat(indentLevel * indentWidth);
-            }
-
-            else {
+            } else {
 
                 newIndent = "\t".repeat(indentLevel);
             }

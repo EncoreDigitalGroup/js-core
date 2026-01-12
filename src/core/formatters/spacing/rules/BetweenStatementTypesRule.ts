@@ -5,6 +5,8 @@
 
 import { SpacingConfig } from "../../../../config/types";
 import { ISpacingRule } from "../ISpacingRule";
+
+
 /**
 * Statement types for categorization
 */
@@ -30,7 +32,9 @@ enum StatementType {
 export class BetweenStatementTypesRule implements ISpacingRule {
 
     readonly name = "BetweenStatementTypesRule";
-    constructor(private config: SpacingConfig) { }
+
+    constructor(private config: SpacingConfig) {
+    }
 
     /**
     * Determine the type of a statement
@@ -93,6 +97,7 @@ export class BetweenStatementTypesRule implements ISpacingRule {
         // Everything else (expressions, calls, etc.)
         return StatementType.Expression;
     }
+
     apply(source: string): string {
 
         if (!this.config.betweenStatementTypes) {

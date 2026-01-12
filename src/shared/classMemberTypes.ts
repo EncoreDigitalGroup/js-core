@@ -2,18 +2,7 @@
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import * as ts from "typescript";
 
 export enum MemberType {
@@ -83,17 +72,14 @@ export function compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: numbe
 
 export const DEFAULT_CLASS_ORDER: MemberType[] = [
 
-    MemberType.StaticProperty,
-    MemberType.InstanceProperty,
-    MemberType.Constructor,
-    MemberType.GetAccessor,
-    MemberType.SetAccessor,
-    MemberType.StaticMethod,
-    MemberType.InstanceMethod,
-];
+        MemberType.StaticProperty,
+        MemberType.InstanceProperty,
+        MemberType.Constructor,
+        MemberType.GetAccessor,
+        MemberType.SetAccessor,
+        MemberType.StaticMethod,
+        MemberType.InstanceMethod,
+    ]
+
 ;
-;
-;
-;
-;
-;
+

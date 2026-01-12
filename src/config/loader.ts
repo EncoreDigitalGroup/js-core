@@ -2,22 +2,13 @@
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
 import { CoreConfig, defaultConfig, mergeConfig } from "./types";
+
+
 /**
 * Transpiles TypeScript code to JavaScript
 */
@@ -31,8 +22,8 @@ function transpileTypeScript(code: string): string {
             target: ts.ScriptTarget.ES2015,
             esModuleInterop: true,
             allowSyntheticDefaultImports: true,
-        },
-    });
+},
+});
 
     return result.outputText;
 }
@@ -56,7 +47,7 @@ function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
         const module: {
 
             exports: any;
-        } = { exports: {} };
+        } = {exports: {}};
 
         const exports = module.exports;
         // Create a require function that can resolve relative imports
@@ -88,9 +79,7 @@ function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
         }
 
         return config;
-    }
-
-    catch (error) {
+    } catch (error) {
         throw new Error(`Failed to load ${CONFIG_FILE_NAME}: ${error instanceof Error ? error.message : String(error)}`);
 
     }
@@ -132,9 +121,7 @@ export function loadConfig(projectRoot: string = process.cwd()): CoreConfig {
         const userConfig = loadTypeScriptConfig(configPath);
 
         return mergeConfig(userConfig);
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(`Error loading configuration from ${configPath}:`);
         console.error(error instanceof Error ? error.message : String(error));

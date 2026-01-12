@@ -3,5 +3,6 @@
 * All Rights Reserved.
 */
 
-export { IFormatter } from "./IFormatter";
-export { BaseFormatter } from "./BaseFormatter";
+
+export {IFormatter} from "./IFormatter";
+export {BaseFormatter} from "./BaseFormatter"

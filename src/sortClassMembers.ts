@@ -5,14 +5,25 @@
 
 import fs from "fs";
 import * as ts from "typescript";
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
 import { transformClass } from "./formatters/class";
-import { transformFile, FileSortConfig } from "./formatters/file";
+import { FileSortConfig, transformFile } from "./formatters/file";
 import { isReactComponent, transformReactComponent } from "./formatters/react";
 import { SortConfig } from "./shared/classMemberTypes";
+
+/**
+* Configuration for sorting class members in a directory
+*/
+
+
+/**
+* Configuration for sorting class members in a directory
+*/
+
+
+/**
+* Configuration for sorting class members in a directory
+*/
+
 /**
 * Configuration for sorting class members in a directory
 */
@@ -205,9 +216,7 @@ function addBlankLinesBetweenDeclarations(code: string): string {
 
                 lastDeclarationKeyword = declarationKeyword;
             }
-        }
-
-        else if (!isBlankLine && !isComment) {
+        } else if (!isBlankLine && !isComment) {
             // Don't reset if we're at depth 0 and the line is just closing braces
             // (this handles cases like }; }; } where multiple closes happen at top level)
             if (!isBlockCommentStart && trimmedLine !== "" && !(braceDepth === 0 && isJustClosingBraces)) {
@@ -247,9 +256,7 @@ function createTransformer(classConfig: SortConfig | null | undefined, reactConf
 
                             return transformReactComponent(node, sourceFile, reactConfig);
                         }
-                    }
-
-                    else if (classConfig) {
+                    } else if (classConfig) {
                         // Otherwise, treat as regular TypeScript class
 
                         return transformClass(node, sourceFile, classConfig);
@@ -281,6 +288,7 @@ function hasClassDeclarations(sourceFile: ts.SourceFile): boolean {
         }
         ts.forEachChild(node, visit);
     }
+
     visit(sourceFile);
 
     return hasClass;
@@ -317,7 +325,7 @@ function sortFileInternal(filePath: string, classConfig: SortConfig | null | und
 
         newLine: ts.NewLineKind.LineFeed,
         removeComments: false,
-    });
+});
 
     let output = printer.printFile(transformedSourceFile);
     // STEP 4: Final formatting - add blank lines
@@ -358,9 +366,7 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
         dryRun = newConfig.dryRun || false;
         include = newConfig.include || ["**/*.{ts,tsx}"];
         exclude = newConfig.exclude || [];
-    }
-
-    else {
+    } else {
         // Old config format (backward compatibility)
 
         const oldConfig = config as SortConfig;
@@ -381,7 +387,7 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
-    }));
+}));
     console.info(`Sorting class members in ${files.length} files...`);
 
     for (const file of files) {
@@ -389,9 +395,7 @@ export function sortClassMembersInDirectory(targetDir: string, config: SortConfi
         try {
 
             sortFileInternal(file, classConfig, reactConfig, fileConfig, dryRun);
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(`Error sorting file ${file}:`, (error as Error).message);
         }
@@ -407,6 +411,4 @@ export function sortClassMembersInFile(filePath: string, config: SortConfig = {}
 
     return sortFileInternal(filePath, config, config, undefined, config.dryRun);
 }
-;
-;
-;
+

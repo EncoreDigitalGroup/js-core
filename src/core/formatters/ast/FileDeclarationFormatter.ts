@@ -6,13 +6,12 @@
 import * as ts from "typescript";
 import { FileDeclarationConfig } from "../../../config/types";
 import { ASTAnalyzer } from "../../ast/ASTAnalyzer";
-import { ASTTransformer } from "../../ast/ASTTransformer";
 import { DependencyResolver } from "../../ast/DependencyResolver";
 import { ASTFormatter } from "./ASTFormatter";
+
 /**
 * Types of top-level declarations in a file
 */
-
 export enum DeclarationType {
 
     Interface = "interface",
@@ -66,8 +65,8 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 */
 
 export class FileDeclarationFormatter extends ASTFormatter {
-
     readonly name = "FileDeclarationFormatter";
+
     constructor(private readonly config: FileDeclarationConfig) {
         super();
     }
@@ -147,7 +146,7 @@ export class FileDeclarationFormatter extends ASTFormatter {
             text,
             dependencies,
             originalIndex: index,
-        };
+};
     }
 
     /**
@@ -172,47 +171,6 @@ export class FileDeclarationFormatter extends ASTFormatter {
         });
     }
 
-    /**
-    * Transform a source file by sorting its top-level declarations
-    */
-    private transformFile(sourceFile: ts.SourceFile): ts.SourceFile {
-        // Separate import statements from other declarations
-
-        const imports: ts.Statement[] = [];
-        const otherStatements: ts.Statement[] = [];
-
-        sourceFile.statements.forEach(statement => {
-
-            if (ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement)) {
-
-                imports.push(statement);
-            }
-
-            else {
-
-                otherStatements.push(statement);
-            }
-        });
-        // Collect all declaration names first
-
-        const allDeclarationNames = new Set<string>(otherStatements.map(stmt => ASTAnalyzer.getDeclarationName(stmt)).filter(n => n));
-        // Analyze and sort non-import declarations
-        const analyzedDeclarations = otherStatements.map((stmt, index) => this.analyzeDeclaration(stmt, sourceFile, index, allDeclarationNames));
-
-        let sortedDeclarations = this.sortFileDeclarations(analyzedDeclarations);
-        // Apply dependency reordering if enabled
-
-        if (this.config.respectDependencies !== false) {
-
-            sortedDeclarations = DependencyResolver.reorderWithDependencies(sortedDeclarations, d => d.name);
-        }
-        // Combine imports with sorted declarations
-
-        const sortedStatements = [...imports, ...sortedDeclarations.map(d => d.node)];
-        // Create new source file with sorted statements
-
-        return ASTTransformer.reorderSourceFileStatements(sourceFile, sortedStatements);
-    }
     async format(source: string, filePath: string): Promise<string> {
 
         if (!this.config.enabled) {
@@ -221,11 +179,62 @@ export class FileDeclarationFormatter extends ASTFormatter {
         }
 
         const sourceFile = this.createSourceFile(source, filePath);
-        const transformed = this.transformFile(sourceFile);
-        const formatted = this.printSourceFile(transformed);
+
+        // Separate imports from other declarations
+        const imports: ts.Statement[] = [];
+        const otherStatements: ts.Statement[] = [];
+
+        sourceFile.statements.forEach(statement => {
+            if (ts.isImportDeclaration(statement) || ts.isImportEqualsDeclaration(statement)) {
+                imports.push(statement);
+            } else {
+                otherStatements.push(statement);
+            }
+        });
+
+        if (otherStatements.length === 0) {
+            return source;
+        }
+
+        // Analyze and sort declarations
+        const allDeclarationNames = new Set<string>(otherStatements.map(stmt =>
+            ASTAnalyzer.getDeclarationName(stmt)).filter(n => n));
+        const analyzedDeclarations = otherStatements.map((stmt, index) =>
+            this.analyzeDeclaration(stmt, sourceFile, index, allDeclarationNames)
+        );
+        let sortedDeclarations = this.sortFileDeclarations(analyzedDeclarations);
+
+        if (this.config.respectDependencies !== false) {
+            sortedDeclarations = DependencyResolver.reorderWithDependencies(sortedDeclarations, d => d.name);
+        }
+
+        // Check if reordering is needed
+        const orderChanged = sortedDeclarations.some((decl, index) => decl.originalIndex !== index);
+
+        if (!orderChanged) {
+            return source;
+        }
+
+        // Reconstruct file with reordered declarations using original text
+        const firstDeclaration = otherStatements[0];
+        const lastDeclaration = otherStatements[otherStatements.length - 1];
+        const declarationsStart = firstDeclaration.getFullStart();
+        const declarationsEnd = lastDeclaration.getEnd();
+
+        // Build new declarations section from sorted texts
+        const declarationTexts = sortedDeclarations.map(d => d.text.trim());
+        const newDeclarations = declarationTexts.join("\n\n");
+
+        // Replace the declarations section (add spacing between imports and declarations)
+        let formatted = source.substring(0, declarationsStart) + "\n\n" + newDeclarations + source.substring(declarationsEnd);
+
+        // Remove trailing semicolons that TypeScript printer adds after closing braces
+        formatted = formatted.replace(/(\n;)+\s*$/, "\n");
 
         this.logFormat(filePath, formatted !== source);
 
         return formatted;
     }
+
 }
+

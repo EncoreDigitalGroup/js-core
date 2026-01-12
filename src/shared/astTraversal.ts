@@ -2,18 +2,7 @@
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import * as ts from "typescript";
 
 export interface ReferenceInfo {
@@ -86,9 +75,10 @@ export function extractReferences(node: ts.Node, scopeFilter?: (name: string) =>
         }
         ts.forEachChild(currentNode, visit);
     }
+
     visit(node);
 
-    return { identifiers, thisReferences, directCalls };
+    return {identifiers, thisReferences, directCalls};
 }
 
 /**
@@ -133,6 +123,4 @@ export function extractFileDeclarationReferences(declaration: ts.Statement, avai
 
     return refs.identifiers;
 }
-;
-;
-;
+

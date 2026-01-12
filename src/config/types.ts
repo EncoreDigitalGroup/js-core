@@ -2,22 +2,26 @@
 * Copyright (c) 2025. Encore Digital Group.
 * All Rights Reserved.
 */
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-/*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
+
 import { DeclarationType, DEFAULT_FILE_ORDER } from "../formatters/file";
-import { ReactMemberType, DEFAULT_REACT_ORDER } from "../formatters/react";
-import { MemberType, DEFAULT_CLASS_ORDER } from "../shared/classMemberTypes";
+import { DEFAULT_REACT_ORDER, ReactMemberType } from "../formatters/react";
+import { DEFAULT_CLASS_ORDER, MemberType } from "../shared/classMemberTypes";
 import { DefaultSortOptions } from "../shared/types";
+
+/**
+* Configuration for class member sorting
+*/
+
+
+/**
+* Configuration for class member sorting
+*/
+
+
+/**
+* Configuration for class member sorting
+*/
+
 /**
 * Configuration for class member sorting
 */
@@ -137,7 +141,7 @@ export interface ImportConfig {
     groupOrder?: string[];
 
     /**
-    * Add blank lines between import groups (default: true)
+    * Add blank lines between import groups (default: false)
     */
     separateGroups?: boolean;
 }
@@ -427,7 +431,7 @@ export interface CoreConfig {
 
 function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
 
-    const result = { ...target };
+    const result = {...target};
 
     for (const key in source) {
 
@@ -440,9 +444,7 @@ function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>)
                 result[key] !== null &&
                 !Array.isArray(result[key])) {
                 result[key] = deepMerge(result[key] as any, source[key] as any);
-            }
-
-            else {
+            } else {
 
                 result[key] = source[key] as T[Extract<keyof T, string>];
             }
@@ -468,7 +470,7 @@ export const defaultConfig: CoreConfig = {
         lineWidth: 120,
         trailingCommas: "all",
         arrowParens: "avoid",
-    },
+},
     imports: {
         enabled: true,
         sortImports: true,
@@ -476,8 +478,8 @@ export const defaultConfig: CoreConfig = {
         removeSideEffects: false,
         groupImports: true,
         groupOrder: ["external", "internal", "relative"],
-        separateGroups: true,
-    },
+        separateGroups: false,
+},
     sorting: {
         enabled: true,
         classMembers: {
@@ -485,36 +487,36 @@ export const defaultConfig: CoreConfig = {
             order: DEFAULT_CLASS_ORDER,
             groupByVisibility: false,
             respectDependencies: true,
-        },
+},
         reactComponents: {
             enabled: true,
             order: DEFAULT_REACT_ORDER,
             groupByVisibility: false,
             respectDependencies: true,
-        },
+},
         fileDeclarations: {
             enabled: true,
             order: DEFAULT_FILE_ORDER,
             respectDependencies: true,
-        },
+},
         include: ["**/*.{ts,tsx}"],
         exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
-    },
+},
     spacing: {
-        enabled: true,
+        enabled: false,
         betweenDeclarations: true,
         beforeReturns: true,
         betweenStatementTypes: true,
-    },
+},
     packageJson: {
         enabled: true,
         customSortOrder: DefaultSortOptions.customSortOrder,
         indentation: 4,
-    },
+},
     tsConfig: {
         enabled: true,
         indentation: 4,
-    },
+},
     // Backward compatibility - keep old prettier config
     prettier: {
         enabled: false, // Disabled by default - use codeStyle instead
@@ -531,10 +533,10 @@ export const defaultConfig: CoreConfig = {
             importOrderSeparation: true,
             singleQuote: false,
             semi: true,
-        },
+},
         include: ["**/*.{js,ts,jsx,tsx}"],
         exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
-    },
+},
     // Backward compatibility - map to sorting
     sorters: {
         enabled: true,
@@ -543,21 +545,21 @@ export const defaultConfig: CoreConfig = {
             order: DEFAULT_CLASS_ORDER,
             groupByVisibility: false,
             respectDependencies: true,
-        },
+},
         reactComponents: {
             enabled: true,
             order: DEFAULT_REACT_ORDER,
             groupByVisibility: false,
             respectDependencies: true,
-        },
+},
         fileDeclarations: {
             enabled: true,
             order: DEFAULT_FILE_ORDER,
             respectDependencies: true,
-        },
+},
         include: ["**/*.{ts,tsx}"],
         exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
-    },
+},
 };
 
 /**
@@ -568,39 +570,26 @@ export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
 
     return deepMerge(defaultConfig, userConfig);
 }
+
 ;
+
 ;
+
 ;
+
 ;
+
 ;
+
 ;
+
 ;
+
 ;
+
 ;
+
 ;
+
 ;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
+

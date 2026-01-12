@@ -4,11 +4,9 @@
 */
 
 import { CoreConfig } from "../../../config/types";
-/*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
 import { ConfigMerger } from "../ConfigMerger";
+
+
 describe("ConfigMerger", () => {
     describe("merge", () => {
         it("should merge user config with defaults", () => {
@@ -17,8 +15,8 @@ describe("ConfigMerger", () => {
 
                 codeStyle: {
                     quoteStyle: "single",
-                },
-            };
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -33,9 +31,9 @@ describe("ConfigMerger", () => {
                 sorting: {
                     classMembers: {
                         groupByVisibility: true,
-                    },
-                },
-            };
+},
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -49,8 +47,8 @@ describe("ConfigMerger", () => {
 
                 imports: {
                     groupOrder: ["relative", "external"],
-                },
-            };
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -63,8 +61,8 @@ describe("ConfigMerger", () => {
 
                 codeStyle: {
                     quoteStyle: undefined,
-                },
-            };
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -78,22 +76,22 @@ describe("ConfigMerger", () => {
 
                 codeStyle: {
                     quoteStyle: "single",
-                },
-            };
+},
+};
 
             const config2: Partial<CoreConfig> = {
 
                 codeStyle: {
                     semicolons: "never",
-                },
-            };
+},
+};
 
             const config3: Partial<CoreConfig> = {
 
                 codeStyle: {
                     quoteStyle: "double", // Override config1
-                },
-            };
+},
+};
 
             const result = ConfigMerger.mergeMultiple(config1, config2, config3);
 
@@ -109,4 +107,4 @@ describe("ConfigMerger", () => {
             expect(result.codeStyle?.enabled).toBe(true);
         });
     });
-});
+})

@@ -1,3 +1,5 @@
+
+
 export interface DependencyInfo {
 
     name: string;
@@ -48,9 +50,7 @@ function findStronglyConnectedComponents(nodes: Map<string, DependencyInfo>): Se
 
                 strongConnect(dep);
                 lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, lowLink.get(dep)!));
-            }
-
-            else if (onStack.has(dep)) {
+            } else if (onStack.has(dep)) {
 
                 lowLink.set(nodeName, Math.min(lowLink.get(nodeName)!, index.get(dep)!));
             }
@@ -109,7 +109,7 @@ export function buildDependencyGraph<T>(items: T[], getName: (item: T) => string
             dependencies: getDependencies(item),
             originalIndex: index,
             sortedIndex: index,
-        });
+});
     });
     // Filter dependencies to only include symbols in our scope
 
@@ -122,7 +122,7 @@ export function buildDependencyGraph<T>(items: T[], getName: (item: T) => string
 
     const circularGroups = findStronglyConnectedComponents(nodes);
 
-    return { nodes, circularGroups };
+    return {nodes, circularGroups};
 }
 
 /**
@@ -181,6 +181,7 @@ export function topologicalSort(graph: DependencyGraph, sortedNames: string[]): 
 
         return true;
     }
+
     // Process nodes in their sorted order preference
     // This ensures that within valid orderings, we respect the type/visibility/name sort
 
@@ -246,9 +247,6 @@ export function reorderWithDependencies<T>(items: T[], getName: (item: T) => str
 
     return result;
 }
+
 ;
-;
-;
-;
-;
-;
+

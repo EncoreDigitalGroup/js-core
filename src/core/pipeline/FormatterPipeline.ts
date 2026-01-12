@@ -5,17 +5,31 @@
 
 import * as fs from "fs/promises";
 import * as path from "path";
-import {CoreConfig, FormatterOrder} from "../../config/types";
-import {ClassMemberFormatter} from "../formatters/ast/ClassMemberFormatter";
-import {FileDeclarationFormatter} from "../formatters/ast/FileDeclarationFormatter";
-import {IFormatter} from "../formatters/base/IFormatter";
-import {ImportOrganizer} from "../formatters/imports/ImportOrganizer";
-import {BlankLineFormatter} from "../formatters/spacing/BlankLineFormatter";
-import {CodeStyleFormatter} from "../formatters/style/CodeStyleFormatter";
+import { CoreConfig, FormatterOrder } from "../../config/types";
+import { ClassMemberFormatter } from "../formatters/ast/ClassMemberFormatter";
+import { FileDeclarationFormatter } from "../formatters/ast/FileDeclarationFormatter";
+import { IFormatter } from "../formatters/base/IFormatter";
+import { ImportOrganizer } from "../formatters/imports/ImportOrganizer";
+import { BlankLineFormatter } from "../formatters/spacing/BlankLineFormatter";
+import { CodeStyleFormatter } from "../formatters/style/CodeStyleFormatter";
 
 /*
- * Tracks the state of a single formatter execution
- */
+* Tracks the state of a single formatter execution
+*/
+
+
+/*
+* Tracks the state of a single formatter execution
+*/
+
+
+/*
+* Tracks the state of a single formatter execution
+*/
+
+/*
+* Tracks the state of a single formatter execution
+*/
 
 export interface FormatterExecution {
 
@@ -26,8 +40,8 @@ export interface FormatterExecution {
 }
 
 /**
- * Context object tracking the entire pipeline execution
- */
+* Context object tracking the entire pipeline execution
+*/
 
 export interface PipelineContext {
 
@@ -40,8 +54,8 @@ export interface PipelineContext {
 }
 
 /**
- * Error thrown when a formatter fails during pipeline execution
- */
+* Error thrown when a formatter fails during pipeline execution
+*/
 
 export class FormatterError extends Error {
 
@@ -52,9 +66,9 @@ export class FormatterError extends Error {
 }
 
 /**
- * Orchestrates the execution of multiple formatters in a defined order.
- * Implements fail-fast error handling and supports dry-run mode.
- */
+* Orchestrates the execution of multiple formatters in a defined order.
+* Implements fail-fast error handling and supports dry-run mode.
+*/
 
 export class FormatterPipeline {
 
@@ -72,8 +86,8 @@ export class FormatterPipeline {
     }
 
     /**
-     * Add a formatter to the pipeline at a specific order position
-     */
+    * Add a formatter to the pipeline at a specific order position
+    */
     private addFormatter(order: FormatterOrder, formatter: IFormatter): void {
 
         if (!this.formatters.has(order)) {
@@ -84,8 +98,8 @@ export class FormatterPipeline {
     }
 
     /**
-     * Get all files in a directory recursively
-     */
+    * Get all files in a directory recursively
+    */
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
 
         const files: string[] = [];
@@ -117,12 +131,12 @@ export class FormatterPipeline {
     }
 
     /**
-     * Format a file using the configured formatters in sequence
-     * @param filePath - Absolute path to the file to format
-     * @param dryRun - If true, don't write changes to disk
-     * @returns Pipeline context with execution details
-     * @throws FormatterError if any formatter fails (fail-fast)
-     */
+    * Format a file using the configured formatters in sequence
+    * @param filePath - Absolute path to the file to format
+    * @param dryRun - If true, don't write changes to disk
+    * @returns Pipeline context with execution details
+    * @throws FormatterError if any formatter fails (fail-fast)
+    */
     async formatFile(filePath: string, dryRun = false): Promise<PipelineContext> {
         // Read original source
 
@@ -136,7 +150,7 @@ export class FormatterPipeline {
             executions: [],
             changed: false,
             dryRun,
-        };
+};
         // Execute formatters in order
 
         for (const order of this.formatterOrder) {
@@ -161,7 +175,7 @@ export class FormatterPipeline {
                     formatterName: formatter.name,
                     order,
                     changed: false,
-                };
+};
 
                 try {
                     // Execute formatter
@@ -200,12 +214,12 @@ export class FormatterPipeline {
     }
 
     /**
-     * Format multiple files in sequence
-     * @param filePaths - Array of file paths to format
-     * @param dryRun - If true, don't write changes to disk
-     * @returns Array of pipeline contexts for each file
-     * @throws FormatterError if any formatter fails for any file
-     */
+    * Format multiple files in sequence
+    * @param filePaths - Array of file paths to format
+    * @param dryRun - If true, don't write changes to disk
+    * @returns Array of pipeline contexts for each file
+    * @throws FormatterError if any formatter fails for any file
+    */
     async formatFiles(filePaths: string[], dryRun = false): Promise<PipelineContext[]> {
 
         const results: PipelineContext[] = [];
@@ -221,12 +235,12 @@ export class FormatterPipeline {
     }
 
     /**
-     * Format all files in a directory recursively
-     * @param dirPath - Directory path to format
-     * @param dryRun - If true, don't write changes to disk
-     * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
-     * @returns Array of pipeline contexts for each file
-     */
+    * Format all files in a directory recursively
+    * @param dirPath - Directory path to format
+    * @param dryRun - If true, don't write changes to disk
+    * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
+    * @returns Array of pipeline contexts for each file
+    */
     async formatDirectory(dirPath: string, dryRun = false, extensions: string[] = [".ts", ".tsx", ".js", ".jsx"]): Promise<PipelineContext[]> {
 
         const files = await this.getFilesRecursively(dirPath, extensions);
@@ -235,32 +249,32 @@ export class FormatterPipeline {
     }
 
     /**
-     * Get the list of formatters in execution order
-     */
+    * Get the list of formatters in execution order
+    */
     getFormatterOrder(): FormatterOrder[] {
 
         return [...this.formatterOrder];
     }
 
     /**
-     * Get all formatters at a specific order position
-     */
+    * Get all formatters at a specific order position
+    */
     getFormattersAtOrder(order: FormatterOrder): IFormatter[] {
 
         return this.formatters.get(order) || [];
     }
 
     /**
-     * Check if any formatters are configured
-     */
+    * Check if any formatters are configured
+    */
     hasFormatters(): boolean {
 
         return this.formatters.size > 0;
     }
 
     /**
-     * Initialize formatters based on configuration
-     */
+    * Initialize formatters based on configuration
+    */
     private initializeFormatters(): void {
         // Code Style Formatter
 
@@ -297,9 +311,6 @@ export class FormatterPipeline {
         }
     }
 }
+
 ;
-;
-;
-;
-;
-;
+

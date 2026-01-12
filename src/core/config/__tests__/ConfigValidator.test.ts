@@ -3,8 +3,9 @@
 * All Rights Reserved.
 */
 
-import {CoreConfig} from "../../../config/types";
-import {ConfigValidator} from "../ConfigValidator";
+import { CoreConfig } from "../../../config/types";
+import { ConfigValidator } from "../ConfigValidator";
+
 
 describe("ConfigValidator", () => {
     describe("validate", () => {
@@ -18,8 +19,8 @@ describe("ConfigValidator", () => {
                     semicolons: "always",
                     indentWidth: 4,
                     lineWidth: 120,
-                },
-            };
+},
+};
 
             const result = ConfigValidator.validate(config);
 
@@ -33,8 +34,8 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     quoteStyle: "triple" as any,
-                },
-            };
+},
+};
 
             const result = ConfigValidator.validate(config);
 
@@ -48,8 +49,8 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     semicolons: "sometimes" as any,
-                },
-            };
+},
+};
 
             const result = ConfigValidator.validate(config);
 
@@ -63,8 +64,8 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     indentWidth: 10,
-                },
-            };
+},
+};
 
             const result = ConfigValidator.validate(config);
 
@@ -78,8 +79,8 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     lineWidth: 250,
-                },
-            };
+},
+};
 
             const result = ConfigValidator.validate(config);
 
@@ -93,8 +94,8 @@ describe("ConfigValidator", () => {
                 imports: {
                     enabled: true,
                     groupOrder: ["external", "invalid", "relative"],
-                },
-            };
+},
+};
 
             const result = ConfigValidator.validate(config);
 
@@ -107,8 +108,8 @@ describe("ConfigValidator", () => {
 
                 prettier: {
                     enabled: true,
-                },
-            };
+},
+};
 
             const result = ConfigValidator.validate(config);
 
@@ -124,8 +125,8 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     quoteStyle: "double",
-                },
-            };
+},
+};
             expect(() => ConfigValidator.validateOrThrow(config)).not.toThrow();
         });
         it("should throw for invalid config", () => {
@@ -135,9 +136,9 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     quoteStyle: "invalid" as any,
-                },
-            };
+},
+};
             expect(() => ConfigValidator.validateOrThrow(config)).toThrow("Invalid configuration");
         });
     });
-});
+})
