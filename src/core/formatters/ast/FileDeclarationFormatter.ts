@@ -4,15 +4,14 @@
 */
 
 import * as ts from "typescript";
-import { FileDeclarationConfig } from "../../../config/types";
-import { ASTAnalyzer } from "../../ast/ASTAnalyzer";
-import { DependencyResolver } from "../../ast/DependencyResolver";
-import { ASTFormatter } from "./ASTFormatter";
+import {FileDeclarationConfig} from "../../../config";
+import {ASTAnalyzer, DependencyResolver} from "../../ast";
+import {ASTFormatter} from "./ASTFormatter";
 
 
 /**
-* Types of top-level declarations in a file
-*/
+ * Types of top-level declarations in a file
+ */
 export enum DeclarationType {
     Interface = "interface",
     TypeAlias = "type_alias",
@@ -27,8 +26,8 @@ export enum DeclarationType {
 }
 
 /**
-* Analyzed file declaration with metadata
-*/
+ * Analyzed file declaration with metadata
+ */
 
 export interface FileDeclaration {
     node: ts.Statement;
@@ -42,8 +41,8 @@ export interface FileDeclaration {
 }
 
 /**
-* Default order for file declarations
-*/
+ * Default order for file declarations
+ */
 
 export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 
@@ -60,8 +59,8 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 ];
 
 /**
-* Formats file-level declarations by sorting them according to configured order
-*/
+ * Formats file-level declarations by sorting them according to configured order
+ */
 
 export class FileDeclarationFormatter extends ASTFormatter {
     readonly name = "FileDeclarationFormatter";
@@ -71,8 +70,8 @@ export class FileDeclarationFormatter extends ASTFormatter {
     }
 
     /**
-    * Determine the type of a top-level declaration
-    */
+     * Determine the type of a top-level declaration
+     */
     private getDeclarationType(node: ts.Statement): DeclarationType {
         const exported = ASTAnalyzer.isExported(node);
         const defaultExp = ASTAnalyzer.isDefaultExport(node);
@@ -113,8 +112,8 @@ export class FileDeclarationFormatter extends ASTFormatter {
     }
 
     /**
-    * Analyze a top-level statement
-    */
+     * Analyze a top-level statement
+     */
     private analyzeDeclaration(node: ts.Statement, sourceFile: ts.SourceFile, index: number, allDeclarationNames: Set<string>): FileDeclaration {
         const type = this.getDeclarationType(node);
         const name = ASTAnalyzer.getDeclarationName(node);
@@ -135,12 +134,12 @@ export class FileDeclarationFormatter extends ASTFormatter {
             text,
             dependencies,
             originalIndex: index,
-};
+        };
     }
 
     /**
-    * Sort file declarations according to configuration
-    */
+     * Sort file declarations according to configuration
+     */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
         const order = this.config.order || DEFAULT_FILE_ORDER;
 

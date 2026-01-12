@@ -3,7 +3,6 @@
 * All Rights Reserved.
 */
 
-
 export {
     type CoreConfig,
     type PrettierConfig,

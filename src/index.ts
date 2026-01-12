@@ -51,38 +51,3 @@ export {
 // ===== LEGACY EXPORTS (Backward Compatibility) =====
 export {sortPackageFile, sortPackageJson} from "./sortPackage";
 export {sortTsConfigFile, sortTsConfig} from "./sortTSConfig";
-
-/**
-* @deprecated Use FormatterPipeline instead
-*/
-export {sortClassMembersInFile, sortClassMembersInDirectory, type SortClassMembersConfig} from "./sortClassMembers";
-
-/**
-* @deprecated Use core/formatters/ast exports instead
-*/
-export {type SortConfig, compareMembers} from "./shared/classMemberTypes";
-
-/**
-* @deprecated Use ClassMemberFormatter instead
-*/
-export {sortClassMembers, transformClass} from "./formatters/class";
-
-/**
-* @deprecated Use ClassMemberFormatter with React config instead
-*/
-export {sortReactMembers, transformReactComponent, isReactComponent, ReactMemberType, DEFAULT_REACT_ORDER,} from "./formatters/react";
-
-/**
-* @deprecated Use FileDeclarationFormatter instead
-*/
-export {transformFile, sortFileDeclarations, type FileSortConfig} from "./formatters/file";
-
-/**
-* @deprecated Use 'sorting' config instead
-*/
-export {type SortersConfig} from "./config";
-
-/**
-* @deprecated Prettier is no longer used - use 'codeStyle' config instead
-*/
-export {type PrettierConfig, mergeConfig} from "./config"
