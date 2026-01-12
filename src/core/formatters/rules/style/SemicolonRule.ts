@@ -4,8 +4,8 @@
 */
 
 import * as ts from "typescript";
-import { CodeStyleConfig } from "../../../../config/types";
-import { IFormattingRule } from "../../IFormattingRule";
+import {CodeStyleConfig} from "../../../../config/types";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 /**
@@ -13,22 +13,18 @@ import { IFormattingRule } from "../../IFormattingRule";
 */
 
 export class SemicolonRule implements IFormattingRule {
-
     readonly name = "SemicolonRule";
 
     constructor(private config: CodeStyleConfig) {
     }
 
     apply(source: string, filePath?: string): string {
-
         if (!this.config.semicolons) {
-
             return source;
         }
 
         const sourceFile = ts.createSourceFile("temp.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
         const changes: Array<{
-
             pos: number;
             type: "add" | "remove";
         }> = [];
@@ -47,7 +43,6 @@ export class SemicolonRule implements IFormattingRule {
                 ts.isImportDeclaration(node) ||
                 ts.isExportDeclaration(node) ||
                 ts.isTypeAliasDeclaration(node)) {
-
                 const nodeEnd = node.getEnd();
                 const fullText = sourceFile.getFullText();
                 const hasSemicolon = fullText[nodeEnd - 1] === ";";
@@ -66,7 +61,6 @@ export class SemicolonRule implements IFormattingRule {
             // Remove incorrect semicolons from interfaces, classes, and enums
 
             if (ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) {
-
                 const nodeEnd = node.getEnd();
                 const fullText = sourceFile.getFullText();
                 const hasSemicolon = fullText[nodeEnd] === ";";
@@ -87,9 +81,7 @@ export class SemicolonRule implements IFormattingRule {
         let result = source;
 
         for (const change of changes) {
-
             if (change.type === "add") {
-
                 result = result.substring(0, change.pos) + ";" + result.substring(change.pos);
             } else {
                 result = result.substring(0, change.pos) + result.substring(change.pos + 1);

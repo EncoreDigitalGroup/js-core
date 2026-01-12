@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import { SpacingConfig } from "../../../../config/types";
-import { IFormattingRule } from "../../IFormattingRule";
+import {SpacingConfig} from "../../../../config/types";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 /**
@@ -12,17 +12,14 @@ import { IFormattingRule } from "../../IFormattingRule";
 * Works at all brace depths (not just top level)
 */
 
-export class BeforeReturnsRule implements IFormattingRule {
-
-    readonly name = "BeforeReturnsRule";
+export class BlankLineBeforeReturnsRule implements IFormattingRule {
+    readonly name = "BlankLineBeforeReturnsRule";
 
     constructor(private config: SpacingConfig) {
     }
 
     apply(source: string, filePath?: string): string {
-
         if (!this.config.beforeReturns) {
-
             return source;
         }
 
@@ -30,7 +27,6 @@ export class BeforeReturnsRule implements IFormattingRule {
         const result: string[] = [];
 
         for (let i = 0; i < lines.length; i++) {
-
             const currentLine = lines[i];
             const trimmedCurrentLine = currentLine.trim();
             const previousLine = i > 0 ? lines[i - 1] : "";
@@ -52,7 +48,6 @@ export class BeforeReturnsRule implements IFormattingRule {
             // - We have at least one line before
 
             if (isReturnStatement && !previousIsBlank && !previousIsComment && i > 0) {
-
                 result.push("");
             }
             result.push(currentLine);
