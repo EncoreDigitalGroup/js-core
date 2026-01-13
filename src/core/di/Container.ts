@@ -3,21 +3,21 @@
 * All Rights Reserved.
 */
 /**
-* Simple, purpose-built DI container for tsfmt
-* Supports magical syntax for type registration and resolution
-*/
+ * Simple, purpose-built DI container for tsfmt
+ * Supports magical syntax for type registration and resolution
+ */
 
 import "reflect-metadata";
 
 
 export class Container {
-private factories = new Map<string, () => any>();
+    private factories = new Map<string, () => any>();
 
-private services = new Map<string, any>();
+    private services = new Map<string, any>();
 
-private singletons = new Map<string, any>();
+    private singletons = new Map<string, any>();
 
-/** Static method to declare dependencies for a class */
+    /** Static method to declare dependencies for a class */
     static inject(...dependencies: string[]) {
         return function (target: any) {
             Reflect.defineMetadata("custom:inject", dependencies, target);
@@ -25,14 +25,14 @@ private singletons = new Map<string, any>();
         };
     }
 
-/** Clear all services (useful for testing) */
+    /** Clear all services (useful for testing) */
     clear(): void {
         this.services.clear();
         this.factories.clear();
         this.singletons.clear();
     }
 
-/** Extract generic type name from call stack */
+    /** Extract generic type name from call stack */
     private extractGenericTypeName(): string {
         const stack = new Error().stack;
         if (!stack) {
@@ -74,7 +74,7 @@ private singletons = new Map<string, any>();
         throw new Error("Cannot extract type name from resolve call. Use format: resolve<TypeName>()");
     }
 
-/** Extract generic type name for registration calls */
+    /** Extract generic type name for registration calls */
     private extractGenericTypeNameForRegistration(): string {
         const stack = new Error().stack;
         if (!stack) {
@@ -116,24 +116,24 @@ private singletons = new Map<string, any>();
         throw new Error("Cannot extract type name from singleton call. Use format: singleton<TypeName>(...)");
     }
 
-/** Check if a service is registered */
+    /** Check if a service is registered */
     has(name: string): boolean {
         return this.services.has(name) || this.factories.has(name) || this.singletons.has(name);
     }
 
-/** Check if a value is a constructor function */
+    /** Check if a value is a constructor function */
     private isConstructorFunction(value: any): value is new (...args: any[]) => any {
         return typeof value === "function" &&
             value.prototype &&
             value.prototype.constructor === value;
     }
 
-/** Register a service instance */
+    /** Register a service instance */
     register<T>(name: string, instance: T): void {
         this.services.set(name, instance);
     }
 
-/** Internal method to resolve by key */
+    /** Internal method to resolve by key */
     private resolveByKey<T>(name: string): T {
         // Check singletons first
         if (this.singletons.has(name)) {
@@ -168,7 +168,7 @@ private singletons = new Map<string, any>();
         throw new Error(`Service '${name}' not found`);
     }
 
-resolve<T>(name?: string): T {
+    resolve<T>(name?: string): T {
         let key: string;
 
         if (name) {
@@ -181,7 +181,7 @@ resolve<T>(name?: string): T {
         return this.resolveByKey<T>(key);
     }
 
-/** Resolve constructor dependencies automatically */
+    /** Resolve constructor dependencies automatically */
     private resolveDependencies(constructor: new (...args: any[]) => any): any[] {
         // Get parameter types from custom metadata (tsx-compatible approach)
         const deps = Reflect.getMetadata("custom:inject", constructor);
@@ -206,7 +206,7 @@ resolve<T>(name?: string): T {
         return [];
     }
 
-singleton<T>(nameOrInstanceOrConstructor: string | T | (() => T) | (new (...args: any[]) => T), instance?: T | (() => T)): void {
+    singleton<T>(nameOrInstanceOrConstructor: string | T | (() => T) | (new (...args: any[]) => T), instance?: T | (() => T)): void {
         let key: string;
         let value: T | (() => T);
 
@@ -238,5 +238,4 @@ singleton<T>(nameOrInstanceOrConstructor: string | T | (() => T) | (new (...args
             this.singletons.set(key, value);
         }
     }
-
 }
