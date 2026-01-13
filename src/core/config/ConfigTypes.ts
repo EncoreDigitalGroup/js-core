@@ -3,9 +3,10 @@
 * All Rights Reserved.
 */
 
-import { MemberType } from "../";
-import { DeclarationType } from "../";
-import { IndexGenerationConfig } from "../";
+import {MemberType} from "../";
+import {DeclarationType} from "../";
+import {IndexGenerationConfig} from "../";
+
 
 /** Configuration for class member sorting */
 export interface ClassMemberConfig {
@@ -199,6 +200,26 @@ export interface CoreConfig {
 
 /** Configuration type definitions and utilities */
 export class ConfigTypes {
+    /** Get all available arrow parentheses options */
+    static getArrowParenOptions(): Array<"always" | "avoid"> {
+        return ["always", "avoid"];
+    }
+
+    /** Get all formatter order options */
+    static getFormatterOrderOptions(): FormatterOrder[] {
+        return Object.values(FormatterOrder);
+    }
+
+    /** Get all available import group options */
+    static getImportGroupOptions(): string[] {
+        return ["external", "internal", "relative"];
+    }
+
+    /** Get all available indent style options */
+    static getIndentStyleOptions(): Array<"tab" | "space"> {
+        return ["tab", "space"];
+    }
+
     /** Get all available quote style options */
     static getQuoteStyleOptions(): Array<"single" | "double"> {
         return ["single", "double"];
@@ -209,29 +230,29 @@ export class ConfigTypes {
         return ["always", "never"];
     }
 
-    /** Get all available indent style options */
-    static getIndentStyleOptions(): Array<"tab" | "space"> {
-        return ["tab", "space"];
-    }
-
     /** Get all available trailing comma options */
     static getTrailingCommaOptions(): Array<"none" | "es5" | "all"> {
         return ["none", "es5", "all"];
     }
 
-    /** Get all available arrow parentheses options */
-    static getArrowParenOptions(): Array<"always" | "avoid"> {
-        return ["always", "avoid"];
+    /** Check if a line width is in recommended range */
+    static isRecommendedLineWidth(width: number): boolean {
+        return width >= 80 && width <= 120;
     }
 
-    /** Get all available import group options */
-    static getImportGroupOptions(): string[] {
-        return ["external", "internal", "relative"];
+    /** Validate an arrow parentheses option */
+    static isValidArrowParenOption(option: string): option is "always" | "avoid" {
+        return this.getArrowParenOptions().includes(option as any);
     }
 
-    /** Get all formatter order options */
-    static getFormatterOrderOptions(): FormatterOrder[] {
-        return Object.values(FormatterOrder);
+    /** Validate an indent style option */
+    static isValidIndentStyle(style: string): style is "tab" | "space" {
+        return this.getIndentStyleOptions().includes(style as any);
+    }
+
+    /** Check if an indent width is valid */
+    static isValidIndentWidth(width: number): boolean {
+        return width >= 1 && width <= 8;
     }
 
     /** Validate a quote style option */
@@ -244,28 +265,8 @@ export class ConfigTypes {
         return this.getSemicolonOptions().includes(option as any);
     }
 
-    /** Validate an indent style option */
-    static isValidIndentStyle(style: string): style is "tab" | "space" {
-        return this.getIndentStyleOptions().includes(style as any);
-    }
-
     /** Validate a trailing comma option */
     static isValidTrailingCommaOption(option: string): option is "none" | "es5" | "all" {
         return this.getTrailingCommaOptions().includes(option as any);
-    }
-
-    /** Validate an arrow parentheses option */
-    static isValidArrowParenOption(option: string): option is "always" | "avoid" {
-        return this.getArrowParenOptions().includes(option as any);
-    }
-
-    /** Check if an indent width is valid */
-    static isValidIndentWidth(width: number): boolean {
-        return width >= 1 && width <= 8;
-    }
-
-    /** Check if a line width is in recommended range */
-    static isRecommendedLineWidth(width: number): boolean {
-        return width >= 80 && width <= 120;
     }
 }

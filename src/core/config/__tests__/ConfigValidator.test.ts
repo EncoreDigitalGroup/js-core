@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig } from "../ConfigTypes";
-import { ConfigValidator } from "../ConfigValidator";
+import {CoreConfig} from "../ConfigTypes";
+import {ConfigValidator} from "../ConfigValidator";
 
 
 describe("ConfigValidator", () => {
@@ -17,8 +17,8 @@ describe("ConfigValidator", () => {
                     semicolons: "always",
                     indentWidth: 4,
                     lineWidth: 120,
-},
-};
+                },
+            };
 
             const result = ConfigValidator.validate(config);
 
@@ -30,60 +30,60 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     quoteStyle: "triple" as any,
-},
-};
+                },
+            };
 
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Invalid quoteStyle: triple. Must be 'single' or 'double'.");
+            expect(result.errors[0]).toContain("Invalid quoteStyle: triple. Must be 'single' or 'double'.");
         });
         it("should detect invalid semicolon option", () => {
             const config: CoreConfig = {
                 codeStyle: {
                     enabled: true,
                     semicolons: "sometimes" as any,
-},
-};
+                },
+            };
 
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Invalid semicolons: sometimes. Must be 'always' or 'never'.");
+            expect(result.errors[0]).toContain("Invalid semicolons: sometimes. Must be 'always' or 'never'.");
         });
         it("should detect invalid indent width", () => {
             const config: CoreConfig = {
                 codeStyle: {
                     enabled: true,
                     indentWidth: 10,
-},
-};
+                },
+            };
 
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Invalid indentWidth: 10. Must be between 1 and 8.");
+            expect(result.errors[0]).toContain("Invalid indentWidth: 10. Must be between 1 and 8.");
         });
         it("should warn about unusual line width", () => {
             const config: CoreConfig = {
                 codeStyle: {
                     enabled: true,
                     lineWidth: 250,
-},
-};
+                },
+            };
 
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(true);
-            expect(result.warnings).toContain("Unusual lineWidth: 250. Recommended range is 80-120.");
+            expect(result.warnings[0]).toContain("Unusual lineWidth: 250. Recommended range is 80-120.");
         });
         it("should detect invalid import group order", () => {
             const config: CoreConfig = {
                 imports: {
                     enabled: true,
                     groupOrder: ["external", "invalid", "relative"],
-},
-};
+                },
+            };
 
             const result = ConfigValidator.validate(config);
 
@@ -97,8 +97,8 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     quoteStyle: "double",
-},
-};
+                },
+            };
             expect(() => ConfigValidator.validateOrThrow(config)).not.toThrow();
         });
         it("should throw for invalid config", () => {
@@ -106,8 +106,8 @@ describe("ConfigValidator", () => {
                 codeStyle: {
                     enabled: true,
                     quoteStyle: "invalid" as any,
-},
-};
+                },
+            };
             expect(() => ConfigValidator.validateOrThrow(config)).toThrow("Invalid configuration");
         });
     });

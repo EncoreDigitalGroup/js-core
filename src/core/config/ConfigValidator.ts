@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig, ConfigTypes } from "./ConfigTypes";
+import {CoreConfig, ConfigTypes} from "./ConfigTypes";
 
 
 /** Validation result containing errors and warnings */

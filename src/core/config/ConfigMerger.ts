@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig } from "./ConfigTypes";
-import { ConfigDefaults } from "./ConfigDefaults";
+import {ConfigDefaults} from "./ConfigDefaults";
+import {CoreConfig} from "./ConfigTypes";
 
 
 /** Merges user configuration with default configuration */
