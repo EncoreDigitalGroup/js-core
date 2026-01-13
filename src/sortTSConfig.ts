@@ -5,7 +5,7 @@
 
 import fs from "fs";
 import path from "path";
-import { DefaultSortOptions, SortOptions } from "./shared/types";
+import {DefaultSortOptions, SortOptions} from "./shared/types";
 
 
 function sortObjectKeysAlphabetically(obj: Record<string, any>): Record<string, any> {

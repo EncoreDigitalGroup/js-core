@@ -24,15 +24,15 @@ export class ASTTransformer {
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments,
-});
+        });
 
         return printer.printNode(ts.EmitHint.Unspecified, node, sourceFile);
     }
 
     /**
-    * Print a source file to string
-    * Extracts and deduplicates leading comments to prevent duplication during formatting
-    */
+     * Print a source file to string
+     * Extracts and deduplicates leading comments to prevent duplication during formatting
+     */
     static printSourceFile(sourceFile: ts.SourceFile): string {
         const fullText = sourceFile.getFullText();
 
@@ -53,7 +53,7 @@ export class ASTTransformer {
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
-});
+        });
 
         // Print the file content
 

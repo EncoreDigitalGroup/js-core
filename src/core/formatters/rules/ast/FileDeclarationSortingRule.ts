@@ -4,10 +4,10 @@
 */
 
 import * as ts from "typescript";
-import { FileDeclarationConfig } from "../../../config";
-import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
-import { DependencyResolver } from "../../../ast/DependencyResolver";
-import { IFormattingRule } from "../../IFormattingRule";
+import {ASTAnalyzer} from "../../../ast/ASTAnalyzer";
+import {DependencyResolver} from "../../../ast/DependencyResolver";
+import {FileDeclarationConfig} from "../../../config";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 /** Types of top-level declarations in a file */
@@ -123,7 +123,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
             text,
             dependencies,
             originalIndex: index,
-};
+        };
     }
 
     private createSourceFile(source: string, filePath: string): ts.SourceFile {

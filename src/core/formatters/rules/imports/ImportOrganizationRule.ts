@@ -4,8 +4,8 @@
 */
 
 import * as ts from "typescript";
-import { ImportConfig } from "../../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import {ImportConfig} from "../../../config";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 interface ImportInfo {
@@ -58,7 +58,7 @@ export class ImportOrganizationRule implements IFormattingRule {
                     isTypeOnly,
                     isSideEffect,
                     group,
-});
+                });
             }
         }
 
@@ -211,7 +211,7 @@ export class ImportOrganizationRule implements IFormattingRule {
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
-});
+        });
 
         const importLines: string[] = [];
 

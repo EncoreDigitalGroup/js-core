@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import { SpacingConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import {SpacingConfig} from "../../../config";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 /** Statement types for categorization */
@@ -19,12 +19,12 @@ enum StatementType {
 }
 
 /**
-* Adds blank lines when switching between different statement types
-* Examples:
-* - Blank line between declarations and control flow
-* - Blank line between loops and expressions
-* - No blank line within the same statement type
-*/
+ * Adds blank lines when switching between different statement types
+ * Examples:
+ * - Blank line between declarations and control flow
+ * - Blank line between loops and expressions
+ * - No blank line within the same statement type
+ */
 
 export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
     readonly name = "BlankLineBetweenStatementTypesRule";

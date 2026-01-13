@@ -5,9 +5,9 @@
 
 import fs from "fs";
 import path from "path";
-import { sortPackageJson as baseSortPackageJson } from "sort-package-json";
-import { sortExportsKeys } from "./formatters/package";
-import { DefaultSortOptions, SortOptions } from "./shared/types";
+import {sortPackageJson as baseSortPackageJson} from "sort-package-json";
+import {sortExportsKeys} from "./formatters/package";
+import {DefaultSortOptions, SortOptions} from "./shared/types";
 
 
 export function sortPackageJson(packageObj: Record<string, any>, options: SortOptions = {}): Record<string, any> {
@@ -16,7 +16,7 @@ export function sortPackageJson(packageObj: Record<string, any>, options: SortOp
 
     let sortedPackage = baseSortPackageJson(packageObj, {
         sortOrder,
-});
+    });
 
     if (sortedPackage.exports) {
         sortedPackage.exports = sortExportsKeys(sortedPackage.exports);

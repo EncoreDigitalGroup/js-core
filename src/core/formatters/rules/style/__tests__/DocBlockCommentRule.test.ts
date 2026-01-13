@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { DocBlockCommentRule } from "../DocBlockCommentRule";
+import {DocBlockCommentRule} from "../DocBlockCommentRule";
 
 
 describe("DocBlockCommentRule", () => {

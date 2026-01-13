@@ -6,8 +6,8 @@
 import * as fs from "fs/promises";
 import * as os from "os";
 import * as path from "path";
-import { ConfigDefaults, CoreConfig, FormatterOrder } from "../../config";
-import { FormatterPipeline } from "../FormatterPipeline";
+import {ConfigDefaults, CoreConfig, FormatterOrder} from "../../config";
+import {FormatterPipeline} from "../FormatterPipeline";
 
 
 describe("FormatterPipeline", () => {
@@ -29,7 +29,7 @@ describe("FormatterPipeline", () => {
 
                 ...ConfigDefaults.getDefaultConfig(),
                 codeStyle: {enabled: true, quoteStyle: "double"},
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const order = pipeline.getFormatterOrder();
@@ -47,7 +47,7 @@ describe("FormatterPipeline", () => {
 
                 ...ConfigDefaults.getDefaultConfig(),
                 formatterOrder: [FormatterOrder.Spacing, FormatterOrder.CodeStyle],
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const order = pipeline.getFormatterOrder();
@@ -63,7 +63,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false},
                 imports: {enabled: false},
                 spacing: {enabled: false},
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const formatters = pipeline.getRulesAtOrder(FormatterOrder.CodeStyle);
@@ -80,7 +80,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false},
                 codeStyle: {enabled: false},
                 spacing: {enabled: false},
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const formatters = pipeline.getRulesAtOrder(FormatterOrder.ImportOrganization);
@@ -97,7 +97,7 @@ describe("FormatterPipeline", () => {
                 imports: {enabled: false},
                 sorting: {enabled: false},
                 spacing: {enabled: false},
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
 
@@ -118,7 +118,7 @@ describe("FormatterPipeline", () => {
                 imports: {enabled: false}, // Disable imports to test only code style
                 sorting: {enabled: false}, // Disable sorting for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const context = await pipeline.formatFile(testFilePath, false);
@@ -148,7 +148,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const context = await pipeline.formatFile(testFilePath, true);
@@ -174,7 +174,7 @@ describe("FormatterPipeline", () => {
                 imports: {enabled: true, sortImports: true},
                 sorting: {enabled: false}, // Disable sorting for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const context = await pipeline.formatFile(testFilePath, false);
@@ -200,7 +200,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             // Mock a formatter error by using an invalid file path
@@ -226,7 +226,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const context = await pipeline.formatFile(testFilePath, false);
@@ -251,7 +251,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const contexts = await pipeline.formatFiles([file1, file2], false);
@@ -281,7 +281,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const contexts = await pipeline.formatDirectory(subDir, false);
@@ -300,7 +300,7 @@ describe("FormatterPipeline", () => {
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 spacing: {enabled: false},
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
             const contexts = await pipeline.formatDirectory(tempDir, false);
@@ -319,7 +319,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const pipeline = new FormatterPipeline(config);
 

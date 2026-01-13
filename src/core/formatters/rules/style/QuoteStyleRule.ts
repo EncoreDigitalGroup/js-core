@@ -4,8 +4,8 @@
 */
 
 import * as ts from "typescript";
-import { CodeStyleConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import {CodeStyleConfig} from "../../../config";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 /** Converts quote style between single and double quotes using AST */
@@ -53,7 +53,7 @@ export class QuoteStyleRule implements IFormattingRule {
                             start: node.getStart(sourceFile),
                             end: node.getEnd(),
                             text: newText,
-});
+                        });
                     }
                 }
             }

@@ -3,13 +3,13 @@
 * All Rights Reserved.
 */
 
-import { IFormattingRule } from "../../IFormattingRule";
+import {IFormattingRule} from "../../IFormattingRule";
 
 
 /**
-* Consolidates single-line doc block comments into a single line
-* Transforms multi-line doc blocks that contain only one line of text
-*/
+ * Consolidates single-line doc block comments into a single line
+ * Transforms multi-line doc blocks that contain only one line of text
+ */
 export class DocBlockCommentRule implements IFormattingRule {
     readonly name = "DocBlockCommentRule";
 
