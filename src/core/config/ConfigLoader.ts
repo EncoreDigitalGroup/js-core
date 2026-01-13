@@ -6,7 +6,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
-import { CoreConfig } from "./ConfigTypes";
+import { CoreConfig, ConfigTypes } from "./ConfigTypes";
 import { ConfigDefaults } from "./ConfigDefaults";
 import { ConfigMerger } from "./ConfigMerger";
 import { ConfigValidator } from "./ConfigValidator";
@@ -229,7 +229,7 @@ const config: CoreConfig = {
     // Enable/disable index file generation
     indexGeneration: {
         enabled: true,
-        directories: ["src/", "packages/"],
+        directories: ConfigDefaults.getDefaultIndexDirectories(),
         updateMainIndex: true,
     },
 

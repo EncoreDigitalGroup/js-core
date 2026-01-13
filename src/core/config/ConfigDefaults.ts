@@ -3,13 +3,19 @@
 * All Rights Reserved.
 */
 
-import { DEFAULT_CLASS_ORDER } from "../";
-import { DEFAULT_FILE_ORDER } from "../";
-import { DefaultSortOptions } from "../../shared";
-import { CoreConfig, FormatterOrder } from "./ConfigTypes";
+import {DEFAULT_CLASS_ORDER} from "../";
+import {DEFAULT_FILE_ORDER} from "../";
+import {DefaultSortOptions} from "../../shared";
+import {CoreConfig, FormatterOrder, ConfigTypes} from "./ConfigTypes";
 
 /** Provides default configuration values for tsfmt */
 export class ConfigDefaults {
+    /** Default file patterns */
+    static readonly DEFAULT_EXCLUDE_PATTERNS = ["node_modules/**", "dist/**", "vendor/**", "bin/**"] as const;
+    static readonly DEFAULT_TS_INCLUDE_PATTERNS = ["**/*.{ts,tsx}"] as const;
+    static readonly DEFAULT_JS_INCLUDE_PATTERNS = ["**/*.{js,ts,jsx,tsx}"] as const;
+    static readonly DEFAULT_INDEX_DIRECTORIES = ["src/", "packages/"] as const;
+
     /** Get the complete default configuration */
     static getDefaultConfig(): CoreConfig {
         return {
@@ -32,7 +38,7 @@ export class ConfigDefaults {
     static getDefaultIndexGenerationConfig() {
         return {
             enabled: true,
-            directories: ["src/", "packages/"],
+            directories: this.getDefaultIndexDirectories(),
             options: {
                 fileExtension: ".ts",
                 indexFileName: "index.ts",
@@ -65,7 +71,7 @@ export class ConfigDefaults {
             removeUnused: true,
             removeSideEffects: false,
             groupImports: true,
-            groupOrder: ["external", "internal", "relative"],
+            groupOrder: ConfigTypes.getImportGroupOptions(),
             separateGroups: false,
         };
     }
@@ -91,8 +97,8 @@ export class ConfigDefaults {
                 order: DEFAULT_FILE_ORDER,
                 respectDependencies: true,
             },
-            include: ["**/*.{ts,tsx}"],
-            exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
+            include: this.getDefaultIncludePatterns(),
+            exclude: this.getDefaultExcludePatterns(),
         };
     }
 
@@ -152,57 +158,28 @@ export class ConfigDefaults {
                 singleQuote: false,
                 semi: true,
             },
-            include: ["**/*.{js,ts,jsx,tsx}"],
-            exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
+            include: this.getDefaultJavaScriptIncludePatterns(),
+            exclude: this.getDefaultExcludePatterns(),
         };
     }
 
     /** Get default exclude patterns for file processing */
     static getDefaultExcludePatterns(): string[] {
-        return ["node_modules/**", "dist/**", "vendor/**", "bin/**"];
+        return [...this.DEFAULT_EXCLUDE_PATTERNS];
     }
 
     /** Get default include patterns for TypeScript files */
     static getDefaultIncludePatterns(): string[] {
-        return ["**/*.{ts,tsx}"];
+        return [...this.DEFAULT_TS_INCLUDE_PATTERNS];
     }
 
     /** Get default include patterns for JavaScript files */
     static getDefaultJavaScriptIncludePatterns(): string[] {
-        return ["**/*.{js,ts,jsx,tsx}"];
+        return [...this.DEFAULT_JS_INCLUDE_PATTERNS];
     }
 
     /** Get default directories for index generation */
     static getDefaultIndexDirectories(): string[] {
-        return ["src/", "packages/"];
-    }
-
-    /** Create a minimal configuration with only enabled features */
-    static getMinimalConfig(): CoreConfig {
-        return {
-            indexGeneration: { enabled: true },
-            codeStyle: { enabled: true },
-            imports: { enabled: true },
-            sorting: { enabled: true },
-            spacing: { enabled: false },
-            packageJson: { enabled: true },
-            tsConfig: { enabled: true },
-        };
-    }
-
-    /** Create a configuration with all features disabled */
-    static getDisabledConfig(): CoreConfig {
-        return {
-            indexGeneration: { enabled: false },
-            codeStyle: { enabled: false },
-            imports: { enabled: false },
-            sorting: { enabled: false },
-            spacing: { enabled: false },
-            packageJson: { enabled: false },
-            tsConfig: { enabled: false },
-        };
+        return [...this.DEFAULT_INDEX_DIRECTORIES];
     }
 }
-
-/** Export the default configuration instance for backward compatibility */
-export const defaultConfig = ConfigDefaults.getDefaultConfig();

@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig } from "./ConfigTypes";
+import { CoreConfig, ConfigTypes } from "./ConfigTypes";
 
 
 /** Validation result containing errors and warnings */
@@ -24,41 +24,37 @@ export class ConfigValidator {
         const errors: string[] = [];
         const warnings: string[] = [];
         // Validate code style config
-
         if (config.codeStyle) {
             if (config.codeStyle.enabled && config.codeStyle.quoteStyle) {
-                const validQuoteStyles = ["single", "double"];
-
-                if (!validQuoteStyles.includes(config.codeStyle.quoteStyle)) {
-                    errors.push(`Invalid quoteStyle: ${config.codeStyle.quoteStyle}. Must be 'single' or 'double'.`);
+                if (!ConfigTypes.isValidQuoteStyle(config.codeStyle.quoteStyle)) {
+                    errors.push(`Invalid quoteStyle: ${config.codeStyle.quoteStyle}. Must be ${ConfigTypes.getQuoteStyleOptions().map(s => `'${s}'`).join(" or ")}.`);
                 }
             }
 
             if (config.codeStyle.enabled && config.codeStyle.semicolons) {
-                const validSemicolonOptions = ["always", "never"];
-
-                if (!validSemicolonOptions.includes(config.codeStyle.semicolons)) {
-                    errors.push(`Invalid semicolons: ${config.codeStyle.semicolons}. Must be 'always' or 'never'.`);
+                if (!ConfigTypes.isValidSemicolonOption(config.codeStyle.semicolons)) {
+                    errors.push(`Invalid semicolons: ${config.codeStyle.semicolons}. Must be ${ConfigTypes.getSemicolonOptions().map(s => `'${s}'`).join(" or ")}.`);
                 }
             }
 
             if (config.codeStyle.indentWidth !== undefined) {
-                if (config.codeStyle.indentWidth < 1 || config.codeStyle.indentWidth > 8) {
+                if (!ConfigTypes.isValidIndentWidth(config.codeStyle.indentWidth)) {
                     errors.push(`Invalid indentWidth: ${config.codeStyle.indentWidth}. Must be between 1 and 8.`);
                 }
             }
 
             if (config.codeStyle.lineWidth !== undefined) {
                 if (config.codeStyle.lineWidth < 40 || config.codeStyle.lineWidth > 200) {
-                    warnings.push(`Unusual lineWidth: ${config.codeStyle.lineWidth}. Recommended range is 80-120.`);
+                    if (!ConfigTypes.isRecommendedLineWidth(config.codeStyle.lineWidth)) {
+                        warnings.push(`Unusual lineWidth: ${config.codeStyle.lineWidth}. Recommended range is 80-120.`);
+                    }
                 }
             }
         }
         // Validate import config
-
         if (config.imports) {
             if (config.imports.groupOrder && config.imports.groupOrder.length > 0) {
-                const validGroups = ["external", "internal", "relative"];
+                const validGroups = ConfigTypes.getImportGroupOptions();
                 const invalidGroups = config.imports.groupOrder.filter(g => !validGroups.includes(g));
 
                 if (invalidGroups.length > 0) {
