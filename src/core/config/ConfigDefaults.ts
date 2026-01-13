@@ -27,10 +27,6 @@ export class ConfigDefaults {
             packageJson: this.getDefaultPackageJsonConfig(),
             tsConfig: this.getDefaultTsConfigConfig(),
             formatterOrder: this.getDefaultFormatterOrder(),
-            // Backward compatibility - keep old prettier config
-            prettier: this.getDefaultPrettierConfig(),
-            // Backward compatibility - map to sorting
-            sorters: this.getDefaultSortingConfig(),
         };
     }
 
@@ -138,29 +134,6 @@ export class ConfigDefaults {
             FormatterOrder.ASTTransformation,
             FormatterOrder.Spacing
         ];
-    }
-
-    /** Get default Prettier configuration (deprecated) */
-    static getDefaultPrettierConfig() {
-        return {
-            enabled: false, // Disabled by default - use codeStyle instead
-            skipIfConfigExists: true,
-            options: {
-                plugins: ["@trivago/prettier-plugin-sort-imports"],
-                bracketSpacing: false,
-                trailingComma: "all" as const,
-                arrowParens: "avoid" as const,
-                tabWidth: 4,
-                editorconfig: true,
-                useTabs: false,
-                printWidth: 120,
-                importOrderSeparation: true,
-                singleQuote: false,
-                semi: true,
-            },
-            include: this.getDefaultJavaScriptIncludePatterns(),
-            exclude: this.getDefaultExcludePatterns(),
-        };
     }
 
     /** Get default exclude patterns for file processing */

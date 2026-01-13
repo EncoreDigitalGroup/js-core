@@ -70,15 +70,6 @@ export class ConfigValidator {
             }
         }
         // Validate spacing config (no specific validations needed currently)
-        // Check for deprecated config usage
-
-        if (config.prettier?.enabled === true) {
-            warnings.push("Prettier is deprecated. Use 'codeStyle' configuration instead. Prettier will be removed in a future version.");
-        }
-
-        if (config.sorters && !config.sorting) {
-            warnings.push("'sorters' is deprecated. Use 'sorting' instead. Will be removed in a future version.");
-        }
 
         return {
             valid: errors.length === 0,

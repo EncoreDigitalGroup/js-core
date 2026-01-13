@@ -90,18 +90,6 @@ describe("ConfigValidator", () => {
             expect(result.valid).toBe(false);
             expect(result.errors[0]).toContain("Invalid group in groupOrder: invalid");
         });
-        it("should warn about deprecated prettier config", () => {
-            const config: CoreConfig = {
-                prettier: {
-                    enabled: true,
-},
-};
-
-            const result = ConfigValidator.validate(config);
-
-            expect(result.valid).toBe(true);
-            expect(result.warnings[0]).toContain("Prettier is deprecated");
-        });
     });
     describe("validateOrThrow", () => {
         it("should not throw for valid config", () => {

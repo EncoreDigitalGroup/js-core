@@ -169,39 +169,6 @@ export enum FormatterOrder {
     Spacing = "Spacing"
 }
 
-/** @deprecated Use SortingConfig instead */
-export interface SortersConfig extends SortingConfig {}
-
-/** Configuration for Prettier formatting */
-export interface PrettierConfig {
-    /** Whether to run Prettier (default: true) */
-    enabled?: boolean;
-
-    /** Whether to skip Prettier if a config file exists in the project (default: true) */
-    skipIfConfigExists?: boolean;
-
-    /** Prettier options to use when no config file exists */
-    options?: {
-        plugins?: string[];
-        bracketSpacing?: boolean;
-        trailingComma?: "none" | "es5" | "all";
-        arrowParens?: "always" | "avoid";
-        tabWidth?: number;
-        editorconfig?: boolean;
-        useTabs?: boolean;
-        printWidth?: number;
-        importOrderSeparation?: boolean;
-        singleQuote?: boolean;
-        semi?: boolean;
-        [key: string]: any;
-    };
-
-    /** File patterns to include (default: ["**\/*.{js,ts,jsx,tsx}"]) */
-    include?: string[];
-
-    /** Directories to exclude (default: ["node_modules/**", "dist/**", "vendor/**", "bin/**"]) */
-    exclude?: string[];
-}
 
 /** Main configuration interface for tsfmt */
 export interface CoreConfig {
@@ -228,18 +195,6 @@ export interface CoreConfig {
 
     /** Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];
-
-    /**
-    * @deprecated Use 'sorting' instead
-    * Configuration for class member and file-level declaration sorting
-    */
-    sorters?: SortersConfig;
-
-    /**
-    * @deprecated Prettier is no longer used - use 'codeStyle' instead
-    * Configuration for Prettier formatting
-    */
-    prettier?: PrettierConfig;
 }
 
 /** Configuration type definitions and utilities */
