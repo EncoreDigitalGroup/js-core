@@ -79,14 +79,72 @@ export class FormatterPipeline {
         this.initializeRules();
     }
 
+    /** Dynamic map of rule constructors built as addRule<T> is called */
+    private static readonly ruleConstructors = new Map<string, new (container: IServiceContainer) => any>();
+
     /** Add a rule to the pipeline at a specific order position */
-    private addRule<T extends IFormattingRule>(order: FormatterOrder, ruleConstructor: new (container: IServiceContainer) => T): void {
+    private addRule<T extends IFormattingRule>(order: FormatterOrder): void {
         if (!this.rules.has(order)) {
             this.rules.set(order, []);
         }
-        // Register the rule with the container so it can resolve dependencies
-        this.container.singleton<T>(() => new ruleConstructor(this.container));
+
+        // Extract the type name from the call stack
+        const typeName = this.extractTypeNameFromStack();
+
+        // Get or infer the constructor for this type
+        let Constructor = FormatterPipeline.ruleConstructors.get(typeName);
+
+        if (!Constructor) {
+            // Dynamically resolve the constructor using global scope
+            Constructor = this.resolveConstructorFromGlobalScope(typeName);
+            if (Constructor) {
+                // Cache it for future use
+                FormatterPipeline.ruleConstructors.set(typeName, Constructor);
+            } else {
+                throw new Error(`Cannot resolve constructor for rule type: ${typeName}`);
+            }
+        }
+
+        // Register with the container using its clean API
+        this.container.singleton<T>(() => new Constructor(this.container));
+
+        // Add to the pipeline
         this.rules.get(order)!.push(this.container.resolve<T>());
+    }
+
+    /** Extract type name from call stack */
+    private extractTypeNameFromStack(): string {
+        const stack = new Error().stack;
+        if (!stack) {
+            throw new Error("Cannot determine type name from stack");
+        }
+
+        // Look for addRule<TypeName> call pattern
+        const match = stack.match(/addRule<([^>]+)>/);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+
+        throw new Error("Cannot extract type name from addRule call. Use format: addRule<RuleName>(order)");
+    }
+
+    /** Resolve constructor from the current module's imports using the type name */
+    private resolveConstructorFromGlobalScope(typeName: string): (new (container: IServiceContainer) => any) | undefined {
+        // In TypeScript land via tsx, we can access the imports directly
+        // Use eval to dynamically access the constructor by name from the current scope
+        try {
+            const constructor = eval(typeName);
+
+            // Verify it's actually a constructor function
+            if (typeof constructor === 'function' && constructor.prototype) {
+                return constructor;
+            }
+
+            return undefined;
+        } catch (error) {
+            // Constructor not found in current scope
+            return undefined;
+        }
     }
 
     /** Get all files in a directory recursively */
@@ -239,40 +297,40 @@ export class FormatterPipeline {
     private initializeRules(): void {
         // Index Generation Rule
         if (this.config.indexGeneration?.enabled) {
-            this.addRule<IndexGenerationRule>(FormatterOrder.IndexGeneration, IndexGenerationRule);
+            this.addRule<IndexGenerationRule>(FormatterOrder.IndexGeneration);
         }
 
         // Code Style Rules
         if (this.config.codeStyle?.enabled) {
-            this.addRule<QuoteStyleRule>(FormatterOrder.CodeStyle, QuoteStyleRule);
-            this.addRule<SemicolonRule>(FormatterOrder.CodeStyle, SemicolonRule);
-            this.addRule<BracketSpacingRule>(FormatterOrder.CodeStyle, BracketSpacingRule);
-            this.addRule<IndentationRule>(FormatterOrder.CodeStyle, IndentationRule);
-            this.addRule<BlockSpacingRule>(FormatterOrder.CodeStyle, BlockSpacingRule);
-            this.addRule<DocBlockCommentRule>(FormatterOrder.CodeStyle, DocBlockCommentRule);
+            this.addRule<QuoteStyleRule>(FormatterOrder.CodeStyle);
+            this.addRule<SemicolonRule>(FormatterOrder.CodeStyle);
+            this.addRule<BracketSpacingRule>(FormatterOrder.CodeStyle);
+            this.addRule<IndentationRule>(FormatterOrder.CodeStyle);
+            this.addRule<BlockSpacingRule>(FormatterOrder.CodeStyle);
+            this.addRule<DocBlockCommentRule>(FormatterOrder.CodeStyle);
         }
 
         // Import Organization Rule
         if (this.config.imports?.enabled) {
-            this.addRule<ImportOrganizationRule>(FormatterOrder.ImportOrganization, ImportOrganizationRule);
+            this.addRule<ImportOrganizationRule>(FormatterOrder.ImportOrganization);
         }
 
         // AST Transformation Rules
         if (this.config.sorting?.enabled) {
             if (this.config.sorting.classMembers?.enabled) {
-                this.addRule<ClassMemberSortingRule>(FormatterOrder.ASTTransformation, ClassMemberSortingRule);
+                this.addRule<ClassMemberSortingRule>(FormatterOrder.ASTTransformation);
             }
 
             if (this.config.sorting.fileDeclarations?.enabled) {
-                this.addRule<FileDeclarationSortingRule>(FormatterOrder.ASTTransformation, FileDeclarationSortingRule);
+                this.addRule<FileDeclarationSortingRule>(FormatterOrder.ASTTransformation);
             }
         }
 
         // Spacing Rules
         if (this.config.spacing?.enabled) {
-            this.addRule<BlankLineBetweenDeclarationsRule>(FormatterOrder.Spacing, BlankLineBetweenDeclarationsRule);
-            this.addRule<BlankLineBetweenStatementTypesRule>(FormatterOrder.Spacing, BlankLineBetweenStatementTypesRule);
-            this.addRule<BlankLineBeforeReturnsRule>(FormatterOrder.Spacing, BlankLineBeforeReturnsRule);
+            this.addRule<BlankLineBetweenDeclarationsRule>(FormatterOrder.Spacing);
+            this.addRule<BlankLineBetweenStatementTypesRule>(FormatterOrder.Spacing);
+            this.addRule<BlankLineBeforeReturnsRule>(FormatterOrder.Spacing);
         }
     }
 
