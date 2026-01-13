@@ -23,7 +23,7 @@ constructor(protected readonly container: Container, config?: CoreConfig) {
             this.config = config;
         } else {
             // Simple resolution by name
-            this.config = this.container.resolve<CoreConfig>();
+            this.config = this.container.resolve<CoreConfig>("CoreConfig");
         }
     }
 

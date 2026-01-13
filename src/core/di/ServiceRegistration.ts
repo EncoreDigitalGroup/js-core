@@ -13,7 +13,7 @@ import { Container } from "./Container";
 export class ServiceRegistration {
     static registerServices(container: Container, config: CoreConfig): void {
         // Register core config
-        container.singleton<CoreConfig>(config);
+        container.singleton("CoreConfig", config);
 
         // Register all formatter rules as singletons with automatic dependency injection
         container.singleton(QuoteStyleRule);
@@ -31,6 +31,6 @@ export class ServiceRegistration {
         container.singleton(IndexGenerationRule);
 
         // Register formatter pipeline
-        container.singleton<FormatterPipeline>(new FormatterPipeline(config, container));
+        container.singleton("FormatterPipeline", new FormatterPipeline(config, container));
     }
 }

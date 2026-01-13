@@ -3,9 +3,9 @@
 * All Rights Reserved.
 */
 /**
- * Simple, purpose-built DI container for tsfmt
- * Supports magical syntax for type registration and resolution
- */
+* Simple, purpose-built DI container for tsfmt
+* Supports magical syntax for type registration and resolution
+*/
 
 import "reflect-metadata";
 

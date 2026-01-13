@@ -123,6 +123,20 @@ constructor(
         this.rules.get(order)!.push(ruleInstance);
     }
 
+    /** Add a rule to the pipeline by explicit name - used by Vite build transformation */
+    // @ts-ignore - This method is called after Vite build transformation replaces addRule<T>() calls
+    private addRuleByName(ruleName: string, order: FormatterOrder): void {
+        if (!this.rules.has(order)) {
+            this.rules.set(order, []);
+        }
+
+        // Resolve the rule from the container by name
+        const ruleInstance = this.container.resolve<IFormattingRule>(ruleName);
+
+        // Add to the pipeline
+        this.rules.get(order)!.push(ruleInstance);
+    }
+
 /** Get all files in a directory recursively */
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
         const files: string[] = [];
