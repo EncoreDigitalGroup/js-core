@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig } from "../../../config/types";
+import { CoreConfig } from "../ConfigTypes";
 import { ConfigMerger } from "../ConfigMerger";
 
 

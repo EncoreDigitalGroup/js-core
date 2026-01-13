@@ -5,7 +5,7 @@
 
 import * as fs from "fs/promises";
 import * as path from "path";
-import { CoreConfig, FormatterOrder } from "../../config";
+import { CoreConfig, FormatterOrder } from "../config";
 import { IFormattingRule } from "../formatters";
 import { ClassMemberSortingRule } from "../formatters";
 import { FileDeclarationSortingRule } from "../formatters";
