@@ -26,7 +26,7 @@ function transpileTypeScript(code: string): string {
 
 /** Config file name that users should create */
 
-export const CONFIG_FILE_NAME = "core.config.ts";
+export const CONFIG_FILE_NAME = "tsfmt.config.ts";
 
 /** Loads and evaluates a TypeScript config file */
 
@@ -72,10 +72,10 @@ function loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
 }
 
 /**
-* Checks if a core.config.ts file exists in the project
+* Checks if a tsfmt.config.ts file exists in the project
 *
 * @param projectRoot - The root directory of the project (defaults to current working directory)
-* @returns true if core.config.ts exists
+* @returns true if tsfmt.config.ts exists
 */
 
 export function hasConfigFile(projectRoot: string = process.cwd()): boolean {
@@ -85,7 +85,7 @@ export function hasConfigFile(projectRoot: string = process.cwd()): boolean {
 }
 
 /**
-* Loads the configuration from core.config.ts if it exists, otherwise returns default config
+* Loads the configuration from tsfmt.config.ts if it exists, otherwise returns default config
 *
 * @param projectRoot - The root directory of the project (defaults to current working directory)
 * @returns The merged configuration

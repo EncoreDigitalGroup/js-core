@@ -87,7 +87,7 @@ async function main(): Promise<void> {
         // Log if custom config is being used
 
         if (hasConfigFile(targetDir)) {
-            console.log("Using custom configuration from core.config.ts");
+            console.log("Using custom configuration from tsfmt.config.ts");
         }
         // Sort package.json
 

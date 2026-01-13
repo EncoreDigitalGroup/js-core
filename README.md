@@ -84,7 +84,7 @@ tsfmt uses a sophisticated pipeline-based architecture:
 **Configuration System**
 
 - Zero-configuration by default with sensible opinions
-- Optional `core.config.ts` file for project-specific customization
+- Optional `tsfmt.config.ts` file for project-specific customization
 - Deep merging of user configuration with defaults
 
 ## Key Features
