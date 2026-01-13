@@ -3,8 +3,7 @@
 * All Rights Reserved.
 */
 
-import { SpacingConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /**
@@ -17,11 +16,8 @@ import { IFormattingRule } from "../../IFormattingRule";
 * - Blank line when keyword changes (const → let, export → const, etc.)
 */
 
-export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
+export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
     readonly name = "BlankLineBetweenDeclarationsRule";
-
-    constructor(private config: SpacingConfig) {
-    }
 
     /** Extracts the keyword from a declaration line */
     private getDeclarationKeyword(trimmedLine: string): string | null {
@@ -65,7 +61,8 @@ export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-        if (!this.config.betweenDeclarations) {
+        const config = this.getSpacingConfig();
+        if (!config?.betweenDeclarations) {
             return source;
         }
 
