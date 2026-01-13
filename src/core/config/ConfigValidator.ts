@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import {CoreConfig, ConfigTypes} from "./ConfigTypes";
+import { CoreConfig, ConfigTypes } from "./ConfigTypes";
 
 
 /** Validation result containing errors and warnings */
@@ -16,10 +16,10 @@ export interface ValidationResult {
 /** Validates CoreConfig configuration objects */
 export class ConfigValidator {
     /**
-     * Validate a CoreConfig object
-     * @param config - Configuration to validate
-     * @returns Validation result with errors and warnings
-     */
+    * Validate a CoreConfig object
+    * @param config - Configuration to validate
+    * @returns Validation result with errors and warnings
+    */
     static validate(config: CoreConfig): ValidationResult {
         const errors: string[] = [];
         const warnings: string[] = [];
@@ -75,14 +75,14 @@ export class ConfigValidator {
             valid: errors.length === 0,
             errors,
             warnings,
-        };
+};
     }
 
     /**
-     * Validate and throw if invalid
-     * @param config - Configuration to validate
-     * @throws Error if configuration is invalid
-     */
+    * Validate and throw if invalid
+    * @param config - Configuration to validate
+    * @throws Error if configuration is invalid
+    */
     static validateOrThrow(config: CoreConfig): void {
         const result = this.validate(config);
 

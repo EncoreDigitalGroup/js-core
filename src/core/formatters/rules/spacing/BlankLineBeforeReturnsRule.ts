@@ -3,14 +3,14 @@
 * All Rights Reserved.
 */
 
-import {SpacingConfig} from "../../../config";
-import {IFormattingRule} from "../../IFormattingRule";
+import { SpacingConfig } from "../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
- * Adds blank lines before return statements
- * Works at all brace depths (not just top level)
- */
+* Adds blank lines before return statements
+* Works at all brace depths (not just top level)
+*/
 
 export class BlankLineBeforeReturnsRule implements IFormattingRule {
     readonly name = "BlankLineBeforeReturnsRule";

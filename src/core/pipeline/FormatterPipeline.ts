@@ -5,21 +5,21 @@
 
 import * as fs from "fs/promises";
 import * as path from "path";
-import {CoreConfig, FormatterOrder} from "../config";
-import {IFormattingRule} from "../formatters";
-import {ClassMemberSortingRule} from "../formatters";
-import {FileDeclarationSortingRule} from "../formatters";
-import {ImportOrganizationRule} from "../formatters";
-import {BlankLineBeforeReturnsRule} from "../formatters";
-import {BlankLineBetweenDeclarationsRule} from "../formatters";
-import {BlankLineBetweenStatementTypesRule} from "../formatters";
-import {BlockSpacingRule} from "../formatters";
-import {BracketSpacingRule} from "../formatters";
-import {IndentationRule} from "../formatters";
-import {QuoteStyleRule} from "../formatters";
-import {SemicolonRule} from "../formatters";
-import {DocBlockCommentRule} from "../formatters";
-import {IndexGenerationRule} from "../formatters";
+import { CoreConfig, FormatterOrder } from "../config";
+import { IFormattingRule } from "../formatters";
+import { ClassMemberSortingRule } from "../formatters";
+import { FileDeclarationSortingRule } from "../formatters";
+import { ImportOrganizationRule } from "../formatters";
+import { BlankLineBeforeReturnsRule } from "../formatters";
+import { BlankLineBetweenDeclarationsRule } from "../formatters";
+import { BlankLineBetweenStatementTypesRule } from "../formatters";
+import { BlockSpacingRule } from "../formatters";
+import { BracketSpacingRule } from "../formatters";
+import { IndentationRule } from "../formatters";
+import { QuoteStyleRule } from "../formatters";
+import { SemicolonRule } from "../formatters";
+import { DocBlockCommentRule } from "../formatters";
+import { IndexGenerationRule } from "../formatters";
 
 
 /*
@@ -54,9 +54,9 @@ export class FormatterError extends Error {
 }
 
 /**
- * Orchestrates the execution of multiple formatters in a defined order.
- * Implements fail-fast error handling and supports dry-run mode.
- */
+* Orchestrates the execution of multiple formatters in a defined order.
+* Implements fail-fast error handling and supports dry-run mode.
+*/
 
 export class FormatterPipeline {
     private formatterOrder: FormatterOrder[];
@@ -109,12 +109,12 @@ export class FormatterPipeline {
     }
 
     /**
-     * Format a file using the configured formatters in sequence
-     * @param filePath - Absolute path to the file to format
-     * @param dryRun - If true, don't write changes to disk
-     * @returns Pipeline context with execution details
-     * @throws FormatterError if any formatter fails (fail-fast)
-     */
+    * Format a file using the configured formatters in sequence
+    * @param filePath - Absolute path to the file to format
+    * @param dryRun - If true, don't write changes to disk
+    * @returns Pipeline context with execution details
+    * @throws FormatterError if any formatter fails (fail-fast)
+    */
     async formatFile(filePath: string, dryRun = false): Promise<PipelineContext> {
         // Read original source
 
@@ -128,7 +128,7 @@ export class FormatterPipeline {
             executions: [],
             changed: false,
             dryRun,
-        };
+};
 
         // Execute rules in order
 
@@ -144,7 +144,7 @@ export class FormatterPipeline {
                     formatterName: rule.name,
                     order,
                     changed: false,
-                };
+};
 
                 try {
                     // Execute rule
@@ -181,12 +181,12 @@ export class FormatterPipeline {
     }
 
     /**
-     * Format multiple files in sequence
-     * @param filePaths - Array of file paths to format
-     * @param dryRun - If true, don't write changes to disk
-     * @returns Array of pipeline contexts for each file
-     * @throws FormatterError if any formatter fails for any file
-     */
+    * Format multiple files in sequence
+    * @param filePaths - Array of file paths to format
+    * @param dryRun - If true, don't write changes to disk
+    * @returns Array of pipeline contexts for each file
+    * @throws FormatterError if any formatter fails for any file
+    */
     async formatFiles(filePaths: string[], dryRun = false): Promise<PipelineContext[]> {
         const results: PipelineContext[] = [];
 
@@ -200,12 +200,12 @@ export class FormatterPipeline {
     }
 
     /**
-     * Format all files in a directory recursively
-     * @param dirPath - Directory path to format
-     * @param dryRun - If true, don't write changes to disk
-     * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
-     * @returns Array of pipeline contexts for each file
-     */
+    * Format all files in a directory recursively
+    * @param dirPath - Directory path to format
+    * @param dryRun - If true, don't write changes to disk
+    * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
+    * @returns Array of pipeline contexts for each file
+    */
     async formatDirectory(dirPath: string, dryRun = false, extensions: string[] = [".ts", ".tsx", ".js", ".jsx"]): Promise<PipelineContext[]> {
         const files = await this.getFilesRecursively(dirPath, extensions);
 

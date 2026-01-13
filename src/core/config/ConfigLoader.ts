@@ -6,10 +6,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
-import {ConfigDefaults} from "./ConfigDefaults";
-import {ConfigMerger} from "./ConfigMerger";
-import {CoreConfig} from "./ConfigTypes";
-import {ConfigValidator} from "./ConfigValidator";
+import { ConfigDefaults } from "./ConfigDefaults";
+import { ConfigMerger } from "./ConfigMerger";
+import { CoreConfig } from "./ConfigTypes";
+import { ConfigValidator } from "./ConfigValidator";
 
 
 /** Configuration loader that handles TypeScript config files */
@@ -26,20 +26,20 @@ export class ConfigLoader {
     }
 
     /**
-     * Gets the path to the config file
-     * @param projectRoot - The root directory of the project
-     * @returns Full path to the config file
-     */
+    * Gets the path to the config file
+    * @param projectRoot - The root directory of the project
+    * @returns Full path to the config file
+    */
     static getConfigFilePath(projectRoot: string = process.cwd()): string {
         return path.join(projectRoot, this.CONFIG_FILE_NAME);
     }
 
     /**
-     * Creates a sample configuration file
-     * @param projectRoot - The root directory of the project
-     * @param overwrite - Whether to overwrite existing file (default: false)
-     * @throws Error if file exists and overwrite is false
-     */
+    * Creates a sample configuration file
+    * @param projectRoot - The root directory of the project
+    * @param overwrite - Whether to overwrite existing file (default: false)
+    * @throws Error if file exists and overwrite is false
+    */
     static createSampleConfig(projectRoot: string = process.cwd(), overwrite: boolean = false): void {
         const configPath = this.getConfigFilePath(projectRoot);
 
@@ -107,21 +107,21 @@ export default config;
     }
 
     /**
-     * Gets cache statistics for debugging
-     * @returns Object with cache information
-     */
+    * Gets cache statistics for debugging
+    * @returns Object with cache information
+    */
     static getCacheStats(): { size: number; keys: string[] } {
         return {
             size: this.configCache.size,
             keys: Array.from(this.configCache.keys())
-        };
+};
     }
 
     /**
-     * Gets file modification time for cache invalidation
-     * @param filePath - Path to the file
-     * @returns File modification time in milliseconds
-     */
+    * Gets file modification time for cache invalidation
+    * @param filePath - Path to the file
+    * @returns File modification time in milliseconds
+    */
     private static getFileModTime(filePath: string): number {
         try {
             return fs.statSync(filePath).mtime.getTime();
@@ -131,20 +131,20 @@ export default config;
     }
 
     /**
-     * Checks if a tsfmt.config.ts file exists in the project
-     * @param projectRoot - The root directory of the project (defaults to current working directory)
-     * @returns true if tsfmt.config.ts exists
-     */
+    * Checks if a tsfmt.config.ts file exists in the project
+    * @param projectRoot - The root directory of the project (defaults to current working directory)
+    * @returns true if tsfmt.config.ts exists
+    */
     static hasConfigFile(projectRoot: string = process.cwd()): boolean {
         const configPath = path.join(projectRoot, this.CONFIG_FILE_NAME);
         return fs.existsSync(configPath);
     }
 
     /**
-     * Transpiles TypeScript code to JavaScript
-     * @param code - TypeScript code to transpile
-     * @returns Transpiled JavaScript code
-     */
+    * Transpiles TypeScript code to JavaScript
+    * @param code - TypeScript code to transpile
+    * @returns Transpiled JavaScript code
+    */
     private static transpileTypeScript(code: string): string {
         const result = ts.transpileModule(code, {
             compilerOptions: {
@@ -152,18 +152,18 @@ export default config;
                 target: ts.ScriptTarget.ES2015,
                 esModuleInterop: true,
                 allowSyntheticDefaultImports: true,
-            },
-        });
+},
+});
 
         return result.outputText;
     }
 
     /**
-     * Loads and evaluates a TypeScript config file
-     * @param filePath - Path to the config file
-     * @returns Partial configuration from the file
-     * @throws Error if the config file is invalid
-     */
+    * Loads and evaluates a TypeScript config file
+    * @param filePath - Path to the config file
+    * @returns Partial configuration from the file
+    * @throws Error if the config file is invalid
+    */
     private static loadTypeScriptConfig(filePath: string): Partial<CoreConfig> {
         try {
             const code = fs.readFileSync(filePath, "utf-8");
@@ -204,10 +204,10 @@ export default config;
     }
 
     /**
-     * Loads the configuration from cache if valid, otherwise from file
-     * @param filePath - Path to the config file
-     * @returns Loaded configuration
-     */
+    * Loads the configuration from cache if valid, otherwise from file
+    * @param filePath - Path to the config file
+    * @returns Loaded configuration
+    */
     private static loadConfigWithCache(filePath: string): Partial<CoreConfig> {
         const currentMtime = this.getFileModTime(filePath);
         const cached = this.configCache.get(filePath);
@@ -223,11 +223,11 @@ export default config;
     }
 
     /**
-     * Loads the configuration from tsfmt.config.ts if it exists, otherwise returns default config
-     * @param projectRoot - The root directory of the project (defaults to current working directory)
-     * @param validate - Whether to validate the configuration (default: true)
-     * @returns The merged configuration
-     */
+    * Loads the configuration from tsfmt.config.ts if it exists, otherwise returns default config
+    * @param projectRoot - The root directory of the project (defaults to current working directory)
+    * @param validate - Whether to validate the configuration (default: true)
+    * @returns The merged configuration
+    */
     static loadConfig(projectRoot: string = process.cwd(), validate: boolean = true): CoreConfig {
         const configPath = this.getConfigFilePath(projectRoot);
 
@@ -255,19 +255,19 @@ export default config;
     }
 
     /**
-     * Loads configuration without validation (for debugging or inspection)
-     * @param projectRoot - The root directory of the project
-     * @returns The merged configuration without validation
-     */
+    * Loads configuration without validation (for debugging or inspection)
+    * @param projectRoot - The root directory of the project
+    * @returns The merged configuration without validation
+    */
     static loadConfigWithoutValidation(projectRoot: string = process.cwd()): CoreConfig {
         return this.loadConfig(projectRoot, false);
     }
 
     /**
-     * Reloads configuration by clearing cache and loading fresh
-     * @param projectRoot - The root directory of the project
-     * @returns The reloaded configuration
-     */
+    * Reloads configuration by clearing cache and loading fresh
+    * @param projectRoot - The root directory of the project
+    * @returns The reloaded configuration
+    */
     static reloadConfig(projectRoot: string = process.cwd()): CoreConfig {
         const configPath = this.getConfigFilePath(projectRoot);
         this.configCache.delete(configPath);

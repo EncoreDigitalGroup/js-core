@@ -3,6 +3,7 @@
 * All Rights Reserved.
 */
 
+
 export interface SortOptions {
     customSortOrder?: string[];
     indentation?: number;

@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import {ConfigMerger} from "../ConfigMerger";
-import {CoreConfig} from "../ConfigTypes";
+import { ConfigMerger } from "../ConfigMerger";
+import { CoreConfig } from "../ConfigTypes";
 
 
 describe("ConfigMerger", () => {
@@ -13,8 +13,8 @@ describe("ConfigMerger", () => {
             const userConfig: Partial<CoreConfig> = {
                 codeStyle: {
                     quoteStyle: "single",
-                },
-            };
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -27,9 +27,9 @@ describe("ConfigMerger", () => {
                 sorting: {
                     classMembers: {
                         groupByVisibility: true,
-                    },
-                },
-            };
+},
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -41,8 +41,8 @@ describe("ConfigMerger", () => {
             const userConfig: Partial<CoreConfig> = {
                 imports: {
                     groupOrder: ["relative", "external"],
-                },
-            };
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -53,8 +53,8 @@ describe("ConfigMerger", () => {
             const userConfig: Partial<CoreConfig> = {
                 codeStyle: {
                     quoteStyle: undefined,
-                },
-            };
+},
+};
 
             const result = ConfigMerger.merge(userConfig);
 
@@ -66,20 +66,20 @@ describe("ConfigMerger", () => {
             const config1: Partial<CoreConfig> = {
                 codeStyle: {
                     quoteStyle: "single",
-                },
-            };
+},
+};
 
             const config2: Partial<CoreConfig> = {
                 codeStyle: {
                     semicolons: "never",
-                },
-            };
+},
+};
 
             const config3: Partial<CoreConfig> = {
                 codeStyle: {
                     quoteStyle: "double", // Override config1
-                },
-            };
+},
+};
 
             const result = ConfigMerger.mergeMultiple(config1, config2, config3);
 

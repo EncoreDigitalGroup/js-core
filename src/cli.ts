@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
-import {FormatterPipeline} from "./core";
-import {CoreConfig, ConfigLoader} from "./core/config";
-import {sortPackageFile} from "./sortPackage";
-import {sortTsConfigFile} from "./sortTSConfig";
+import { FormatterPipeline } from "./core";
+import { CoreConfig, ConfigLoader } from "./core/config";
+import { sortPackageFile } from "./sortPackage";
+import { sortTsConfigFile } from "./sortTSConfig";
 
 
 /** Format files using the FormatterPipeline */
@@ -20,7 +20,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
-    }));
+}));
 
     if (files.length === 0) {
         console.info("No files found to format.");
@@ -98,7 +98,7 @@ async function main(): Promise<void> {
                     customSortOrder: config.packageJson.customSortOrder,
                     indentation: config.packageJson.indentation,
                     dryRun,
-                });
+});
             }
         }
         // Sort tsconfig.json
@@ -111,7 +111,7 @@ async function main(): Promise<void> {
                 sortTsConfigFile(tsconfigPath, {
                     indentation: config.tsConfig.indentation,
                     dryRun,
-                });
+});
             }
         }
         // Format files using the new pipeline

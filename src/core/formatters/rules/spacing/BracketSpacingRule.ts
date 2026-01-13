@@ -4,16 +4,16 @@
 */
 
 import * as ts from "typescript";
-import {CodeStyleConfig} from "../../../config";
-import {IFormattingRule} from "../../IFormattingRule";
+import { CodeStyleConfig } from "../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
- * Adds or removes spacing inside object literals and imports using AST
- * Examples:
- * - bracketSpacing: true  -> { foo: bar }
- * - bracketSpacing: false -> {foo: bar}
- */
+* Adds or removes spacing inside object literals and imports using AST
+* Examples:
+* - bracketSpacing: true  -> { foo: bar }
+* - bracketSpacing: false -> {foo: bar}
+*/
 
 export class BracketSpacingRule implements IFormattingRule {
     readonly name = "BracketSpacingRule";

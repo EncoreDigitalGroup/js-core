@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import {ConfigTypes, FormatterOrder} from "../ConfigTypes";
+import { ConfigTypes, FormatterOrder } from "../ConfigTypes";
 
 
 describe("ConfigTypes", () => {

@@ -20,15 +20,15 @@ export interface DependencyGraph {
 }
 
 /**
- * Generic dependency resolver using Tarjan's algorithm for
- * circular dependency detection and topological sorting
- */
+* Generic dependency resolver using Tarjan's algorithm for
+* circular dependency detection and topological sorting
+*/
 
 export class DependencyResolver {
     /**
-     * Find strongly connected components (circular dependency groups)
-     * Using Tarjan's algorithm
-     */
+    * Find strongly connected components (circular dependency groups)
+    * Using Tarjan's algorithm
+    */
     private static findStronglyConnectedComponents(nodes: Map<string, DependencyNode>): Set<string>[] {
         const index = new Map<string, number>();
         const lowLink = new Map<string, number>();
@@ -99,7 +99,7 @@ export class DependencyResolver {
                 dependencies: getDependencies(item),
                 originalIndex: index,
                 sortedIndex: index,
-            });
+});
         });
         // Filter dependencies to only include symbols in our scope
 
@@ -116,9 +116,9 @@ export class DependencyResolver {
     }
 
     /**
-     * Performs topological sort respecting the ideal sorted order
-     * Returns array of names in dependency-aware order
-     */
+    * Performs topological sort respecting the ideal sorted order
+    * Returns array of names in dependency-aware order
+    */
     static topologicalSort(graph: DependencyGraph, sortedNames: string[]): string[] {
         const result: string[] = [];
         const visited = new Set<string>();
@@ -178,9 +178,9 @@ export class DependencyResolver {
     }
 
     /**
-     * Reorders items to respect dependencies while minimizing changes
-     * from the ideal sorted order
-     */
+    * Reorders items to respect dependencies while minimizing changes
+    * from the ideal sorted order
+    */
     static reorderWithDependencies<T>(items: T[], getName: (item: T) => string): T[] {
         // Build dependency graph
 

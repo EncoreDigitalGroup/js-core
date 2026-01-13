@@ -3,19 +3,19 @@
 * All Rights Reserved.
 */
 
-import {SpacingConfig} from "../../../config";
-import {IFormattingRule} from "../../IFormattingRule";
+import { SpacingConfig } from "../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
- * Adds blank lines between declarations with different keywords
- * KEY ENHANCEMENT: Works at ALL brace depths (not just top level)
- *
- * Examples:
- * - No blank line between consecutive "const" declarations
- * - No blank line between consecutive "export" statements
- * - Blank line when keyword changes (const → let, export → const, etc.)
- */
+* Adds blank lines between declarations with different keywords
+* KEY ENHANCEMENT: Works at ALL brace depths (not just top level)
+*
+* Examples:
+* - No blank line between consecutive "const" declarations
+* - No blank line between consecutive "export" statements
+* - Blank line when keyword changes (const → let, export → const, etc.)
+*/
 
 export class BlankLineBetweenDeclarationsRule implements IFormattingRule {
     readonly name = "BlankLineBetweenDeclarationsRule";

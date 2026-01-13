@@ -3,9 +3,9 @@
 * All Rights Reserved.
 */
 
-import {MemberType} from "../";
-import {DeclarationType} from "../";
-import {IndexGenerationConfig} from "../";
+import { MemberType } from "../";
+import { DeclarationType } from "../";
+import { IndexGenerationConfig } from "../";
 
 
 /** Configuration for class member sorting */

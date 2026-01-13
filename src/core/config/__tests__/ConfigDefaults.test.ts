@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import {ConfigDefaults} from "../ConfigDefaults";
-import {FormatterOrder} from "../ConfigTypes";
+import { ConfigDefaults } from "../ConfigDefaults";
+import { FormatterOrder } from "../ConfigTypes";
 
 
 describe("ConfigDefaults", () => {

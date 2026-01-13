@@ -4,10 +4,10 @@
 */
 
 import * as ts from "typescript";
-import {ASTAnalyzer} from "../../../ast/ASTAnalyzer";
-import {DependencyResolver} from "../../../ast/DependencyResolver";
-import {ClassMemberConfig} from "../../../config";
-import {IFormattingRule} from "../../IFormattingRule";
+import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
+import { DependencyResolver } from "../../../ast/DependencyResolver";
+import { ClassMemberConfig } from "../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /** Types of class members */
@@ -120,7 +120,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
             text,
             dependencies,
             originalIndex: index,
-        };
+};
     }
 
     private createSourceFile(source: string, filePath: string): ts.SourceFile {

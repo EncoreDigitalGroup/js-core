@@ -4,8 +4,8 @@
 */
 
 import * as ts from "typescript";
-import {CodeStyleConfig} from "../../../config";
-import {IFormattingRule} from "../../IFormattingRule";
+import { CodeStyleConfig } from "../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /** Adds or removes semicolons based on configuration using AST */

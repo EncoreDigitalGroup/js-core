@@ -3,15 +3,15 @@
 * All Rights Reserved.
 */
 
-import {IFormattingRule} from "../../IFormattingRule";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
- * Removes excessive blank lines inside blocks (interfaces, classes, enums, functions)
- * - No blank line after opening brace
- * - JSDoc comments stick to what they describe (no blank line after)
- * - Single blank line between members/properties
- */
+* Removes excessive blank lines inside blocks (interfaces, classes, enums, functions)
+* - No blank line after opening brace
+* - JSDoc comments stick to what they describe (no blank line after)
+* - Single blank line between members/properties
+*/
 
 export class BlockSpacingRule implements IFormattingRule {
     readonly name = "BlockSpacingRule";

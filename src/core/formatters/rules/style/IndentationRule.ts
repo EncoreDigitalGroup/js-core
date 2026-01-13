@@ -3,15 +3,15 @@
 * All Rights Reserved.
 */
 
-import {CodeStyleConfig} from "../../../config";
-import {IFormattingRule} from "../../IFormattingRule";
+import { CodeStyleConfig } from "../../../config";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /**
- * Normalizes indentation (tabs vs spaces, indent width)
- * Note: Uses line-by-line processing rather than AST for better preservation
- * of comments and whitespace
- */
+* Normalizes indentation (tabs vs spaces, indent width)
+* Note: Uses line-by-line processing rather than AST for better preservation
+* of comments and whitespace
+*/
 
 export class IndentationRule implements IFormattingRule {
     readonly name = "IndentationRule";

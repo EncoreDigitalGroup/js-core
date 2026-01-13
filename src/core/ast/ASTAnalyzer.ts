@@ -26,9 +26,9 @@ export interface ReferenceInfo {
 
 export class ASTAnalyzer {
     /**
-     * Extracts all identifier references from a node
-     * This is the core traversal function that recursively visits the AST
-     */
+    * Extracts all identifier references from a node
+    * This is the core traversal function that recursively visits the AST
+    */
     static extractReferences(node: ts.Node, scopeFilter?: (name: string) => boolean): ReferenceInfo {
         const identifiers = new Set<string>();
         const thisReferences = new Set<string>();
@@ -86,9 +86,9 @@ export class ASTAnalyzer {
     }
 
     /**
-     * Extract references from a class member
-     * Only considers references to members in availableMembers set
-     */
+    * Extract references from a class member
+    * Only considers references to members in availableMembers set
+    */
     static extractClassMemberReferences(member: ts.ClassElement, availableMembers: Set<string>): Set<string> {
         // Don't analyze constructor - it can reference anything
 
@@ -104,9 +104,9 @@ export class ASTAnalyzer {
     }
 
     /**
-     * Extract references from a file-level declaration
-     * Only considers references to declarations in availableDeclarations set
-     */
+    * Extract references from a file-level declaration
+    * Only considers references to declarations in availableDeclarations set
+    */
     static extractFileDeclarationReferences(declaration: ts.Statement, availableDeclarations: Set<string>): Set<string> {
         // Skip import/export statements
 

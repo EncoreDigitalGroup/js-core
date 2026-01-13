@@ -5,7 +5,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import {IFormattingRule} from "../../IFormattingRule";
+import { IFormattingRule } from "../../IFormattingRule";
 
 
 /** Options for configuring how index files are generated */
@@ -42,7 +42,7 @@ export class IndexGenerationRule implements IFormattingRule {
         fileExtension: ".ts",
         indexFileName: "index.ts",
         recursive: true
-    };
+};
 
     readonly name = "IndexGenerationRule";
 
