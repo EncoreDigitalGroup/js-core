@@ -6,8 +6,9 @@
 * Auto-discovers rule mappings by parsing the FormatterPipeline source code
 */
 
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync } from "fs";
+import { resolve } from "path";
+
 
 export function transformGenericsPlugin() {
     // Move the discovery function outside the plugin object
@@ -16,26 +17,27 @@ export function transformGenericsPlugin() {
             // Read the FormatterPipeline source file (try different paths)
             let sourceCode: string;
             const possiblePaths = [
-                resolve(__dirname, '../core/pipeline/FormatterPipeline.ts'),
-                resolve(__dirname, '../../src/core/pipeline/FormatterPipeline.ts'),
-                resolve(process.cwd(), 'src/core/pipeline/FormatterPipeline.ts')
+                resolve(__dirname, "../core/pipeline/FormatterPipeline.ts"),
+                resolve(__dirname, "../../src/core/pipeline/FormatterPipeline.ts"),
+                resolve(process.cwd(), "src/core/pipeline/FormatterPipeline.ts")
             ];
 
             for (const path of possiblePaths) {
                 try {
-                    sourceCode = readFileSync(path, 'utf8');
+                    sourceCode = readFileSync(path, "utf8");
                     break;
-                } catch {}
+                } catch {
+                }
             }
 
             if (!sourceCode!) {
-                throw new Error('Could not find FormatterPipeline.ts');
+                throw new Error("Could not find FormatterPipeline.ts");
             }
 
             // Extract the initializeRules method using brace counting
             const methodStart = sourceCode.match(/private\s+initializeRules\(\):\s*void\s*\{/);
             if (!methodStart || methodStart.index === undefined) {
-                throw new Error('Could not find initializeRules method');
+                throw new Error("Could not find initializeRules method");
             }
 
             // Find the matching closing brace using brace counting
@@ -44,9 +46,9 @@ export function transformGenericsPlugin() {
             let endIndex = startIndex;
 
             for (let i = startIndex; i < sourceCode.length && braceCount > 0; i++) {
-                if (sourceCode[i] === '{') {
+                if (sourceCode[i] === "{") {
                     braceCount++;
-                } else if (sourceCode[i] === '}') {
+                } else if (sourceCode[i] === "}") {
                     braceCount--;
                 }
                 endIndex = i;
@@ -114,5 +116,5 @@ export function transformGenericsPlugin() {
                 }
             }
         }
-    };
+};
 }

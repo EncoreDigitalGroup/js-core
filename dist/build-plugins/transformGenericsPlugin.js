@@ -11,11 +11,9 @@ function transformGenericsPlugin() {
         path.resolve(__dirname, "../../src/core/pipeline/FormatterPipeline.ts"),
         path.resolve(process.cwd(), "src/core/pipeline/FormatterPipeline.ts")
       ];
-      let pipelinePath = "";
       for (const path2 of possiblePaths) {
         try {
           sourceCode = fs.readFileSync(path2, "utf8");
-          pipelinePath = path2;
           break;
         } catch {
         }
