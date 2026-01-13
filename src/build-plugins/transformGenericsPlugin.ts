@@ -21,11 +21,9 @@ export function transformGenericsPlugin() {
                 resolve(process.cwd(), 'src/core/pipeline/FormatterPipeline.ts')
             ];
 
-            let pipelinePath = '';
             for (const path of possiblePaths) {
                 try {
                     sourceCode = readFileSync(path, 'utf8');
-                    pipelinePath = path;
                     break;
                 } catch {}
             }
@@ -72,7 +70,6 @@ export function transformGenericsPlugin() {
                 orderToRuleMap[orderKey].push(ruleName);
             }
 
-            console.log('Auto-discovered rule mappings from', pipelinePath, ':', JSON.stringify(orderToRuleMap, null, 2));
             return orderToRuleMap;
         } catch (error) {
             throw new Error(`Failed to auto-discover rule mappings from FormatterPipeline.ts: ${error}`);

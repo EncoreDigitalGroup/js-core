@@ -1,6 +1,6 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
-import { transformGenericsPlugin } from "./src/build-plugins/transformGenericsPlugin";
+import { transformGenericsPlugin } from "./src";
 
 
 export default defineConfig({
@@ -26,7 +26,8 @@ export default defineConfig({
                 "glob",
                 "reflect-metadata",
                 "sort-package-json",
-                "json-sort-cli"
+                "json-sort-cli",
+                "typescript"
             ],
             output: {
                 preserveModules: true,
