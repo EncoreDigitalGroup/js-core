@@ -3,9 +3,9 @@
 * All Rights Reserved.
 */
 
-import { DocBlockCommentRule } from "../DocBlockCommentRule";
-import { Container } from "../../../../di";
 import { CoreConfig } from "../../../../config";
+import { Container } from "../../../../di";
+import { DocBlockCommentRule } from "../DocBlockCommentRule";
 
 
 describe("DocBlockCommentRule", () => {
@@ -24,13 +24,13 @@ describe("DocBlockCommentRule", () => {
                 indentation: {
                     type: "spaces",
                     size: 4
-                },
+},
                 blockSpacing: true,
                 docBlockComments: {
                     consolidateSingleLine: true
-                }
-            }
-        } as CoreConfig;
+}
+}
+} as CoreConfig;
         container.singleton<CoreConfig>(config);
         rule = new DocBlockCommentRule(container);
     });

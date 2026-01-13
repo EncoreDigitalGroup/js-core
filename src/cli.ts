@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
+import "reflect-metadata";
 import { FormatterPipeline } from "./core";
 import { CoreConfig, ConfigLoader } from "./core";
 import { Container, ServiceRegistration } from "./core/di";

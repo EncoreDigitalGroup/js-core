@@ -7,7 +7,7 @@ import * as fs from "fs/promises";
 import * as os from "os";
 import * as path from "path";
 import { ConfigDefaults, CoreConfig, FormatterOrder } from "../../config";
-import {Container, ServiceRegistration} from "../../di";
+import { Container, ServiceRegistration } from "../../di";
 import { FormatterPipeline } from "../FormatterPipeline";
 
 

@@ -47,10 +47,11 @@ export class FormatterError extends Error {
 */
 
 export class FormatterPipeline {
-    private formatterOrder: FormatterOrder[];
-    private rules: Map<FormatterOrder, IFormattingRule[]> = new Map();
+private formatterOrder: FormatterOrder[];
 
-    constructor(
+private rules: Map<FormatterOrder, IFormattingRule[]> = new Map();
+
+constructor(
         private readonly config: CoreConfig,
         private readonly container: Container
     ) {
@@ -64,23 +65,7 @@ export class FormatterPipeline {
         this.initializeRules();
     }
 
-    /** Add a rule to the pipeline at a specific order position using magical syntax */
-    private addRule<T extends IFormattingRule>(order: FormatterOrder): void {
-        if (!this.rules.has(order)) {
-            this.rules.set(order, []);
-        }
-
-        // Extract the type name from the call stack for the generic parameter
-        const typeName = this.extractTypeNameFromStack();
-
-        // Resolve the rule from the container
-        const ruleInstance = this.container.resolve<T>(typeName);
-
-        // Add to the pipeline
-        this.rules.get(order)!.push(ruleInstance);
-    }
-
-    /** Extract type name from call stack by reading source code */
+/** Extract type name from call stack by reading source code */
     private extractTypeNameFromStack(): string {
         const stack = new Error().stack;
         if (!stack) {
@@ -122,8 +107,23 @@ export class FormatterPipeline {
         throw new Error("Cannot extract type name from addRule call. Use format: addRule<RuleName>(order)");
     }
 
+/** Add a rule to the pipeline at a specific order position using magical syntax */
+    private addRule<T extends IFormattingRule>(order: FormatterOrder): void {
+        if (!this.rules.has(order)) {
+            this.rules.set(order, []);
+        }
 
-    /** Get all files in a directory recursively */
+        // Extract the type name from the call stack for the generic parameter
+        const typeName = this.extractTypeNameFromStack();
+
+        // Resolve the rule from the container
+        const ruleInstance = this.container.resolve<T>(typeName);
+
+        // Add to the pipeline
+        this.rules.get(order)!.push(ruleInstance);
+    }
+
+/** Get all files in a directory recursively */
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
         const files: string[] = [];
         const entries = await fs.readdir(dirPath, {withFileTypes: true});
@@ -150,7 +150,7 @@ export class FormatterPipeline {
         return files;
     }
 
-    /**
+/**
     * Format a file using the configured formatters in sequence
     * @param filePath - Absolute path to the file to format
     * @param dryRun - If true, don't write changes to disk
@@ -222,7 +222,7 @@ export class FormatterPipeline {
         return context;
     }
 
-    /**
+/**
     * Format multiple files in sequence
     * @param filePaths - Array of file paths to format
     * @param dryRun - If true, don't write changes to disk
@@ -241,7 +241,7 @@ export class FormatterPipeline {
         return results;
     }
 
-    /**
+/**
     * Format all files in a directory recursively
     * @param dirPath - Directory path to format
     * @param dryRun - If true, don't write changes to disk
@@ -254,22 +254,22 @@ export class FormatterPipeline {
         return this.formatFiles(files, dryRun);
     }
 
-    /** Get the list of formatters in execution order */
+/** Get the list of formatters in execution order */
     getFormatterOrder(): FormatterOrder[] {
         return [...this.formatterOrder];
     }
 
-    /** Get all rules at a specific order position */
+/** Get all rules at a specific order position */
     getRulesAtOrder(order: FormatterOrder): IFormattingRule[] {
         return this.rules.get(order) || [];
     }
 
-    /** Check if any rules are configured */
+/** Check if any rules are configured */
     hasRules(): boolean {
         return this.rules.size > 0;
     }
 
-    /** Initialize rules based on configuration using clean DI pattern */
+/** Initialize rules based on configuration using clean DI pattern */
     private initializeRules(): void {
         // Index Generation Rule
         if (this.config.indexGeneration?.enabled) {

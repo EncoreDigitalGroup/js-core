@@ -15,20 +15,20 @@ export class ServiceRegistration {
         // Register core config
         container.singleton<CoreConfig>(config);
 
-        // Register all formatter rules as singletons
-        container.singleton<QuoteStyleRule>(new QuoteStyleRule(container));
-        container.singleton<SemicolonRule>(new SemicolonRule(container));
-        container.singleton<BracketSpacingRule>(new BracketSpacingRule(container));
-        container.singleton<IndentationRule>(new IndentationRule(container));
-        container.singleton<BlockSpacingRule>(new BlockSpacingRule(container));
-        container.singleton<DocBlockCommentRule>(new DocBlockCommentRule(container));
-        container.singleton<ImportOrganizationRule>(new ImportOrganizationRule(container));
-        container.singleton<ClassMemberSortingRule>(new ClassMemberSortingRule(container));
-        container.singleton<FileDeclarationSortingRule>(new FileDeclarationSortingRule(container));
-        container.singleton<BlankLineBetweenDeclarationsRule>(new BlankLineBetweenDeclarationsRule(container));
-        container.singleton<BlankLineBetweenStatementTypesRule>(new BlankLineBetweenStatementTypesRule(container));
-        container.singleton<BlankLineBeforeReturnsRule>(new BlankLineBeforeReturnsRule(container));
-        container.singleton<IndexGenerationRule>(new IndexGenerationRule(container));
+        // Register all formatter rules as singletons with automatic dependency injection
+        container.singleton(QuoteStyleRule);
+        container.singleton(SemicolonRule);
+        container.singleton(BracketSpacingRule);
+        container.singleton(IndentationRule);
+        container.singleton(BlockSpacingRule);
+        container.singleton(DocBlockCommentRule);
+        container.singleton(ImportOrganizationRule);
+        container.singleton(ClassMemberSortingRule);
+        container.singleton(FileDeclarationSortingRule);
+        container.singleton(BlankLineBetweenDeclarationsRule);
+        container.singleton(BlankLineBetweenStatementTypesRule);
+        container.singleton(BlankLineBeforeReturnsRule);
+        container.singleton(IndexGenerationRule);
 
         // Register formatter pipeline
         container.singleton<FormatterPipeline>(new FormatterPipeline(config, container));
