@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { SpacingConfig } from "../../../../config/types";
+import { SpacingConfig } from "../../../config";
 import { IFormattingRule } from "../../IFormattingRule";
 
 

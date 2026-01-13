@@ -4,9 +4,9 @@
 */
 
 import * as ts from "typescript";
-import { ClassMemberConfig } from "../../../../config/types";
 import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
 import { DependencyResolver } from "../../../ast/DependencyResolver";
+import { ClassMemberConfig } from "../../../config";
 import { IFormattingRule } from "../../IFormattingRule";
 
 

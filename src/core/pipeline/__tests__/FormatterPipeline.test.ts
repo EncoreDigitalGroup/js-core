@@ -6,7 +6,7 @@
 import * as fs from "fs/promises";
 import * as os from "os";
 import * as path from "path";
-import { CoreConfig, defaultConfig, FormatterOrder } from "../../../config/types";
+import { ConfigDefaults, CoreConfig, FormatterOrder } from "../../config";
 import { FormatterPipeline } from "../FormatterPipeline";
 
 
@@ -27,7 +27,7 @@ describe("FormatterPipeline", () => {
         it("should initialize with default formatter order", () => {
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 codeStyle: {enabled: true, quoteStyle: "double"},
 };
 
@@ -45,7 +45,7 @@ describe("FormatterPipeline", () => {
         it("should initialize with custom formatter order", () => {
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 formatterOrder: [FormatterOrder.Spacing, FormatterOrder.CodeStyle],
 };
 
@@ -57,7 +57,7 @@ describe("FormatterPipeline", () => {
         it("should initialize CodeStyleFormatter when enabled", () => {
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "single"},
                 sorting: {enabled: false},
@@ -74,7 +74,7 @@ describe("FormatterPipeline", () => {
         it("should initialize ImportOrganizer when enabled", () => {
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 imports: {enabled: true, sortImports: true},
                 sorting: {enabled: false},
@@ -91,7 +91,7 @@ describe("FormatterPipeline", () => {
         it("should not initialize disabled formatters", () => {
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: false},
                 imports: {enabled: false},
@@ -112,7 +112,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 imports: {enabled: false}, // Disable imports to test only code style
@@ -142,7 +142,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
@@ -168,7 +168,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double", bracketSpacing: true},
                 imports: {enabled: true, sortImports: true},
@@ -194,7 +194,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
@@ -220,7 +220,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
@@ -245,7 +245,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
@@ -275,7 +275,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test
@@ -296,7 +296,7 @@ describe("FormatterPipeline", () => {
 
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 spacing: {enabled: false},
@@ -313,7 +313,7 @@ describe("FormatterPipeline", () => {
             const invalidPath = path.join(tempDir, "nonexistent.ts");
             const config: CoreConfig = {
 
-                ...defaultConfig,
+                ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 sorting: {enabled: false}, // Disable sorting for this test

@@ -3,8 +3,8 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig } from "../../../config/types";
 import { ConfigMerger } from "../ConfigMerger";
+import { CoreConfig } from "../ConfigTypes";
 
 
 describe("ConfigMerger", () => {

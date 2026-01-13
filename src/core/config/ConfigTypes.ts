@@ -3,14 +3,12 @@
 * All Rights Reserved.
 */
 
-import { DEFAULT_CLASS_ORDER, MemberType } from "../core";
-import { DeclarationType, DEFAULT_FILE_ORDER } from "../core";
-import { IndexGenerationConfig } from "../core";
-import { DefaultSortOptions } from "../shared";
+import { MemberType } from "../";
+import { DeclarationType } from "../";
+import { IndexGenerationConfig } from "../";
 
 
 /** Configuration for class member sorting */
-
 export interface ClassMemberConfig {
     /** Whether to sort class members (default: true) */
     enabled?: boolean;
@@ -26,7 +24,6 @@ export interface ClassMemberConfig {
 }
 
 /** Configuration for code style formatting */
-
 export interface CodeStyleConfig {
     /** Whether to run code style formatting (default: true) */
     enabled?: boolean;
@@ -57,7 +54,6 @@ export interface CodeStyleConfig {
 }
 
 /** Configuration for import organization */
-
 export interface ImportConfig {
     /** Whether to organize imports (default: true) */
     enabled?: boolean;
@@ -82,7 +78,6 @@ export interface ImportConfig {
 }
 
 /** Configuration for React component member sorting */
-
 export interface ReactComponentConfig {
     /** Whether to sort React component members (default: true) */
     enabled?: boolean;
@@ -98,7 +93,6 @@ export interface ReactComponentConfig {
 }
 
 /** Configuration for file-level declaration sorting */
-
 export interface FileDeclarationConfig {
     /** Whether to sort file-level declarations (default: true) */
     enabled?: boolean;
@@ -111,7 +105,6 @@ export interface FileDeclarationConfig {
 }
 
 /** Configuration for AST-based sorting (class members, file declarations) */
-
 export interface SortingConfig {
     /** Whether to enable AST-based sorting (default: true) */
     enabled?: boolean;
@@ -133,7 +126,6 @@ export interface SortingConfig {
 }
 
 /** Configuration for spacing rules */
-
 export interface SpacingConfig {
     /** Whether to apply spacing rules (default: true) */
     enabled?: boolean;
@@ -149,7 +141,6 @@ export interface SpacingConfig {
 }
 
 /** Configuration for package.json sorting */
-
 export interface PackageJsonConfig {
     /** Whether to sort package.json (default: true) */
     enabled?: boolean;
@@ -162,7 +153,6 @@ export interface PackageJsonConfig {
 }
 
 /** Configuration for tsconfig.json sorting */
-
 export interface TsConfigConfig {
     /** Whether to sort tsconfig.json (default: true) */
     enabled?: boolean;
@@ -172,7 +162,6 @@ export interface TsConfigConfig {
 }
 
 /** Represents the execution order of formatters in the pipeline */
-
 export enum FormatterOrder {
     IndexGeneration = "IndexGeneration",
     CodeStyle = "CodeStyle",
@@ -181,45 +170,8 @@ export enum FormatterOrder {
     Spacing = "Spacing"
 }
 
-/** @deprecated Use SortingConfig instead */
-
-export interface SortersConfig extends SortingConfig {
-}
-
-/** Configuration for Prettier formatting */
-
-export interface PrettierConfig {
-    /** Whether to run Prettier (default: true) */
-    enabled?: boolean;
-
-    /** Whether to skip Prettier if a config file exists in the project (default: true) */
-    skipIfConfigExists?: boolean;
-
-    /** Prettier options to use when no config file exists */
-    options?: {
-        plugins?: string[];
-        bracketSpacing?: boolean;
-        trailingComma?: "none" | "es5" | "all";
-        arrowParens?: "always" | "avoid";
-        tabWidth?: number;
-        editorconfig?: boolean;
-        useTabs?: boolean;
-        printWidth?: number;
-        importOrderSeparation?: boolean;
-        singleQuote?: boolean;
-        semi?: boolean;
-        [key: string]: any;
-    };
-
-    /** File patterns to include (default: ["**\/*.{js,ts,jsx,tsx}"]) */
-    include?: string[];
-
-    /** Directories to exclude (default: ["node_modules/**", "dist/**", "vendor/**", "bin/**"]) */
-    exclude?: string[];
-}
 
 /** Main configuration interface for tsfmt */
-
 export interface CoreConfig {
     /** Configuration for automatic index.ts file generation */
     indexGeneration?: IndexGenerationConfig;
@@ -244,161 +196,77 @@ export interface CoreConfig {
 
     /** Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];
-
-    /**
-    * @deprecated Use 'sorting' instead
-    * Configuration for class member and file-level declaration sorting
-    */
-    sorters?: SortersConfig;
-
-    /**
-    * @deprecated Prettier is no longer used - use 'codeStyle' instead
-    * Configuration for Prettier formatting
-    */
-    prettier?: PrettierConfig;
 }
 
-/** Deep merges two configuration objects */
-
-function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
-    const result = {...target};
-
-    for (const key in source) {
-        if (source[key] !== undefined) {
-            if (typeof source[key] === "object" &&
-
-                source[key] !== null &&
-                !Array.isArray(source[key]) &&
-                typeof result[key] === "object" &&
-                result[key] !== null &&
-                !Array.isArray(result[key])) {
-                result[key] = deepMerge(result[key] as any, source[key] as any);
-            } else {
-                result[key] = source[key] as T[Extract<keyof T, string>];
-            }
-        }
+/** Configuration type definitions and utilities */
+export class ConfigTypes {
+    /** Get all available arrow parentheses options */
+    static getArrowParenOptions(): Array<"always" | "avoid"> {
+        return ["always", "avoid"];
     }
 
-    return result;
-}
+    /** Get all formatter order options */
+    static getFormatterOrderOptions(): FormatterOrder[] {
+        return Object.values(FormatterOrder);
+    }
 
-/** Default configuration */
+    /** Get all available import group options */
+    static getImportGroupOptions(): string[] {
+        return ["external", "internal", "relative"];
+    }
 
-export const defaultConfig: CoreConfig = {
-    indexGeneration: {
-        enabled: true,
-        directories: ["src/", "packages/"],
-        options: {
-            fileExtension: ".ts",
-            indexFileName: "index.ts",
-            recursive: true
-},
-        updateMainIndex: true,
-},
-    codeStyle: {
-        enabled: true,
-        quoteStyle: "double",
-        semicolons: "always",
-        bracketSpacing: false,
-        indentStyle: "space",
-        indentWidth: 4,
-        lineWidth: 120,
-        trailingCommas: "all",
-        arrowParens: "avoid",
-},
-    imports: {
-        enabled: true,
-        sortImports: true,
-        removeUnused: true,
-        removeSideEffects: false,
-        groupImports: true,
-        groupOrder: ["external", "internal", "relative"],
-        separateGroups: false,
-},
-    sorting: {
-        enabled: true,
-        classMembers: {
-            enabled: true,
-            order: DEFAULT_CLASS_ORDER,
-            groupByVisibility: false,
-            respectDependencies: true,
-},
-        reactComponents: {
-            enabled: true,
-            order: DEFAULT_CLASS_ORDER,
-            groupByVisibility: false,
-            respectDependencies: true,
-},
-        fileDeclarations: {
-            enabled: true,
-            order: DEFAULT_FILE_ORDER,
-            respectDependencies: true,
-},
-        include: ["**/*.{ts,tsx}"],
-        exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
-},
-    spacing: {
-        enabled: false,
-        betweenDeclarations: true,
-        beforeReturns: true,
-        betweenStatementTypes: true,
-},
-    packageJson: {
-        enabled: true,
-        customSortOrder: DefaultSortOptions.customSortOrder,
-        indentation: 4,
-},
-    tsConfig: {
-        enabled: true,
-        indentation: 4,
-},
-    // Backward compatibility - keep old prettier config
-    prettier: {
-        enabled: false, // Disabled by default - use codeStyle instead
-        skipIfConfigExists: true,
-        options: {
-            plugins: ["@trivago/prettier-plugin-sort-imports"],
-            bracketSpacing: false,
-            trailingComma: "all",
-            arrowParens: "avoid",
-            tabWidth: 4,
-            editorconfig: true,
-            useTabs: false,
-            printWidth: 120,
-            importOrderSeparation: true,
-            singleQuote: false,
-            semi: true,
-},
-        include: ["**/*.{js,ts,jsx,tsx}"],
-        exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
-},
-    // Backward compatibility - map to sorting
-    sorters: {
-        enabled: true,
-        classMembers: {
-            enabled: true,
-            order: DEFAULT_CLASS_ORDER,
-            groupByVisibility: false,
-            respectDependencies: true,
-},
-        reactComponents: {
-            enabled: true,
-            order: DEFAULT_CLASS_ORDER,
-            groupByVisibility: false,
-            respectDependencies: true,
-},
-        fileDeclarations: {
-            enabled: true,
-            order: DEFAULT_FILE_ORDER,
-            respectDependencies: true,
-},
-        include: ["**/*.{ts,tsx}"],
-        exclude: ["node_modules/**", "dist/**", "vendor/**", "bin/**"],
-},
-};
+    /** Get all available indent style options */
+    static getIndentStyleOptions(): Array<"tab" | "space"> {
+        return ["tab", "space"];
+    }
 
-/** Merges user configuration with default configuration */
+    /** Get all available quote style options */
+    static getQuoteStyleOptions(): Array<"single" | "double"> {
+        return ["single", "double"];
+    }
 
-export function mergeConfig(userConfig: Partial<CoreConfig>): CoreConfig {
-    return deepMerge(defaultConfig, userConfig);
+    /** Get all available semicolon options */
+    static getSemicolonOptions(): Array<"always" | "never"> {
+        return ["always", "never"];
+    }
+
+    /** Get all available trailing comma options */
+    static getTrailingCommaOptions(): Array<"none" | "es5" | "all"> {
+        return ["none", "es5", "all"];
+    }
+
+    /** Check if a line width is in recommended range */
+    static isRecommendedLineWidth(width: number): boolean {
+        return width >= 80 && width <= 120;
+    }
+
+    /** Validate an arrow parentheses option */
+    static isValidArrowParenOption(option: string): option is "always" | "avoid" {
+        return this.getArrowParenOptions().includes(option as any);
+    }
+
+    /** Validate an indent style option */
+    static isValidIndentStyle(style: string): style is "tab" | "space" {
+        return this.getIndentStyleOptions().includes(style as any);
+    }
+
+    /** Check if an indent width is valid */
+    static isValidIndentWidth(width: number): boolean {
+        return width >= 1 && width <= 8;
+    }
+
+    /** Validate a quote style option */
+    static isValidQuoteStyle(style: string): style is "single" | "double" {
+        return this.getQuoteStyleOptions().includes(style as any);
+    }
+
+    /** Validate a semicolon option */
+    static isValidSemicolonOption(option: string): option is "always" | "never" {
+        return this.getSemicolonOptions().includes(option as any);
+    }
+
+    /** Validate a trailing comma option */
+    static isValidTrailingCommaOption(option: string): option is "none" | "es5" | "all" {
+        return this.getTrailingCommaOptions().includes(option as any);
+    }
 }

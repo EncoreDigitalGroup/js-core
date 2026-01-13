@@ -3,11 +3,11 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig, defaultConfig } from "../../config/types";
+import { ConfigDefaults } from "./ConfigDefaults";
+import { CoreConfig } from "./ConfigTypes";
 
 
 /** Merges user configuration with default configuration */
-
 export class ConfigMerger {
     /**
     * Deep merge two configuration objects
@@ -43,7 +43,7 @@ export class ConfigMerger {
     * @returns Complete merged configuration
     */
     static merge(userConfig: Partial<CoreConfig>): CoreConfig {
-        return this.deepMerge(defaultConfig, userConfig);
+        return this.deepMerge(ConfigDefaults.getDefaultConfig(), userConfig);
     }
 
     /**
@@ -52,7 +52,7 @@ export class ConfigMerger {
     * @returns Merged configuration
     */
     static mergeMultiple(...configs: Partial<CoreConfig>[]): CoreConfig {
-        let result = defaultConfig;
+        let result = ConfigDefaults.getDefaultConfig();
 
         for (const config of configs) {
             result = this.deepMerge(result, config);

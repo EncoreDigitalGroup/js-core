@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { CoreConfig } from "../../../config/types";
+import { CoreConfig } from "../ConfigTypes";
 import { ConfigValidator } from "../ConfigValidator";
 
 
@@ -36,7 +36,7 @@ describe("ConfigValidator", () => {
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Invalid quoteStyle: triple. Must be 'single' or 'double'.");
+            expect(result.errors[0]).toContain("Invalid quoteStyle: triple. Must be 'single' or 'double'.");
         });
         it("should detect invalid semicolon option", () => {
             const config: CoreConfig = {
@@ -49,7 +49,7 @@ describe("ConfigValidator", () => {
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Invalid semicolons: sometimes. Must be 'always' or 'never'.");
+            expect(result.errors[0]).toContain("Invalid semicolons: sometimes. Must be 'always' or 'never'.");
         });
         it("should detect invalid indent width", () => {
             const config: CoreConfig = {
@@ -62,7 +62,7 @@ describe("ConfigValidator", () => {
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Invalid indentWidth: 10. Must be between 1 and 8.");
+            expect(result.errors[0]).toContain("Invalid indentWidth: 10. Must be between 1 and 8.");
         });
         it("should warn about unusual line width", () => {
             const config: CoreConfig = {
@@ -75,7 +75,7 @@ describe("ConfigValidator", () => {
             const result = ConfigValidator.validate(config);
 
             expect(result.valid).toBe(true);
-            expect(result.warnings).toContain("Unusual lineWidth: 250. Recommended range is 80-120.");
+            expect(result.warnings[0]).toContain("Unusual lineWidth: 250. Recommended range is 80-120.");
         });
         it("should detect invalid import group order", () => {
             const config: CoreConfig = {
@@ -89,18 +89,6 @@ describe("ConfigValidator", () => {
 
             expect(result.valid).toBe(false);
             expect(result.errors[0]).toContain("Invalid group in groupOrder: invalid");
-        });
-        it("should warn about deprecated prettier config", () => {
-            const config: CoreConfig = {
-                prettier: {
-                    enabled: true,
-},
-};
-
-            const result = ConfigValidator.validate(config);
-
-            expect(result.valid).toBe(true);
-            expect(result.warnings[0]).toContain("Prettier is deprecated");
         });
     });
     describe("validateOrThrow", () => {

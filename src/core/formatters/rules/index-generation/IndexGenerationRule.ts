@@ -38,17 +38,18 @@ export interface IndexGenerationConfig {
 /** Rule that generates index.ts files for directories */
 
 export class IndexGenerationRule implements IFormattingRule {
-private readonly defaultOptions: IndexGenerationOptions = {
+    private readonly defaultOptions: IndexGenerationOptions = {
         fileExtension: ".ts",
         indexFileName: "index.ts",
         recursive: true
 };
 
-readonly name = "IndexGenerationRule";
+    readonly name = "IndexGenerationRule";
 
-constructor(private readonly config: IndexGenerationConfig) {}
+    constructor(private readonly config: IndexGenerationConfig) {
+    }
 
-private findProjectRoot(filePath: string): string | null {
+    private findProjectRoot(filePath: string): string | null {
         let current = path.dirname(filePath);
 
         while (current !== path.dirname(current)) {
@@ -61,7 +62,7 @@ private findProjectRoot(filePath: string): string | null {
         return null;
     }
 
-private isTestDirectory(dirName: string): boolean {
+    private isTestDirectory(dirName: string): boolean {
         // Common test directory patterns (not configurable)
 
         const testDirectories = [
@@ -79,7 +80,7 @@ private isTestDirectory(dirName: string): boolean {
             dirName.endsWith(".spec");
     }
 
-private isTestFile(fileName: string): boolean {
+    private isTestFile(fileName: string): boolean {
         // Common test file patterns (not configurable)
 
         const testPatterns = [
@@ -94,7 +95,7 @@ private isTestFile(fileName: string): boolean {
         return testPatterns.some(pattern => pattern.test(fileName));
     }
 
-private generateSingleDirectoryIndex(dir: string, options: IndexGenerationOptions): void {
+    private generateSingleDirectoryIndex(dir: string, options: IndexGenerationOptions): void {
         try {
             const entries = fs.readdirSync(dir, {withFileTypes: true});
             const exports: string[] = [];
@@ -154,7 +155,7 @@ ${exports.join("\n")}
         }
     }
 
-private generateIndexExportRecursive(dir: string, options: IndexGenerationOptions): void {
+    private generateIndexExportRecursive(dir: string, options: IndexGenerationOptions): void {
         try {
             const entries = fs.readdirSync(dir, {withFileTypes: true});
 
@@ -177,7 +178,7 @@ private generateIndexExportRecursive(dir: string, options: IndexGenerationOption
         }
     }
 
-private generateIndexExport(dir: string, options: IndexGenerationOptions): void {
+    private generateIndexExport(dir: string, options: IndexGenerationOptions): void {
         if (!fs.existsSync(dir)) {
             return;
         }
@@ -189,7 +190,7 @@ private generateIndexExport(dir: string, options: IndexGenerationOptions): void 
         }
     }
 
-private discoverExportableModules(srcDir: string): string[] {
+    private discoverExportableModules(srcDir: string): string[] {
         try {
             const entries = fs.readdirSync(srcDir, {withFileTypes: true});
             const modules: string[] = [];
@@ -232,7 +233,7 @@ private discoverExportableModules(srcDir: string): string[] {
         }
     }
 
-private updateMainIndex(indexPath: string, modules: string[]): void {
+    private updateMainIndex(indexPath: string, modules: string[]): void {
         try {
             const exports = modules.map(mod => `export * from "./${mod}";`).join("\n");
 
@@ -248,7 +249,7 @@ ${exports}
         }
     }
 
-private generateIndexFiles(currentFilePath: string): void {
+    private generateIndexFiles(currentFilePath: string): void {
         try {
             const projectRoot = this.findProjectRoot(currentFilePath);
 
@@ -282,7 +283,7 @@ private generateIndexFiles(currentFilePath: string): void {
         }
     }
 
-apply(source: string, filePath?: string): string {
+    apply(source: string, filePath?: string): string {
         if (!this.config.enabled || !filePath) {
             return source;
         }
