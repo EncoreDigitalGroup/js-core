@@ -6,23 +6,8 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { CoreConfig, FormatterOrder } from "../config";
-import {
-    IFormattingRule,
-    ClassMemberSortingRule,
-    FileDeclarationSortingRule,
-    ImportOrganizationRule,
-    BlankLineBeforeReturnsRule,
-    BlankLineBetweenDeclarationsRule,
-    BlankLineBetweenStatementTypesRule,
-    BlockSpacingRule,
-    BracketSpacingRule,
-    IndentationRule,
-    QuoteStyleRule,
-    SemicolonRule,
-    DocBlockCommentRule,
-    IndexGenerationRule
-} from "../formatters";
-import { IServiceContainer } from "../di";
+import { Container } from "../di";
+import { BlankLineBeforeReturnsRule, BlankLineBetweenDeclarationsRule, BlankLineBetweenStatementTypesRule, BlockSpacingRule, BracketSpacingRule, ClassMemberSortingRule, DocBlockCommentRule, FileDeclarationSortingRule, IFormattingRule, ImportOrganizationRule, IndentationRule, IndexGenerationRule, QuoteStyleRule, SemicolonRule } from "../formatters";
 
 
 /*
@@ -67,7 +52,7 @@ export class FormatterPipeline {
 
     constructor(
         private readonly config: CoreConfig,
-        private readonly container: IServiceContainer
+        private readonly container: Container
     ) {
         this.formatterOrder = config.formatterOrder || [
             FormatterOrder.IndexGeneration,
@@ -79,37 +64,20 @@ export class FormatterPipeline {
         this.initializeRules();
     }
 
-    /** Dynamic map of rule constructors built as addRule<T> is called */
-    private static readonly ruleConstructors = new Map<string, new (container: IServiceContainer) => any>();
-
-    /** Add a rule to the pipeline at a specific order position */
+    /** Add a rule to the pipeline at a specific order position using magical syntax */
     private addRule<T extends IFormattingRule>(order: FormatterOrder): void {
         if (!this.rules.has(order)) {
             this.rules.set(order, []);
         }
 
-        // Extract the type name from the call stack
+        // Extract the type name from the call stack for the generic parameter
         const typeName = this.extractTypeNameFromStack();
 
-        // Get or infer the constructor for this type
-        let Constructor = FormatterPipeline.ruleConstructors.get(typeName);
-
-        if (!Constructor) {
-            // Dynamically resolve the constructor using global scope
-            Constructor = this.resolveConstructorFromGlobalScope(typeName);
-            if (Constructor) {
-                // Cache it for future use
-                FormatterPipeline.ruleConstructors.set(typeName, Constructor);
-            } else {
-                throw new Error(`Cannot resolve constructor for rule type: ${typeName}`);
-            }
-        }
-
-        // Register with the container using its clean API
-        this.container.singleton<T>(() => new Constructor(this.container));
+        // Resolve the rule from the container
+        const ruleInstance = this.container.resolve<T>(typeName);
 
         // Add to the pipeline
-        this.rules.get(order)!.push(this.container.resolve<T>());
+        this.rules.get(order)!.push(ruleInstance);
     }
 
     /** Extract type name from call stack by reading source code */
@@ -120,11 +88,11 @@ export class FormatterPipeline {
         }
 
         // Parse stack to find the calling location
-        const lines = stack.split('\n');
+        const lines = stack.split("\n");
         for (const line of lines) {
             // Skip our own methods
-            if (line.includes('FormatterPipeline.extractTypeNameFromStack') ||
-                line.includes('FormatterPipeline.addRule')) {
+            if (line.includes("FormatterPipeline.extractTypeNameFromStack") ||
+                line.includes("FormatterPipeline.addRule")) {
                 continue;
             }
 
@@ -134,9 +102,9 @@ export class FormatterPipeline {
                 const [, filePath, lineNum] = match;
                 try {
                     // Read the source file to extract the generic type
-                    const fs = require('fs');
-                    const sourceCode = fs.readFileSync(filePath, 'utf8');
-                    const sourceLines = sourceCode.split('\n');
+                    const fs = require("fs");
+                    const sourceCode = fs.readFileSync(filePath, "utf8");
+                    const sourceLines = sourceCode.split("\n");
                     const callLine = sourceLines[parseInt(lineNum) - 1];
 
                     // Extract the generic type from the addRule call
@@ -154,29 +122,6 @@ export class FormatterPipeline {
         throw new Error("Cannot extract type name from addRule call. Use format: addRule<RuleName>(order)");
     }
 
-    /** Resolve constructor from the current module's imports using the type name */
-    private resolveConstructorFromGlobalScope(typeName: string): (new (container: IServiceContainer) => any) | undefined {
-        // In TypeScript land via tsx, we can access the imports directly
-        try {
-            // Use globalThis to access the constructor in the current execution context
-            const moduleExports = require('../formatters');
-            const constructor = moduleExports[typeName];
-
-            if (typeof constructor === 'function' && constructor.prototype) {
-                return constructor;
-            }
-
-            // Fallback: try direct eval in current scope
-            const evalConstructor = eval(typeName);
-            if (typeof evalConstructor === 'function' && evalConstructor.prototype) {
-                return evalConstructor;
-            }
-        } catch (error) {
-            // Constructor not accessible
-        }
-
-        return undefined;
-    }
 
     /** Get all files in a directory recursively */
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
@@ -364,7 +309,6 @@ export class FormatterPipeline {
             this.addRule<BlankLineBeforeReturnsRule>(FormatterOrder.Spacing);
         }
     }
-
 }
 
 

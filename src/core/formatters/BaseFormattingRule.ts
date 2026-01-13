@@ -4,63 +4,58 @@
 */
 
 import { CoreConfig } from "../config";
-import { IServiceContainer } from "../di";
+import { Container } from "../di";
 import { IFormattingRule } from "./IFormattingRule";
 
+
 /**
- * Base class for all formatting rules that provides container access
- * Eliminates the need for each rule to implement the container constructor boilerplate
- */
+* Base class for all formatting rules that provides container access
+* Eliminates the need for each rule to implement the container constructor boilerplate
+*/
 export abstract class BaseFormattingRule implements IFormattingRule {
     abstract readonly name: string;
+    protected readonly config: CoreConfig;
 
-    constructor(protected readonly container: IServiceContainer) {
+    constructor(protected readonly container: Container, config?: CoreConfig) {
+        // Use provided config or resolve from container
+        if (config) {
+            this.config = config;
+        } else {
+            // Simple resolution by name
+            this.config = this.container.resolve<CoreConfig>();
+        }
     }
 
-    /**
-     * Helper method to resolve the core configuration
-     */
+    /** Helper method to get the core configuration */
     protected getConfig(): CoreConfig {
-        return this.container.resolve<CoreConfig>();
+        return this.config;
     }
 
-    /**
-     * Helper method to get code style configuration
-     */
+    /** Helper method to get code style configuration */
     protected getCodeStyleConfig() {
         return this.getConfig().codeStyle;
     }
 
-    /**
-     * Helper method to get spacing configuration
-     */
+    /** Helper method to get spacing configuration */
     protected getSpacingConfig() {
         return this.getConfig().spacing;
     }
 
-    /**
-     * Helper method to get imports configuration
-     */
+    /** Helper method to get imports configuration */
     protected getImportsConfig() {
         return this.getConfig().imports;
     }
 
-    /**
-     * Helper method to get sorting configuration
-     */
+    /** Helper method to get sorting configuration */
     protected getSortingConfig() {
         return this.getConfig().sorting;
     }
 
-    /**
-     * Helper method to get index generation configuration
-     */
+    /** Helper method to get index generation configuration */
     protected getIndexGenerationConfig() {
         return this.getConfig().indexGeneration;
     }
 
-    /**
-     * Apply the formatting rule to the source code
-     */
+    /** Apply the formatting rule to the source code */
     abstract apply(source: string, filePath?: string): string;
 }

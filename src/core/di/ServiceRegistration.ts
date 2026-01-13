@@ -4,29 +4,33 @@
 */
 
 import { CoreConfig } from "../config";
+import { QuoteStyleRule, SemicolonRule, BracketSpacingRule, IndentationRule, BlockSpacingRule, DocBlockCommentRule, ImportOrganizationRule, ClassMemberSortingRule, FileDeclarationSortingRule, BlankLineBetweenDeclarationsRule, BlankLineBetweenStatementTypesRule, BlankLineBeforeReturnsRule, IndexGenerationRule } from "../formatters";
 import { FormatterPipeline } from "../pipeline";
-import { IServiceContainer } from "./IServiceContainer";
+import { Container } from "./Container";
 
-/**
- * Registers all services with the DI container using the clean API
- */
+
+/** Simple service registration for our custom DI container */
 export class ServiceRegistration {
-    /**
-     * Register all core services and formatter rules
-     * @param container - Service container to register services with
-     * @param config - Application configuration
-     */
-    static registerServices(container: IServiceContainer, config: CoreConfig): void {
-        // Register configuration using clean API
+    static registerServices(container: Container, config: CoreConfig): void {
+        // Register core config
         container.singleton<CoreConfig>(config);
 
-        // Register the container itself for services that need it
-        container.singleton<IServiceContainer>(container);
+        // Register all formatter rules as singletons
+        container.singleton<QuoteStyleRule>(new QuoteStyleRule(container));
+        container.singleton<SemicolonRule>(new SemicolonRule(container));
+        container.singleton<BracketSpacingRule>(new BracketSpacingRule(container));
+        container.singleton<IndentationRule>(new IndentationRule(container));
+        container.singleton<BlockSpacingRule>(new BlockSpacingRule(container));
+        container.singleton<DocBlockCommentRule>(new DocBlockCommentRule(container));
+        container.singleton<ImportOrganizationRule>(new ImportOrganizationRule(container));
+        container.singleton<ClassMemberSortingRule>(new ClassMemberSortingRule(container));
+        container.singleton<FileDeclarationSortingRule>(new FileDeclarationSortingRule(container));
+        container.singleton<BlankLineBetweenDeclarationsRule>(new BlankLineBetweenDeclarationsRule(container));
+        container.singleton<BlankLineBetweenStatementTypesRule>(new BlankLineBetweenStatementTypesRule(container));
+        container.singleton<BlankLineBeforeReturnsRule>(new BlankLineBeforeReturnsRule(container));
+        container.singleton<IndexGenerationRule>(new IndexGenerationRule(container));
 
-        // Register pipeline using clean API - it will register its own rules
-        container.singleton<FormatterPipeline>(() => {
-            const configInstance = container.resolve<CoreConfig>();
-            return new FormatterPipeline(configInstance, container);
-        });
+        // Register formatter pipeline
+        container.singleton<FormatterPipeline>(new FormatterPipeline(config, container));
     }
 }

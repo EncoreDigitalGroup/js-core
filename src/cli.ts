@@ -1,18 +1,17 @@
-import "reflect-metadata";
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
-import {FormatterPipeline} from "./core";
-import {CoreConfig, ConfigLoader} from "./core";
-import {ServiceContainer, ServiceRegistration} from "./core";
-import {sortPackageFile} from "./sortPackage";
-import {sortTsConfigFile} from "./sortTSConfig";
+import { FormatterPipeline } from "./core";
+import { CoreConfig, ConfigLoader } from "./core";
+import { Container, ServiceRegistration } from "./core/di";
+import { sortPackageFile } from "./sortPackage";
+import { sortTsConfigFile } from "./sortTSConfig";
 
 
 /** Format files using the FormatterPipeline */
 async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
     // Set up dependency injection container
-    const container = new ServiceContainer();
+    const container = new Container();
     ServiceRegistration.registerServices(container, config);
     // Get include/exclude patterns
     const include = config.sorting?.include || ["**/*.{ts,tsx,js,jsx}"];
@@ -25,7 +24,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
-    }));
+}));
 
     if (files.length === 0) {
         console.info("No files found to format.");
@@ -33,8 +32,8 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     }
     console.info(`Formatting ${files.length} files...`);
 
-    // Resolve pipeline from DI container using clean API
-    const pipeline = container.resolve<FormatterPipeline>();
+    // Resolve pipeline from DI container
+    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
 
     // Format each file
     let formattedCount = 0;
@@ -103,7 +102,7 @@ async function main(): Promise<void> {
                     customSortOrder: config.packageJson.customSortOrder,
                     indentation: config.packageJson.indentation,
                     dryRun,
-                });
+});
             }
         }
         // Sort tsconfig.json
@@ -116,7 +115,7 @@ async function main(): Promise<void> {
                 sortTsConfigFile(tsconfigPath, {
                     indentation: config.tsConfig.indentation,
                     dryRun,
-                });
+});
             }
         }
         // Format files using the new pipeline
