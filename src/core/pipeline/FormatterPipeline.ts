@@ -112,17 +112,43 @@ export class FormatterPipeline {
         this.rules.get(order)!.push(this.container.resolve<T>());
     }
 
-    /** Extract type name from call stack */
+    /** Extract type name from call stack by reading source code */
     private extractTypeNameFromStack(): string {
         const stack = new Error().stack;
         if (!stack) {
             throw new Error("Cannot determine type name from stack");
         }
 
-        // Look for addRule<TypeName> call pattern
-        const match = stack.match(/addRule<([^>]+)>/);
-        if (match && match[1]) {
-            return match[1].trim();
+        // Parse stack to find the calling location
+        const lines = stack.split('\n');
+        for (const line of lines) {
+            // Skip our own methods
+            if (line.includes('FormatterPipeline.extractTypeNameFromStack') ||
+                line.includes('FormatterPipeline.addRule')) {
+                continue;
+            }
+
+            // Find the first external call location
+            const match = line.match(/at\s+.*\s+\((.+):(\d+):(\d+)\)/);
+            if (match) {
+                const [, filePath, lineNum] = match;
+                try {
+                    // Read the source file to extract the generic type
+                    const fs = require('fs');
+                    const sourceCode = fs.readFileSync(filePath, 'utf8');
+                    const sourceLines = sourceCode.split('\n');
+                    const callLine = sourceLines[parseInt(lineNum) - 1];
+
+                    // Extract the generic type from the addRule call
+                    const typeMatch = callLine.match(/\.addRule<([^>]+)>/);
+                    if (typeMatch && typeMatch[1]) {
+                        return typeMatch[1].trim();
+                    }
+                } catch (error) {
+                    // Continue to next line if file read fails
+                    continue;
+                }
+            }
         }
 
         throw new Error("Cannot extract type name from addRule call. Use format: addRule<RuleName>(order)");
@@ -131,20 +157,25 @@ export class FormatterPipeline {
     /** Resolve constructor from the current module's imports using the type name */
     private resolveConstructorFromGlobalScope(typeName: string): (new (container: IServiceContainer) => any) | undefined {
         // In TypeScript land via tsx, we can access the imports directly
-        // Use eval to dynamically access the constructor by name from the current scope
         try {
-            const constructor = eval(typeName);
+            // Use globalThis to access the constructor in the current execution context
+            const moduleExports = require('../formatters');
+            const constructor = moduleExports[typeName];
 
-            // Verify it's actually a constructor function
             if (typeof constructor === 'function' && constructor.prototype) {
                 return constructor;
             }
 
-            return undefined;
+            // Fallback: try direct eval in current scope
+            const evalConstructor = eval(typeName);
+            if (typeof evalConstructor === 'function' && evalConstructor.prototype) {
+                return evalConstructor;
+            }
         } catch (error) {
-            // Constructor not found in current scope
-            return undefined;
+            // Constructor not accessible
         }
+
+        return undefined;
     }
 
     /** Get all files in a directory recursively */

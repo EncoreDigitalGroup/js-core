@@ -118,8 +118,8 @@ export class ServiceContainer implements IServiceContainer {
     }
 
     /**
-     * Extract type name from the call stack for registration
-     * This is the magic that enables the clean API
+     * Extract type name from the call stack by reading the source code at the call site
+     * This works in tsx because we can read the actual TypeScript source files
      */
     private getTypeNameFromStack(): string {
         const stack = new Error().stack;
@@ -127,37 +127,40 @@ export class ServiceContainer implements IServiceContainer {
             throw new Error("Cannot determine type name from stack");
         }
 
-        // Look for multiple patterns: container.singleton<TypeName>( or container.resolve<TypeName>()
-        const patterns = [
-            /\.(singleton|register|scoped|resolve|isRegistered)<([^>]+)>/,
-            /(singleton|register|scoped|resolve|isRegistered)<([^>]+)>/,
-            /<([^>]+)>.*at.*\.(singleton|register|scoped|resolve|isRegistered)/
-        ];
-
-        for (const pattern of patterns) {
-            const match = stack.match(pattern);
-            if (match) {
-                // Find the type name in the match groups
-                const typeName = match[2] || match[1];
-                if (typeName && typeName.trim()) {
-                    return typeName.trim();
-                }
-            }
-        }
-
-        // Fallback: try to extract from the method call line directly
+        // Parse stack to find the calling location
         const lines = stack.split('\n');
         for (const line of lines) {
-            if (line.includes('.singleton<') || line.includes('.resolve<') ||
-                line.includes('.register<') || line.includes('.scoped<') ||
-                line.includes('.isRegistered<')) {
-                const typeMatch = line.match(/<([^>]+)>/);
-                if (typeMatch && typeMatch[1]) {
-                    return typeMatch[1].trim();
+            // Skip our own methods
+            if (line.includes('ServiceContainer.getTypeNameFromStack') ||
+                line.includes('ServiceContainer.singleton') ||
+                line.includes('ServiceContainer.resolve') ||
+                line.includes('ServiceContainer.register')) {
+                continue;
+            }
+
+            // Find the first external call location
+            const match = line.match(/at\s+.*\s+\((.+):(\d+):(\d+)\)/);
+            if (match) {
+                const [, filePath, lineNum] = match;
+                try {
+                    // Read the source file to extract the generic type
+                    const fs = require('fs');
+                    const sourceCode = fs.readFileSync(filePath, 'utf8');
+                    const sourceLines = sourceCode.split('\n');
+                    const callLine = sourceLines[parseInt(lineNum) - 1];
+
+                    // Extract the generic type from the call line
+                    const typeMatch = callLine.match(/\.(singleton|register|scoped|resolve|isRegistered)<([^>]+)>/);
+                    if (typeMatch && typeMatch[2]) {
+                        return typeMatch[2].trim();
+                    }
+                } catch (error) {
+                    // Continue to next line if file read fails
+                    continue;
                 }
             }
         }
 
-        throw new Error("Cannot extract type name. Use explicit generic syntax: container.singleton<TypeName>(...)");
+        throw new Error("Cannot extract type name from source code. Use explicit generic syntax: container.singleton<TypeName>(...)");
     }
 }
