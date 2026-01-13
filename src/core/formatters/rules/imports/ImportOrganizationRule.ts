@@ -4,8 +4,7 @@
 */
 
 import * as ts from "typescript";
-import { ImportConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 interface ImportInfo {
@@ -19,11 +18,8 @@ interface ImportInfo {
 
 /** Organizes and formats import statements */
 
-export class ImportOrganizationRule implements IFormattingRule {
+export class ImportOrganizationRule extends BaseFormattingRule {
     readonly name = "ImportOrganizationRule";
-
-    constructor(private readonly config: ImportConfig) {
-    }
 
     private createSourceFile(source: string): ts.SourceFile {
         return ts.createSourceFile("temp.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -132,12 +128,13 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private filterUnusedImports(imports: ImportInfo[], sourceFile: ts.SourceFile): ImportInfo[] {
-        if (!this.config.removeUnused) {
+        const config = this.getImportsConfig();
+        if (!config?.removeUnused) {
             return imports;
         }
         // Don't remove side-effect imports unless configured
 
-        if (!this.config.removeSideEffects) {
+        if (!config.removeSideEffects) {
             return imports.filter(imp => imp.isSideEffect || this.isImportUsed(imp, sourceFile));
         }
 
@@ -145,7 +142,8 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private sortImports(imports: ImportInfo[]): ImportInfo[] {
-        if (!this.config.sortImports) {
+        const config = this.getImportsConfig();
+        if (!config?.sortImports) {
             return imports;
         }
 
@@ -156,11 +154,12 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private groupImports(imports: ImportInfo[]): ImportInfo[] {
-        if (!this.config.groupImports) {
+        const config = this.getImportsConfig();
+        if (!config?.groupImports) {
             return imports;
         }
 
-        const groupOrder = this.config.groupOrder || ["external", "internal", "relative"];
+        const groupOrder = config.groupOrder || ["external", "internal", "relative"];
         const grouped: ImportInfo[] = [];
 
         for (const group of groupOrder) {
@@ -173,6 +172,7 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     private reconstructSource(sourceFile: ts.SourceFile, imports: ImportInfo[]): string {
+        const config = this.getImportsConfig();
         const fullText = sourceFile.getFullText();
 
         // Extract ALL leading block comments (not just the first one)
@@ -220,7 +220,7 @@ export class ImportOrganizationRule implements IFormattingRule {
         for (const importInfo of imports) {
             // Add blank line between groups if configured
 
-            if (this.config.separateGroups &&
+            if (config?.separateGroups &&
 
                 lastGroup !== null &&
                 lastGroup !== importInfo.group) {
@@ -263,7 +263,8 @@ export class ImportOrganizationRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-        if (!this.config.enabled) {
+        const config = this.getImportsConfig();
+        if (!config?.enabled) {
             return source;
         }
 

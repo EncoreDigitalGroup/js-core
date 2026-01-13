@@ -4,20 +4,17 @@
 */
 
 import * as ts from "typescript";
-import { CodeStyleConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Adds or removes semicolons based on configuration using AST */
 
-export class SemicolonRule implements IFormattingRule {
+export class SemicolonRule extends BaseFormattingRule {
     readonly name = "SemicolonRule";
 
-    constructor(private config: CodeStyleConfig) {
-    }
-
     apply(source: string, filePath?: string): string {
-        if (!this.config.semicolons) {
+        const config = this.getCodeStyleConfig();
+        if (!config?.semicolons) {
             return source;
         }
 
@@ -45,11 +42,11 @@ export class SemicolonRule implements IFormattingRule {
                 const fullText = sourceFile.getFullText();
                 const hasSemicolon = fullText[nodeEnd - 1] === ";";
 
-                if (this.config.semicolons === "always" && !hasSemicolon) {
+                if (config.semicolons === "always" && !hasSemicolon) {
                     // Add semicolon
 
                     changes.push({pos: nodeEnd, type: "add"});
-                } else if (this.config.semicolons === "never" && hasSemicolon) {
+                } else if (config.semicolons === "never" && hasSemicolon) {
                     // Remove semicolon
 
                     changes.push({pos: nodeEnd - 1, type: "remove"});

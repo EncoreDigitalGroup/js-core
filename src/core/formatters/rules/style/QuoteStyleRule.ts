@@ -4,20 +4,17 @@
 */
 
 import * as ts from "typescript";
-import { CodeStyleConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Converts quote style between single and double quotes using AST */
 
-export class QuoteStyleRule implements IFormattingRule {
+export class QuoteStyleRule extends BaseFormattingRule {
     readonly name = "QuoteStyleRule";
 
-    constructor(private config: CodeStyleConfig) {
-    }
-
     apply(source: string, filePath?: string): string {
-        if (!this.config.quoteStyle) {
+        const config = this.getCodeStyleConfig();
+        if (!config?.quoteStyle) {
             return source;
         }
 
@@ -35,7 +32,7 @@ export class QuoteStyleRule implements IFormattingRule {
             if (ts.isStringLiteral(node)) {
                 const nodeText = node.getText(sourceFile);
                 const currentQuote = nodeText[0];
-                const desiredQuote = this.config.quoteStyle === "single" ? "'" : '"';
+                const desiredQuote = config.quoteStyle === "single" ? "'" : '"';
                 // Only change if quotes are different
 
                 if (currentQuote !== desiredQuote) {

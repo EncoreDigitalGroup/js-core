@@ -1,14 +1,19 @@
 import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
+import "reflect-metadata";
 import { FormatterPipeline } from "./core";
-import { CoreConfig, ConfigLoader } from "./core/config";
+import { CoreConfig, ConfigLoader } from "./core";
+import { Container, ServiceRegistration } from "./core/di";
 import { sortPackageFile } from "./sortPackage";
 import { sortTsConfigFile } from "./sortTSConfig";
 
 
 /** Format files using the FormatterPipeline */
 async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
+    // Set up dependency injection container
+    const container = new Container();
+    ServiceRegistration.registerServices(container, config);
     // Get include/exclude patterns
     const include = config.sorting?.include || ["**/*.{ts,tsx,js,jsx}"];
     const exclude = config.sorting?.exclude || [];
@@ -28,8 +33,8 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     }
     console.info(`Formatting ${files.length} files...`);
 
-    // Create pipeline
-    const pipeline = new FormatterPipeline(config);
+    // Resolve pipeline from DI container
+    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
 
     // Format each file
     let formattedCount = 0;

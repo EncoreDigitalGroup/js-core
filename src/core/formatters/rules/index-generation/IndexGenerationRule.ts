@@ -5,7 +5,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Options for configuring how index files are generated */
@@ -37,7 +37,7 @@ export interface IndexGenerationConfig {
 
 /** Rule that generates index.ts files for directories */
 
-export class IndexGenerationRule implements IFormattingRule {
+export class IndexGenerationRule extends BaseFormattingRule {
     private readonly defaultOptions: IndexGenerationOptions = {
         fileExtension: ".ts",
         indexFileName: "index.ts",
@@ -45,9 +45,6 @@ export class IndexGenerationRule implements IFormattingRule {
 };
 
     readonly name = "IndexGenerationRule";
-
-    constructor(private readonly config: IndexGenerationConfig) {
-    }
 
     private findProjectRoot(filePath: string): string | null {
         let current = path.dirname(filePath);
@@ -257,8 +254,9 @@ ${exports}
                 return;
             }
 
-            const directories = this.config.directories || [];
-            const options = {...this.defaultOptions, ...this.config.options};
+            const config = this.getIndexGenerationConfig();
+            const directories = config?.directories || [];
+            const options = {...this.defaultOptions, ...config?.options};
 
             for (const dir of directories) {
                 const fullDirPath = path.resolve(projectRoot, dir);
@@ -268,7 +266,7 @@ ${exports}
 
             // Update main src/index.ts if configured
 
-            if (this.config.updateMainIndex !== false) {
+            if (config?.updateMainIndex !== false) {
                 const srcDir = path.join(projectRoot, "src");
                 const mainIndexPath = path.join(srcDir, "index.ts");
 
@@ -284,7 +282,8 @@ ${exports}
     }
 
     apply(source: string, filePath?: string): string {
-        if (!this.config.enabled || !filePath) {
+        const config = this.getIndexGenerationConfig();
+        if (!config?.enabled || !filePath) {
             return source;
         }
 

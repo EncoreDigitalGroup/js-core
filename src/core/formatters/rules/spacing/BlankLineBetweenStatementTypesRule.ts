@@ -3,8 +3,7 @@
 * All Rights Reserved.
 */
 
-import { SpacingConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Statement types for categorization */
@@ -26,11 +25,8 @@ enum StatementType {
 * - No blank line within the same statement type
 */
 
-export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
+export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
     readonly name = "BlankLineBetweenStatementTypesRule";
-
-    constructor(private config: SpacingConfig) {
-    }
 
     /** Determine the type of a statement */
     private getStatementType(trimmedLine: string): StatementType {
@@ -89,7 +85,8 @@ export class BlankLineBetweenStatementTypesRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-        if (!this.config.betweenStatementTypes) {
+        const config = this.getSpacingConfig();
+        if (!config?.betweenStatementTypes) {
             return source;
         }
 

@@ -3,8 +3,7 @@
 * All Rights Reserved.
 */
 
-import { CodeStyleConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /**
@@ -13,18 +12,16 @@ import { IFormattingRule } from "../../IFormattingRule";
 * of comments and whitespace
 */
 
-export class IndentationRule implements IFormattingRule {
+export class IndentationRule extends BaseFormattingRule {
     readonly name = "IndentationRule";
 
-    constructor(private config: CodeStyleConfig) {
-    }
-
     apply(source: string, filePath?: string): string {
-        if (!this.config.indentStyle || !this.config.indentWidth) {
+        const config = this.getCodeStyleConfig();
+        if (!config?.indentStyle || !config.indentWidth) {
             return source;
         }
 
-        const indentWidth = this.config.indentWidth;
+        const indentWidth = config.indentWidth;
         // For indentation, we need to reprocess line by line
         // Note: While we could use AST for this, line-by-line processing
         // is more practical for indentation normalization as it preserves
@@ -47,7 +44,7 @@ export class IndentationRule implements IFormattingRule {
 
             let indentLevel = 0;
 
-            if (this.config.indentStyle === "space") {
+            if (config.indentStyle === "space") {
                 // Count tabs and spaces
 
                 const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
@@ -66,7 +63,7 @@ export class IndentationRule implements IFormattingRule {
 
             let newIndent: string;
 
-            if (this.config.indentStyle === "space") {
+            if (config.indentStyle === "space") {
                 newIndent = " ".repeat(indentLevel * indentWidth);
             } else {
                 newIndent = "\t".repeat(indentLevel);

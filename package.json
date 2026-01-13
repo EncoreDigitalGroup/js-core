@@ -13,23 +13,26 @@
     "dependencies": {
         "glob": "^13.0.0",
         "json-sort-cli": "^4.0.9",
+        "reflect-metadata": "^0.2.2",
         "sort-package-json": "^3.0.0",
-        "tsx": "^4.21.0",
         "typescript": "^5.0.0"
     },
     "devDependencies": {
         "@types/jest": "^30.0.0",
         "@types/node": "^25.0.3",
         "jest": "^30.1.1",
-        "ts-jest": "^29.0.0"
+        "ts-jest": "^29.0.0",
+        "vite": "^7.0.0"
     },
     "scripts": {
-        "format": "node bin/cli.js",
+        "build": "vite build",
+        "dev": "tsx src/cli.ts",
+        "format": "node dist/cli.js",
         "test": "jest"
     },
-    "main": "bin/cli.js",
+    "main": "dist/cli.js",
     "files": [
-        "bin",
+        "dist",
         "README.md"
     ],
     "repository": {
@@ -38,6 +41,6 @@
     },
     "license": "BSD-3-Clause",
     "bin": {
-        "tsfmt": "./bin/cli.js"
+        "tsfmt": "./dist/cli.js"
     }
 }

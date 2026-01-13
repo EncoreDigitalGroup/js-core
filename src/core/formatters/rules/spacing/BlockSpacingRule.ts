@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /**
@@ -13,7 +13,7 @@ import { IFormattingRule } from "../../IFormattingRule";
 * - Single blank line between members/properties
 */
 
-export class BlockSpacingRule implements IFormattingRule {
+export class BlockSpacingRule extends BaseFormattingRule {
     readonly name = "BlockSpacingRule";
 
     apply(source: string, filePath?: string): string {

@@ -6,8 +6,7 @@
 import * as ts from "typescript";
 import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
 import { DependencyResolver } from "../../../ast/DependencyResolver";
-import { FileDeclarationConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Types of top-level declarations in a file */
@@ -56,11 +55,8 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 
 /** Sorts file-level declarations according to configured order */
 
-export class FileDeclarationSortingRule implements IFormattingRule {
+export class FileDeclarationSortingRule extends BaseFormattingRule {
     readonly name = "FileDeclarationSortingRule";
-
-    constructor(private readonly config: FileDeclarationConfig) {
-    }
 
     /** Determine the type of a top-level declaration */
     private getDeclarationType(node: ts.Statement): DeclarationType {
@@ -132,7 +128,8 @@ export class FileDeclarationSortingRule implements IFormattingRule {
 
     /** Sort file declarations according to configuration */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
-        const order = this.config.order || DEFAULT_FILE_ORDER;
+        const config = this.getSortingConfig()?.fileDeclarations;
+        const order = config?.order || DEFAULT_FILE_ORDER;
 
         return [...declarations].sort((a, b) => {
             const aTypeIndex = order.indexOf(a.type);
@@ -148,7 +145,8 @@ export class FileDeclarationSortingRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-        if (!this.config.enabled) {
+        const config = this.getSortingConfig()?.fileDeclarations;
+        if (!config?.enabled) {
             return source;
         }
 
@@ -184,7 +182,7 @@ export class FileDeclarationSortingRule implements IFormattingRule {
 
         let sortedDeclarations = this.sortFileDeclarations(analyzedDeclarations);
 
-        if (this.config.respectDependencies !== false) {
+        if (config.respectDependencies !== false) {
             sortedDeclarations = DependencyResolver.reorderWithDependencies(sortedDeclarations, d => d.name);
         }
 

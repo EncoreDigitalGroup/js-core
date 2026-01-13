@@ -3,8 +3,7 @@
 * All Rights Reserved.
 */
 
-import { SpacingConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /**
@@ -12,14 +11,12 @@ import { IFormattingRule } from "../../IFormattingRule";
 * Works at all brace depths (not just top level)
 */
 
-export class BlankLineBeforeReturnsRule implements IFormattingRule {
+export class BlankLineBeforeReturnsRule extends BaseFormattingRule {
     readonly name = "BlankLineBeforeReturnsRule";
 
-    constructor(private config: SpacingConfig) {
-    }
-
     apply(source: string, filePath?: string): string {
-        if (!this.config.beforeReturns) {
+        const config = this.getSpacingConfig();
+        if (!config?.beforeReturns) {
             return source;
         }
 

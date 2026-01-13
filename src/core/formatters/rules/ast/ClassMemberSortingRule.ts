@@ -6,8 +6,7 @@
 import * as ts from "typescript";
 import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
 import { DependencyResolver } from "../../../ast/DependencyResolver";
-import { ClassMemberConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Types of class members */
@@ -53,11 +52,8 @@ export const DEFAULT_CLASS_ORDER: MemberType[] = [
 
 /** Sorts class members according to configured order */
 
-export class ClassMemberSortingRule implements IFormattingRule {
+export class ClassMemberSortingRule extends BaseFormattingRule {
     readonly name = "ClassMemberSortingRule";
-
-    constructor(private readonly config: ClassMemberConfig) {
-    }
 
     /** Determine the type of a class member */
     private getMemberType(member: ts.ClassElement): MemberType {
@@ -135,8 +131,8 @@ export class ClassMemberSortingRule implements IFormattingRule {
             return aTypeIndex - bTypeIndex;
         }
         // Within the same type, sort by visibility if configured
-
-        if (this.config.groupByVisibility) {
+        const config = this.getSortingConfig()?.classMembers;
+        if (config?.groupByVisibility) {
             if (a.isPublic !== b.isPublic)
 
                 return a.isPublic ? -1 : 1;
@@ -155,7 +151,8 @@ export class ClassMemberSortingRule implements IFormattingRule {
 
     /** Sort class members according to configuration */
     private sortClassMembers(members: ClassMember[]): ClassMember[] {
-        const order = this.config.order || DEFAULT_CLASS_ORDER;
+        const config = this.getSortingConfig()?.classMembers;
+        const order = config?.order || DEFAULT_CLASS_ORDER;
 
         return [...members].sort((a, b) => {
             const aTypeIndex = order.indexOf(a.type);
@@ -166,7 +163,8 @@ export class ClassMemberSortingRule implements IFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-        if (!this.config.enabled) {
+        const config = this.getSortingConfig()?.classMembers;
+        if (!config?.enabled) {
             return source;
         }
 
@@ -208,7 +206,7 @@ export class ClassMemberSortingRule implements IFormattingRule {
 
             let sortedMembers = this.sortClassMembers(analyzedMembers);
 
-            if (this.config.respectDependencies !== false) {
+            if (config.respectDependencies !== false) {
                 sortedMembers = DependencyResolver.reorderWithDependencies(sortedMembers, m => m.name);
             }
 

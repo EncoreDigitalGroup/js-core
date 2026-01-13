@@ -4,8 +4,7 @@
 */
 
 import * as ts from "typescript";
-import { CodeStyleConfig } from "../../../config";
-import { IFormattingRule } from "../../IFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /**
@@ -15,14 +14,12 @@ import { IFormattingRule } from "../../IFormattingRule";
 * - bracketSpacing: false -> {foo: bar}
 */
 
-export class BracketSpacingRule implements IFormattingRule {
+export class BracketSpacingRule extends BaseFormattingRule {
     readonly name = "BracketSpacingRule";
 
-    constructor(private config: CodeStyleConfig) {
-    }
-
     apply(source: string, filePath?: string): string {
-        if (this.config.bracketSpacing === undefined) {
+        const config = this.getCodeStyleConfig();
+        if (!config || config.bracketSpacing === undefined) {
             return source;
         }
 
@@ -42,7 +39,7 @@ export class BracketSpacingRule implements IFormattingRule {
                 const closeBraceStart = node.getEnd() - 1; // Position of '}'
 
                 if (node.properties.length > 0) {
-                    if (this.config.bracketSpacing) {
+                    if (config.bracketSpacing) {
                         // Add spacing after opening brace
 
                         const afterOpenBrace = fullText[openBraceEnd];
@@ -86,7 +83,7 @@ export class BracketSpacingRule implements IFormattingRule {
                     const closeBraceStart = node.getEnd() - 1;
 
                     if (node.elements.length > 0) {
-                        if (this.config.bracketSpacing) {
+                        if (config.bracketSpacing) {
                             // Add spacing after opening brace
 
                             const afterOpenBrace = fullText[openBraceEnd];
