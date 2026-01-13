@@ -4,13 +4,35 @@
 */
 
 import { DocBlockCommentRule } from "../DocBlockCommentRule";
+import { Container } from "../../../../di";
+import { CoreConfig } from "../../../../config";
 
 
 describe("DocBlockCommentRule", () => {
     let rule: DocBlockCommentRule;
+    let container: Container;
+    let config: CoreConfig;
 
     beforeEach(() => {
-        rule = new DocBlockCommentRule();
+        container = new Container();
+        config = {
+            codeStyle: {
+                enabled: true,
+                quoteStyle: "double",
+                semicolons: "always",
+                bracketSpacing: true,
+                indentation: {
+                    type: "spaces",
+                    size: 4
+                },
+                blockSpacing: true,
+                docBlockComments: {
+                    consolidateSingleLine: true
+                }
+            }
+        } as CoreConfig;
+        container.singleton<CoreConfig>(config);
+        rule = new DocBlockCommentRule(container);
     });
 
     describe("apply", () => {

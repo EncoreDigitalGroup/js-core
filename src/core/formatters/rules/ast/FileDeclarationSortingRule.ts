@@ -128,7 +128,7 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
 
     /** Sort file declarations according to configuration */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
-        const config = this.getSortingConfig()?.fileDeclaration;
+        const config = this.getSortingConfig()?.fileDeclarations;
         const order = config?.order || DEFAULT_FILE_ORDER;
 
         return [...declarations].sort((a, b) => {
@@ -145,7 +145,7 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-        const config = this.getSortingConfig()?.fileDeclaration;
+        const config = this.getSortingConfig()?.fileDeclarations;
         if (!config?.enabled) {
             return source;
         }

@@ -131,7 +131,7 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             return aTypeIndex - bTypeIndex;
         }
         // Within the same type, sort by visibility if configured
-        const config = this.getSortingConfig()?.classMember;
+        const config = this.getSortingConfig()?.classMembers;
         if (config?.groupByVisibility) {
             if (a.isPublic !== b.isPublic)
 
@@ -151,7 +151,7 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
 
     /** Sort class members according to configuration */
     private sortClassMembers(members: ClassMember[]): ClassMember[] {
-        const config = this.getSortingConfig()?.classMember;
+        const config = this.getSortingConfig()?.classMembers;
         const order = config?.order || DEFAULT_CLASS_ORDER;
 
         return [...members].sort((a, b) => {
@@ -163,7 +163,7 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
     }
 
     apply(source: string, filePath?: string): string {
-        const config = this.getSortingConfig()?.classMember;
+        const config = this.getSortingConfig()?.classMembers;
         if (!config?.enabled) {
             return source;
         }

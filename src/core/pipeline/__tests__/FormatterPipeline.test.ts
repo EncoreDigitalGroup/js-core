@@ -7,7 +7,7 @@ import * as fs from "fs/promises";
 import * as os from "os";
 import * as path from "path";
 import { ConfigDefaults, CoreConfig, FormatterOrder } from "../../config";
-import { ServiceContainer, ServiceRegistration } from "../../di";
+import {Container, ServiceRegistration} from "../../di";
 import { FormatterPipeline } from "../FormatterPipeline";
 
 
@@ -32,7 +32,7 @@ describe("FormatterPipeline", () => {
                 codeStyle: {enabled: true, quoteStyle: "double"},
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const order = pipeline.getFormatterOrder();
@@ -52,7 +52,7 @@ describe("FormatterPipeline", () => {
                 formatterOrder: [FormatterOrder.Spacing, FormatterOrder.CodeStyle],
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const order = pipeline.getFormatterOrder();
@@ -70,7 +70,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false},
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const formatters = pipeline.getRulesAtOrder(FormatterOrder.CodeStyle);
@@ -89,7 +89,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false},
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const formatters = pipeline.getRulesAtOrder(FormatterOrder.ImportOrganization);
@@ -108,7 +108,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false},
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
 
@@ -131,7 +131,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const context = await pipeline.formatFile(testFilePath, false);
@@ -163,7 +163,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const context = await pipeline.formatFile(testFilePath, true);
@@ -191,7 +191,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const context = await pipeline.formatFile(testFilePath, false);
@@ -219,7 +219,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             // Mock a formatter error by using an invalid file path
@@ -247,7 +247,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const context = await pipeline.formatFile(testFilePath, false);
@@ -274,7 +274,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const contexts = await pipeline.formatFiles([file1, file2], false);
@@ -306,7 +306,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const contexts = await pipeline.formatDirectory(subDir, false);
@@ -327,7 +327,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false},
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
             const contexts = await pipeline.formatDirectory(tempDir, false);
@@ -348,7 +348,7 @@ describe("FormatterPipeline", () => {
                 spacing: {enabled: false}, // Disable spacing for this test
 };
 
-            const container = new ServiceContainer();
+            const container = new Container();
             ServiceRegistration.registerServices(container, config);
             const pipeline = new FormatterPipeline(config, container);
 
