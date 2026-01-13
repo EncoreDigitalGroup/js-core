@@ -14,6 +14,16 @@ cd "$GITHUB_WORKSPACE" || {
 }
 
 # Run format and capture exit code
+npm run build
+BUILD_EXIT_CODE=$?
+
+# If build failed, exit with the same code
+if [ $BUILD_EXIT_CODE -ne 0 ]; then
+  echo "Build failed with exit code $BUILD_EXIT_CODE"
+  exit $BUILD_EXIT_CODE
+fi
+
+# Run format and capture exit code
 npm run format
 FORMAT_EXIT_CODE=$?
 
@@ -32,7 +42,7 @@ else
   git add .
 
   # Commit changes
-  commit_message="Apply Formatting"
+  commit_message="Apply Formatting and Build"
   git commit -m "$commit_message"
 
   # Push changes to origin
