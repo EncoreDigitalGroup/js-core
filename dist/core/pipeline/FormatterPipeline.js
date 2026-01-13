@@ -115,12 +115,12 @@ class FormatterPipeline {
     return files;
   }
   /**
-      * Format a file using the configured formatters in sequence
-      * @param filePath - Absolute path to the file to format
-      * @param dryRun - If true, don't write changes to disk
-      * @returns Pipeline context with execution details
-      * @throws FormatterError if any formatter fails (fail-fast)
-      */
+  * Format a file using the configured formatters in sequence
+  * @param filePath - Absolute path to the file to format
+  * @param dryRun - If true, don't write changes to disk
+  * @returns Pipeline context with execution details
+  * @throws FormatterError if any formatter fails (fail-fast)
+  */
   async formatFile(filePath, dryRun = false) {
     const originalSource = await fs__namespace.readFile(filePath, "utf-8");
     const context = {
@@ -164,12 +164,12 @@ class FormatterPipeline {
     return context;
   }
   /**
-      * Format multiple files in sequence
-      * @param filePaths - Array of file paths to format
-      * @param dryRun - If true, don't write changes to disk
-      * @returns Array of pipeline contexts for each file
-      * @throws FormatterError if any formatter fails for any file
-      */
+  * Format multiple files in sequence
+  * @param filePaths - Array of file paths to format
+  * @param dryRun - If true, don't write changes to disk
+  * @returns Array of pipeline contexts for each file
+  * @throws FormatterError if any formatter fails for any file
+  */
   async formatFiles(filePaths, dryRun = false) {
     const results = [];
     for (const filePath of filePaths) {
@@ -179,12 +179,12 @@ class FormatterPipeline {
     return results;
   }
   /**
-      * Format all files in a directory recursively
-      * @param dirPath - Directory path to format
-      * @param dryRun - If true, don't write changes to disk
-      * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
-      * @returns Array of pipeline contexts for each file
-      */
+  * Format all files in a directory recursively
+  * @param dirPath - Directory path to format
+  * @param dryRun - If true, don't write changes to disk
+  * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
+  * @returns Array of pipeline contexts for each file
+  */
   async formatDirectory(dirPath, dryRun = false, extensions = [".ts", ".tsx", ".js", ".jsx"]) {
     const files = await this.getFilesRecursively(dirPath, extensions);
     return this.formatFiles(files, dryRun);
