@@ -16,7 +16,7 @@ export function sortPackageJson(packageObj: Record<string, any>, options: SortOp
 
     let sortedPackage = baseSortPackageJson(packageObj, {
         sortOrder,
-});
+    });
 
     if (sortedPackage.exports) {
         sortedPackage.exports = sortExportsKeys(sortedPackage.exports);

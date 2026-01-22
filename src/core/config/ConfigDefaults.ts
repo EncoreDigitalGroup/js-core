@@ -32,7 +32,7 @@ export class ConfigDefaults {
             lineWidth: 120,
             trailingCommas: "all" as const,
             arrowParens: "avoid" as const,
-};
+        };
     }
 
     /** Get default directories for index generation */
@@ -49,9 +49,9 @@ export class ConfigDefaults {
                 fileExtension: ".ts",
                 indexFileName: "index.ts",
                 recursive: true
-},
+            },
             updateMainIndex: true,
-};
+        };
     }
 
     /** Get default import configuration */
@@ -64,7 +64,7 @@ export class ConfigDefaults {
             groupImports: true,
             groupOrder: ConfigTypes.getImportGroupOptions(),
             separateGroups: false,
-};
+        };
     }
 
     /** Get default include patterns for TypeScript files */
@@ -86,21 +86,21 @@ export class ConfigDefaults {
                 order: DEFAULT_CLASS_ORDER,
                 groupByVisibility: false,
                 respectDependencies: true,
-},
+            },
             reactComponents: {
                 enabled: true,
                 order: DEFAULT_CLASS_ORDER,
                 groupByVisibility: false,
                 respectDependencies: true,
-},
+            },
             fileDeclarations: {
                 enabled: true,
                 order: DEFAULT_FILE_ORDER,
                 respectDependencies: true,
-},
+            },
             include: this.getDefaultIncludePatterns(),
             exclude: this.getDefaultExcludePatterns(),
-};
+        };
     }
 
     /** Get default spacing configuration */
@@ -110,7 +110,7 @@ export class ConfigDefaults {
             betweenDeclarations: true,
             beforeReturns: true,
             betweenStatementTypes: true,
-};
+        };
     }
 
     /** Get default package.json configuration */
@@ -119,7 +119,7 @@ export class ConfigDefaults {
             enabled: true,
             customSortOrder: DefaultSortOptions.customSortOrder,
             indentation: 4,
-};
+        };
     }
 
     /** Get default tsconfig.json configuration */
@@ -127,7 +127,7 @@ export class ConfigDefaults {
         return {
             enabled: true,
             indentation: 4,
-};
+        };
     }
 
     /** Get default formatter order */
@@ -152,7 +152,7 @@ export class ConfigDefaults {
             packageJson: this.getDefaultPackageJsonConfig(),
             tsConfig: this.getDefaultTsConfigConfig(),
             formatterOrder: this.getDefaultFormatterOrder(),
-};
+        };
     }
 
     /** Get default include patterns for JavaScript files */
@@ -170,7 +170,7 @@ export class ConfigDefaults {
             spacing: {enabled: false},
             packageJson: {enabled: false},
             tsConfig: {enabled: false},
-};
+        };
     }
 
     /** Create a minimal configuration with only enabled features */
@@ -183,6 +183,6 @@ export class ConfigDefaults {
             spacing: {enabled: false},
             packageJson: {enabled: true},
             tsConfig: {enabled: true},
-};
+        };
     }
 }

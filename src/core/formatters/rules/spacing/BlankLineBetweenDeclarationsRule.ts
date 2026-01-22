@@ -112,7 +112,7 @@ export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
                     result[result.length - 1].trim() !== "") {
                     result.push("");
                     lastNonBlankLineWasDeclarationEnd = false;
-                }
+                    }
                 // Add blank line before declaration starts ONLY if the keyword is different
 
                 else if (isDeclarationStart &&

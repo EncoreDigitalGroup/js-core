@@ -42,7 +42,7 @@ export class IndexGenerationRule extends BaseFormattingRule {
         fileExtension: ".ts",
         indexFileName: "index.ts",
         recursive: true
-};
+    };
 
     readonly name = "IndexGenerationRule";
 

@@ -24,13 +24,13 @@ describe("DocBlockCommentRule", () => {
                 indentation: {
                     type: "spaces",
                     size: 4
-},
+                },
                 blockSpacing: true,
                 docBlockComments: {
                     consolidateSingleLine: true
-}
-}
-} as CoreConfig;
+                }
+            }
+        } as CoreConfig;
         container.singleton<CoreConfig>(config);
         rule = new DocBlockCommentRule(container);
     });

@@ -50,7 +50,7 @@ export class QuoteStyleRule extends BaseFormattingRule {
                             start: node.getStart(sourceFile),
                             end: node.getEnd(),
                             text: newText,
-});
+                        });
                     }
                 }
             }

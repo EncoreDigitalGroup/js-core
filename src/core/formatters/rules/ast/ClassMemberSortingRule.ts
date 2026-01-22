@@ -116,7 +116,7 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             text,
             dependencies,
             originalIndex: index,
-};
+        };
     }
 
     private createSourceFile(source: string, filePath: string): ts.SourceFile {

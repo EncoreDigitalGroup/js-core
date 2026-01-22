@@ -30,7 +30,7 @@ describe("FormatterPipeline", () => {
 
                 ...ConfigDefaults.getDefaultConfig(),
                 codeStyle: {enabled: true, quoteStyle: "double"},
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -50,7 +50,7 @@ describe("FormatterPipeline", () => {
 
                 ...ConfigDefaults.getDefaultConfig(),
                 formatterOrder: [FormatterOrder.Spacing, FormatterOrder.CodeStyle],
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -68,7 +68,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false},
                 imports: {enabled: false},
                 spacing: {enabled: false},
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -87,7 +87,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false},
                 codeStyle: {enabled: false},
                 spacing: {enabled: false},
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -106,7 +106,7 @@ describe("FormatterPipeline", () => {
                 imports: {enabled: false},
                 sorting: {enabled: false},
                 spacing: {enabled: false},
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -129,7 +129,7 @@ describe("FormatterPipeline", () => {
                 imports: {enabled: false}, // Disable imports to test only code style
                 sorting: {enabled: false}, // Disable sorting for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -161,7 +161,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -189,7 +189,7 @@ describe("FormatterPipeline", () => {
                 imports: {enabled: true, sortImports: true},
                 sorting: {enabled: false}, // Disable sorting for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -217,7 +217,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -245,7 +245,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -272,7 +272,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -304,7 +304,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -325,7 +325,7 @@ describe("FormatterPipeline", () => {
                 indexGeneration: {enabled: false},
                 codeStyle: {enabled: true, quoteStyle: "double"},
                 spacing: {enabled: false},
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);
@@ -346,7 +346,7 @@ describe("FormatterPipeline", () => {
                 sorting: {enabled: false}, // Disable sorting for this test
                 imports: {enabled: false}, // Disable imports for this test
                 spacing: {enabled: false}, // Disable spacing for this test
-};
+            };
 
             const container = new Container();
             ServiceRegistration.registerServices(container, config);

@@ -9,29 +9,6 @@ import { sortPackageFile } from "./sortPackage";
 import { sortTsConfigFile } from "./sortTSConfig";
 
 
-/** Format a single file using the FormatterPipeline */
-async function formatSingleFile(filePath: string, config: CoreConfig, dryRun: boolean): Promise<void> {
-    const container = new Container();
-    ServiceRegistration.registerServices(container, config);
-    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
-
-    try {
-        const context = await pipeline.formatFile(filePath, dryRun);
-
-        if (context.changed) {
-            if (dryRun) {
-                console.info(`Would format: ${filePath}`);
-            } else {
-                console.log(`📊  Formatted: ${filePath}`);
-            }
-        } else {
-            console.info(`No changes needed: ${filePath}`);
-        }
-    } catch (error) {
-        console.error(`Error formatting file ${filePath}:`, (error as Error).message);
-    }
-}
-
 /** Format files in a directory using the FormatterPipeline */
 async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
     const container = new Container();
@@ -81,6 +58,29 @@ async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: bo
         console.info(`Would format ${formattedCount} of ${files.length} files.`);
     } else {
         console.info(`Formatted ${formattedCount} of ${files.length} files.`);
+    }
+}
+
+/** Format a single file using the FormatterPipeline */
+async function formatSingleFile(filePath: string, config: CoreConfig, dryRun: boolean): Promise<void> {
+    const container = new Container();
+    ServiceRegistration.registerServices(container, config);
+    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
+
+    try {
+        const context = await pipeline.formatFile(filePath, dryRun);
+
+        if (context.changed) {
+            if (dryRun) {
+                console.info(`Would format: ${filePath}`);
+            } else {
+                console.log(`📊  Formatted: ${filePath}`);
+            }
+        } else {
+            console.info(`No changes needed: ${filePath}`);
+        }
+    } catch (error) {
+        console.error(`Error formatting file ${filePath}:`, (error as Error).message);
     }
 }
 

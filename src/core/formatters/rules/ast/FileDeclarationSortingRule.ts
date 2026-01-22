@@ -4,8 +4,8 @@
 */
 
 import * as ts from "typescript";
-import { ASTAnalyzer } from "../../../ast/ASTAnalyzer";
-import { DependencyResolver } from "../../../ast/DependencyResolver";
+import { ASTAnalyzer } from "../../../ast";
+import { DependencyResolver } from "../../../ast";
 import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
@@ -119,7 +119,7 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
             text,
             dependencies,
             originalIndex: index,
-};
+        };
     }
 
     private createSourceFile(source: string, filePath: string): ts.SourceFile {

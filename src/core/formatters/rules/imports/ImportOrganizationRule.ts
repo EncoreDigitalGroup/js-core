@@ -54,7 +54,7 @@ export class ImportOrganizationRule extends BaseFormattingRule {
                     isTypeOnly,
                     isSideEffect,
                     group,
-});
+                });
             }
         }
 
@@ -211,7 +211,7 @@ export class ImportOrganizationRule extends BaseFormattingRule {
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
-});
+        });
 
         const importLines: string[] = [];
 

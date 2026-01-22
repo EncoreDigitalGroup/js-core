@@ -184,7 +184,7 @@ export class FormatterPipeline {
             executions: [],
             changed: false,
             dryRun,
-};
+        };
 
         // Execute rules in order
 
@@ -200,7 +200,7 @@ export class FormatterPipeline {
                     formatterName: rule.name,
                     order,
                     changed: false,
-};
+                };
 
                 try {
                     // Execute rule

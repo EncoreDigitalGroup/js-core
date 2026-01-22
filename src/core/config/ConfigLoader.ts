@@ -114,7 +114,7 @@ export default config;
         return {
             size: this.configCache.size,
             keys: Array.from(this.configCache.keys())
-};
+        };
     }
 
     /**
@@ -152,8 +152,8 @@ export default config;
                 target: ts.ScriptTarget.ES2015,
                 esModuleInterop: true,
                 allowSyntheticDefaultImports: true,
-},
-});
+            },
+        });
 
         return result.outputText;
     }
