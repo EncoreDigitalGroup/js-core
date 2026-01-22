@@ -211,6 +211,7 @@ class FormatterPipeline {
       this.addRuleByName("SemicolonRule", ConfigTypes.FormatterOrder.CodeStyle);
       this.addRuleByName("BracketSpacingRule", ConfigTypes.FormatterOrder.CodeStyle);
       this.addRuleByName("IndentationRule", ConfigTypes.FormatterOrder.CodeStyle);
+      this.addRuleByName("StructuralIndentationRule", ConfigTypes.FormatterOrder.CodeStyle);
       this.addRuleByName("BlockSpacingRule", ConfigTypes.FormatterOrder.CodeStyle);
       this.addRuleByName("DocBlockCommentRule", ConfigTypes.FormatterOrder.CodeStyle);
     }
