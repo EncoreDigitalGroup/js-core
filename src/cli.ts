@@ -4,14 +4,36 @@ import * as path from "path";
 import "reflect-metadata";
 import { FormatterPipeline } from "./core";
 import { CoreConfig, ConfigLoader } from "./core";
-import { Container, ServiceRegistration } from "./core/di";
+import { Container, ServiceRegistration } from "./core";
 import { sortPackageFile } from "./sortPackage";
 import { sortTsConfigFile } from "./sortTSConfig";
 
 
-/** Format files using the FormatterPipeline */
-async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
-    // Set up dependency injection container
+/** Format a single file using the FormatterPipeline */
+async function formatSingleFile(filePath: string, config: CoreConfig, dryRun: boolean): Promise<void> {
+    const container = new Container();
+    ServiceRegistration.registerServices(container, config);
+    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
+
+    try {
+        const context = await pipeline.formatFile(filePath, dryRun);
+
+        if (context.changed) {
+            if (dryRun) {
+                console.info(`Would format: ${filePath}`);
+            } else {
+                console.log(`📊  Formatted: ${filePath}`);
+            }
+        } else {
+            console.info(`No changes needed: ${filePath}`);
+        }
+    } catch (error) {
+        console.error(`Error formatting file ${filePath}:`, (error as Error).message);
+    }
+}
+
+/** Format files in a directory using the FormatterPipeline */
+async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
     const container = new Container();
     ServiceRegistration.registerServices(container, config);
     // Get include/exclude patterns
@@ -25,7 +47,7 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
-}));
+    }));
 
     if (files.length === 0) {
         console.info("No files found to format.");
@@ -62,12 +84,17 @@ async function formatFiles(targetDir: string, config: CoreConfig, dryRun: boolea
     }
 }
 
+/** Check if a path is a supported file type */
+function isSupportedFile(filePath: string): boolean {
+    const supportedExtensions = [".ts", ".tsx", ".js", ".jsx"];
+    return supportedExtensions.some(ext => filePath.endsWith(ext));
+}
+
 /** Main CLI function */
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
     // Parse command line arguments
-
-    let targetDir = process.cwd();
+    let target = process.cwd();
     let dryRun = false;
 
     for (let i = 0; i < args.length; i++) {
@@ -76,7 +103,7 @@ async function main(): Promise<void> {
         if (arg === "--dry") {
             dryRun = true;
         } else if (!arg.startsWith("-")) {
-            targetDir = path.resolve(arg);
+            target = path.resolve(arg);
         } else {
             console.error(`Error: Unsupported option "${arg}". Only --dry is supported.`);
             process.exit(1);
@@ -84,56 +111,89 @@ async function main(): Promise<void> {
     }
 
     try {
-        // Load configuration
+        // Determine if target is a file or directory
+        const targetStat = fs.existsSync(target) ? fs.statSync(target) : null;
+        const isFile = targetStat?.isFile() ?? false;
+        const isDirectory = targetStat?.isDirectory() ?? false;
 
-        const config = ConfigLoader.loadConfig(targetDir);
+        if (!targetStat) {
+            console.error(`Error: Target "${target}" does not exist.`);
+            process.exit(1);
+        }
+
+        // For files, load config from the file's directory; for directories, use the target
+        const configDir = isFile ? path.dirname(target) : target;
+        const config = ConfigLoader.loadConfig(configDir);
+
         // Log if custom config is being used
-
-        if (ConfigLoader.hasConfigFile(targetDir)) {
+        if (ConfigLoader.hasConfigFile(configDir)) {
             console.log("Using custom configuration from tsfmt.config.ts");
         }
-        // Sort package.json
 
-        if (config.packageJson?.enabled) {
-            const packagePath = path.join(targetDir, "package.json");
-
-            if (fs.existsSync(packagePath)) {
-                console.log(`📦  Processing ${packagePath}...`);
-                sortPackageFile(packagePath, {
-                    customSortOrder: config.packageJson.customSortOrder,
-                    indentation: config.packageJson.indentation,
-                    dryRun,
-});
+        // Handle single file formatting
+        if (isFile) {
+            if (!isSupportedFile(target)) {
+                console.error(`Error: Unsupported file type. Supported: .ts, .tsx, .js, .jsx`);
+                process.exit(1);
             }
-        }
-        // Sort tsconfig.json
 
-        if (config.tsConfig?.enabled) {
-            const tsconfigPath = path.join(targetDir, "tsconfig.json");
-
-            if (fs.existsSync(tsconfigPath)) {
-                console.log(`🔧  Processing ${tsconfigPath}...`);
-                sortTsConfigFile(tsconfigPath, {
-                    indentation: config.tsConfig.indentation,
-                    dryRun,
-});
+            if (config.codeStyle?.enabled ||
+                config.imports?.enabled ||
+                config.sorting?.enabled ||
+                config.spacing?.enabled) {
+                await formatSingleFile(target, config, dryRun);
             }
-        }
-        // Format files using the new pipeline
-        // Check if any formatters are enabled
 
-        if (config.codeStyle?.enabled ||
-
-            config.imports?.enabled ||
-            config.sorting?.enabled ||
-            config.spacing?.enabled) {
-            await formatFiles(targetDir, config, dryRun);
+            if (dryRun) {
+                console.info("Dry run completed. No files were modified.");
+            } else {
+                console.info("Formatting completed successfully.");
+            }
+            return;
         }
 
-        if (dryRun) {
-            console.info("Dry run completed. No files were modified.");
-        } else {
-            console.info("Formatting completed successfully.");
+        // Handle directory formatting
+        if (isDirectory) {
+            // Sort package.json
+            if (config.packageJson?.enabled) {
+                const packagePath = path.join(target, "package.json");
+
+                if (fs.existsSync(packagePath)) {
+                    console.log(`📦  Processing ${packagePath}...`);
+                    sortPackageFile(packagePath, {
+                        customSortOrder: config.packageJson.customSortOrder,
+                        indentation: config.packageJson.indentation,
+                        dryRun,
+                    });
+                }
+            }
+
+            // Sort tsconfig.json
+            if (config.tsConfig?.enabled) {
+                const tsconfigPath = path.join(target, "tsconfig.json");
+
+                if (fs.existsSync(tsconfigPath)) {
+                    console.log(`🔧  Processing ${tsconfigPath}...`);
+                    sortTsConfigFile(tsconfigPath, {
+                        indentation: config.tsConfig.indentation,
+                        dryRun,
+                    });
+                }
+            }
+
+            // Format files using the pipeline
+            if (config.codeStyle?.enabled ||
+                config.imports?.enabled ||
+                config.sorting?.enabled ||
+                config.spacing?.enabled) {
+                await formatDirectory(target, config, dryRun);
+            }
+
+            if (dryRun) {
+                console.info("Dry run completed. No files were modified.");
+            } else {
+                console.info("Formatting completed successfully.");
+            }
         }
     } catch (error) {
         console.error("Error during formatting:", (error as Error).message);

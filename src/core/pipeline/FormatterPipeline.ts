@@ -7,7 +7,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { CoreConfig, FormatterOrder } from "../config";
 import { Container } from "../di";
-import { BlankLineBeforeReturnsRule, BlankLineBetweenDeclarationsRule, BlankLineBetweenStatementTypesRule, BlockSpacingRule, BracketSpacingRule, ClassMemberSortingRule, DocBlockCommentRule, FileDeclarationSortingRule, IFormattingRule, ImportOrganizationRule, IndentationRule, IndexGenerationRule, QuoteStyleRule, SemicolonRule } from "../formatters";
+import { BlankLineBeforeReturnsRule, BlankLineBetweenDeclarationsRule, BlankLineBetweenStatementTypesRule, BlockSpacingRule, BracketSpacingRule, ClassMemberSortingRule, DocBlockCommentRule, FileDeclarationSortingRule, IFormattingRule, ImportOrganizationRule, IndentationRule, IndexGenerationRule, QuoteStyleRule, SemicolonRule, StructuralIndentationRule } from "../formatters";
 
 
 /*
@@ -296,6 +296,7 @@ export class FormatterPipeline {
             this.addRule<SemicolonRule>(FormatterOrder.CodeStyle);
             this.addRule<BracketSpacingRule>(FormatterOrder.CodeStyle);
             this.addRule<IndentationRule>(FormatterOrder.CodeStyle);
+            this.addRule<StructuralIndentationRule>(FormatterOrder.CodeStyle);
             this.addRule<BlockSpacingRule>(FormatterOrder.CodeStyle);
             this.addRule<DocBlockCommentRule>(FormatterOrder.CodeStyle);
         }

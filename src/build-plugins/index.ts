@@ -1,5 +1,4 @@
-
 // Auto-generated exports - do not edit manually
 // Run tsfmt to regenerate
 
-export * from "./transformGenericsPlugin"
+export * from "./transformGenericsPlugin";
