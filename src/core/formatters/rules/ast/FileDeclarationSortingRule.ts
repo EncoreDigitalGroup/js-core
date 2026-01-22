@@ -10,7 +10,6 @@ import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Types of top-level declarations in a file */
-
 export enum DeclarationType {
     Interface = "interface",
     TypeAlias = "type_alias",
@@ -25,7 +24,6 @@ export enum DeclarationType {
 }
 
 /** Analyzed file declaration with metadata */
-
 export interface FileDeclaration {
     node: ts.Statement;
     type: DeclarationType;
@@ -38,7 +36,6 @@ export interface FileDeclaration {
 }
 
 /** Default order for file declarations */
-
 export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 
     DeclarationType.Interface,
@@ -54,7 +51,6 @@ export const DEFAULT_FILE_ORDER: DeclarationType[] = [
 ];
 
 /** Sorts file-level declarations according to configured order */
-
 export class FileDeclarationSortingRule extends BaseFormattingRule {
     readonly name = "FileDeclarationSortingRule";
 
@@ -170,7 +166,6 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         }
 
         // Analyze and sort declarations
-
         const allDeclarationNames = new Set<string>(otherStatements.map(stmt =>
 
             ASTAnalyzer.getDeclarationName(stmt)).filter(n => n));
@@ -187,7 +182,6 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         }
 
         // Check if reordering is needed
-
         const orderChanged = sortedDeclarations.some((decl, index) => decl.originalIndex !== index);
 
         if (!orderChanged) {
@@ -195,7 +189,6 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         }
 
         // Reconstruct file with reordered declarations using original text
-
         const firstDeclaration = otherStatements[0];
         const lastDeclaration = otherStatements[otherStatements.length - 1];
         const declarationsStart = firstDeclaration.getFullStart();
@@ -206,11 +199,9 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         const newDeclarations = declarationTexts.join("\n\n");
 
         // Replace the declarations section (add spacing between imports and declarations)
-
         let formatted = source.substring(0, declarationsStart) + "\n\n" + newDeclarations + source.substring(declarationsEnd);
 
         // Remove trailing semicolons that TypeScript printer adds after closing braces
-
         formatted = formatted.replace(/(\n;)+\s*$/, "\n");
 
         return formatted;

@@ -142,7 +142,7 @@ async function main(): Promise<void> {
                 config.sorting?.enabled ||
                 config.spacing?.enabled) {
                 await formatSingleFile(target, config, dryRun);
-            }
+                }
 
             if (dryRun) {
                 console.info("Dry run completed. No files were modified.");
@@ -187,7 +187,7 @@ async function main(): Promise<void> {
                 config.sorting?.enabled ||
                 config.spacing?.enabled) {
                 await formatDirectory(target, config, dryRun);
-            }
+                }
 
             if (dryRun) {
                 console.info("Dry run completed. No files were modified.");

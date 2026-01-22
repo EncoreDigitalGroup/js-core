@@ -46,7 +46,7 @@ export class Container {
             if (line.includes("Container.extractGenericTypeName") ||
                 line.includes("Container.resolve")) {
                 continue;
-            }
+                }
 
             // Find the first external call location
             const match = line.match(/at\s+.*\s+\((.+):(\d+):(\d+)\)/);
@@ -88,7 +88,7 @@ export class Container {
             if (line.includes("Container.extractGenericTypeNameForRegistration") ||
                 line.includes("Container.singleton")) {
                 continue;
-            }
+                }
 
             // Find the first external call location
             const match = line.match(/at\s+.*\s+\((.+):(\d+):(\d+)\)/);

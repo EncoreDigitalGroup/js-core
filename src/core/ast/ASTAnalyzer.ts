@@ -115,7 +115,7 @@ export class ASTAnalyzer {
             ts.isImportEqualsDeclaration(declaration) ||
             ts.isExportDeclaration(declaration)) {
             return new Set();
-        }
+            }
 
         const refs = this.extractReferences(declaration, name => availableDeclarations.has(name));
         // For file declarations, we care about all identifiers
@@ -142,7 +142,7 @@ export class ASTAnalyzer {
             if (ts.isStringLiteral(member.name)) {
                 return member.name.text;
             }
-        }
+            }
 
         return "";
     }
@@ -156,7 +156,7 @@ export class ASTAnalyzer {
             ts.isFunctionDeclaration(declaration) ||
             ts.isClassDeclaration(declaration)) {
             return declaration.name?.text || "";
-        }
+            }
 
         if (ts.isVariableStatement(declaration)) {
             const firstDecl = declaration.declarationList.declarations[0];

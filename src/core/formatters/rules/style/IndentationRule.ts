@@ -31,36 +31,30 @@ export class IndentationRule extends BaseFormattingRule {
 
         for (const line of lines) {
             // Skip empty lines
-
             if (line.trim() === "") {
                 result.push(line);
                 continue;
             }
             // Get the leading whitespace
-
             const leadingWhitespace = line.match(/^\s*/)?.[0] || "";
             const content = line.substring(leadingWhitespace.length);
             // Calculate indent level based on current whitespace
-
             let indentLevel = 0;
 
             if (config.indentStyle === "space") {
                 // Count tabs and spaces
-
                 const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
                 const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
 
                 indentLevel = tabCount + Math.floor(spaceCount / indentWidth);
             } else {
                 // Converting to tabs
-
                 const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
                 const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
 
                 indentLevel = tabCount + Math.floor(spaceCount / indentWidth);
             }
             // Create new indentation
-
             let newIndent: string;
 
             if (config.indentStyle === "space") {

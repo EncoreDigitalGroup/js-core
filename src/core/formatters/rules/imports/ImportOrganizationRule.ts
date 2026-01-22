@@ -4,7 +4,7 @@
 */
 
 import * as ts from "typescript";
-import { BaseFormattingRule } from "../../BaseFormattingRule";
+import {BaseFormattingRule} from "../../BaseFormattingRule";
 
 
 interface ImportInfo {
@@ -17,7 +17,6 @@ interface ImportInfo {
 }
 
 /** Organizes and formats import statements */
-
 export class ImportOrganizationRule extends BaseFormattingRule {
     readonly name = "ImportOrganizationRule";
 
@@ -68,12 +67,10 @@ export class ImportOrganizationRule extends BaseFormattingRule {
             return identifiers;
         }
         // Default import
-
         if (importInfo.importClause.name) {
             identifiers.push(importInfo.importClause.name.text);
         }
         // Named imports
-
         if (importInfo.importClause.namedBindings) {
             if (ts.isNamedImports(importInfo.importClause.namedBindings)) {
                 for (const element of importInfo.importClause.namedBindings.elements) {
@@ -97,7 +94,6 @@ export class ImportOrganizationRule extends BaseFormattingRule {
 
             if (ts.isIdentifier(node) && node.text === identifier) {
                 // Make sure it's not the import declaration itself
-
                 const parent = node.parent;
 
                 if (!ts.isImportSpecifier(parent) && !ts.isImportClause(parent)) {
@@ -113,7 +109,6 @@ export class ImportOrganizationRule extends BaseFormattingRule {
 
     private isImportUsed(importInfo: ImportInfo, sourceFile: ts.SourceFile): boolean {
         // Side-effect imports are considered "used"
-
         if (importInfo.isSideEffect) {
             return true;
         }
@@ -133,7 +128,6 @@ export class ImportOrganizationRule extends BaseFormattingRule {
             return imports;
         }
         // Don't remove side-effect imports unless configured
-
         if (!config.removeSideEffects) {
             return imports.filter(imp => imp.isSideEffect || this.isImportUsed(imp, sourceFile));
         }
@@ -181,7 +175,6 @@ export class ImportOrganizationRule extends BaseFormattingRule {
         let leadingComments = leadingCommentsMatch ? leadingCommentsMatch[1].trim() : "";
 
         // Deduplicate consecutive identical block comments (fixes copyright duplication)
-
         if (leadingComments) {
             const commentBlocks = leadingComments.match(/\/\*[\s\S]*?\*\//g) || [];
             const uniqueBlocks = new Set(commentBlocks.map(block => block.trim()));
@@ -190,16 +183,13 @@ export class ImportOrganizationRule extends BaseFormattingRule {
         }
 
         // Find the last import statement position
-
         const importStatements = sourceFile.statements.filter(stmt => ts.isImportDeclaration(stmt));
         const lastImport = importStatements[importStatements.length - 1];
         const afterImportsPos = lastImport ? lastImport.getEnd() : (leadingCommentsMatch ? leadingCommentsMatch[0].length : 0);
 
         // Extract everything after imports, preserving original formatting
-
         let restOfFile = fullText.substring(afterImportsPos);
         // Ensure restOfFile starts with a newline
-
         if (restOfFile && !restOfFile.startsWith("\n")) {
             restOfFile = "\n" + restOfFile;
         }
@@ -207,7 +197,6 @@ export class ImportOrganizationRule extends BaseFormattingRule {
         restOfFile = restOfFile.replace(/^\n{2,}/, "\n");
 
         // Build import section (only reprint imports, not everything else)
-
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
@@ -219,9 +208,7 @@ export class ImportOrganizationRule extends BaseFormattingRule {
 
         for (const importInfo of imports) {
             // Add blank line between groups if configured
-
             if (config?.separateGroups &&
-
                 lastGroup !== null &&
                 lastGroup !== importInfo.group) {
                 importLines.push("");
@@ -231,14 +218,12 @@ export class ImportOrganizationRule extends BaseFormattingRule {
 
             // Strip any leading block comments from individual imports
             // (file-level copyright is handled separately at the top)
-
             importText = importText.replace(/^((?:\/\*[\s\S]*?\*\/\s*)+)/, "").trim();
             importLines.push(importText);
             lastGroup = importInfo.group;
         }
 
         // Combine sections
-
         const sections: string[] = [];
 
         if (leadingComments) {
@@ -256,7 +241,6 @@ export class ImportOrganizationRule extends BaseFormattingRule {
         let combined = sections.join("\n\n");
 
         // Remove trailing semicolons that TypeScript printer adds after closing braces
-
         combined = combined.replace(/(;\n+)+;?\s*$/, "\n");
 
         return combined;
@@ -273,7 +257,6 @@ export class ImportOrganizationRule extends BaseFormattingRule {
 
         // Apply all transformations in sequence
         // Each method checks its own config and returns early if disabled
-
         let processedImports = this.filterUnusedImports(imports, sourceFile);
 
         processedImports = this.sortImports(processedImports);

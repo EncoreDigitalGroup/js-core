@@ -28,7 +28,6 @@ export class QuoteStyleRule extends BaseFormattingRule {
 
         const visit = (node: ts.Node) => {
             // Handle string literals (but not template literals)
-
             if (ts.isStringLiteral(node)) {
                 const nodeText = node.getText(sourceFile);
                 const currentQuote = nodeText[0];
@@ -37,12 +36,10 @@ export class QuoteStyleRule extends BaseFormattingRule {
 
                 if (currentQuote !== desiredQuote) {
                     // Get the string content (without quotes)
-
                     const content = node.text;
                     // Check if the new quote style would require escaping
                     const needsEscape = content.includes(desiredQuote);
                     // If it needs escaping, skip this string literal
-
                     if (!needsEscape) {
                         const newText = desiredQuote + content + desiredQuote;
 

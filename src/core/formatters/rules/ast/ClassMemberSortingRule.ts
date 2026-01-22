@@ -10,7 +10,6 @@ import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Types of class members */
-
 export enum MemberType {
     StaticProperty = "static_property",
     InstanceProperty = "instance_property",
@@ -22,7 +21,6 @@ export enum MemberType {
 }
 
 /** Analyzed class member with metadata */
-
 export interface ClassMember {
     node: ts.ClassElement;
     type: MemberType;
@@ -38,7 +36,6 @@ export interface ClassMember {
 }
 
 /** Default order for class members */
-
 export const DEFAULT_CLASS_ORDER: MemberType[] = [
 
     MemberType.StaticProperty,
@@ -51,7 +48,6 @@ export const DEFAULT_CLASS_ORDER: MemberType[] = [
 ];
 
 /** Sorts class members according to configured order */
-
 export class ClassMemberSortingRule extends BaseFormattingRule {
     readonly name = "ClassMemberSortingRule";
 
@@ -126,7 +122,6 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
     /** Compare two class members for sorting */
     private compareMembers(a: ClassMember, b: ClassMember, aTypeIndex: number, bTypeIndex: number): number {
         // First, sort by member type according to the defined order
-
         if (aTypeIndex !== bTypeIndex) {
             return aTypeIndex - bTypeIndex;
         }
@@ -173,7 +168,6 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
         let formatted = source;
 
         // Find all class declarations and reorder their members
-
         const classes: ts.ClassDeclaration[] = [];
         const visit = (node: ts.Node) => {
             if (ts.isClassDeclaration(node)) {
@@ -184,7 +178,6 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
         visit(sourceFile);
 
         // Process classes in reverse order to maintain correct positions
-
         for (let i = classes.length - 1; i >= 0; i--) {
             const classNode = classes[i];
 
@@ -193,7 +186,6 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             }
 
             // Analyze and sort members
-
             const allMemberNames = new Set<string>(classNode.members
 
                 .map(m => ASTAnalyzer.getClassMemberName(m))
@@ -211,7 +203,6 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             }
 
             // Check if reordering is needed
-
             const orderChanged = sortedMembers.some((member, index) => member.originalIndex !== index);
 
             if (!orderChanged) {
@@ -219,7 +210,6 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             }
 
             // Reconstruct class body with reordered members using original text
-
             const firstMember = classNode.members[0];
             const lastMember = classNode.members[classNode.members.length - 1];
             const classBodyStart = firstMember.getFullStart();
@@ -230,7 +220,6 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             const newClassBody = memberTexts.join("\n\n");
 
             // Replace the class body (add leading newline for proper spacing)
-
             formatted = formatted.substring(0, classBodyStart) + "\n" + newClassBody + formatted.substring(classBodyEnd);
         }
 

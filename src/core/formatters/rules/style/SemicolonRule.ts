@@ -4,7 +4,7 @@
 */
 
 import * as ts from "typescript";
-import { BaseFormattingRule } from "../../BaseFormattingRule";
+import {BaseFormattingRule} from "../../BaseFormattingRule";
 
 
 /** Adds or removes semicolons based on configuration using AST */
@@ -27,7 +27,6 @@ export class SemicolonRule extends BaseFormattingRule {
         const visit = (node: ts.Node) => {
             // Check statements that should have semicolons
             // NOTE: Interfaces, classes, and enums should NOT have semicolons after their closing braces
-
             if (ts.isVariableStatement(node) ||
 
                 ts.isExpressionStatement(node) ||
@@ -44,17 +43,14 @@ export class SemicolonRule extends BaseFormattingRule {
 
                 if (config.semicolons === "always" && !hasSemicolon) {
                     // Add semicolon
-
                     changes.push({pos: nodeEnd, type: "add"});
                 } else if (config.semicolons === "never" && hasSemicolon) {
                     // Remove semicolon
-
                     changes.push({pos: nodeEnd - 1, type: "remove"});
                 }
             }
 
             // Remove incorrect semicolons from interfaces, classes, and enums
-
             if (ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) {
                 const nodeEnd = node.getEnd();
                 const fullText = sourceFile.getFullText();
@@ -62,7 +58,6 @@ export class SemicolonRule extends BaseFormattingRule {
 
                 if (hasSemicolon) {
                     // Remove the incorrect semicolon after the closing brace
-
                     changes.push({pos: nodeEnd, type: "remove"});
                 }
             }

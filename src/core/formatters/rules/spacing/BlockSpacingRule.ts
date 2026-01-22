@@ -21,7 +21,6 @@ export class BlockSpacingRule extends BaseFormattingRule {
 
         // Remove blank lines after opening braces of interfaces, classes, enums, functions
         // Pattern: { followed by newlines and whitespace before content
-
         result = result.replace(/\{\n\n+(\s*(?:\/\*\*|[a-zA-Z_]))/g, "{\n$1");
 
         // Remove blank lines between JSDoc comments and what they describe

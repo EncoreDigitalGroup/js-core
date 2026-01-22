@@ -101,7 +101,7 @@ private checkNodeBrackets(
                 }
             }
         }
-}
+    }
 
 private analyzeBracketStructure(
         sourceFile: ts.SourceFile,
@@ -117,7 +117,7 @@ private analyzeBracketStructure(
         };
 
         visit(sourceFile);
-}
+    }
 
 private getScriptKind(filePath?: string): ts.ScriptKind {
         if (!filePath) {

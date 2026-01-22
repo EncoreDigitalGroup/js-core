@@ -30,7 +30,7 @@ export class ConfigMerger {
                     result[key] = this.deepMerge(result[key] as any, source[key] as any);
                     } else {
                     result[key] = source[key] as T[Extract<keyof T, string>];
-                    }
+                }
             }
         }
 

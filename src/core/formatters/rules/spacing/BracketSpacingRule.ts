@@ -33,7 +33,6 @@ export class BracketSpacingRule extends BaseFormattingRule {
         const fullText = sourceFile.getFullText();
         const visit = (node: ts.Node) => {
             // Handle object literals
-
             if (ts.isObjectLiteralExpression(node)) {
                 const openBraceEnd = node.getStart(sourceFile) + 1; // Position after '{'
                 const closeBraceStart = node.getEnd() - 1; // Position of '}'
@@ -41,14 +40,12 @@ export class BracketSpacingRule extends BaseFormattingRule {
                 if (node.properties.length > 0) {
                     if (config.bracketSpacing) {
                         // Add spacing after opening brace
-
                         const afterOpenBrace = fullText[openBraceEnd];
 
                         if (afterOpenBrace !== " " && afterOpenBrace !== "\n") {
                             changes.push({pos: openBraceEnd, type: "add", text: " "});
                         }
                         // Add spacing before closing brace
-
                         const beforeCloseBrace = fullText[closeBraceStart - 1];
 
                         if (beforeCloseBrace !== " " && beforeCloseBrace !== "\n") {
@@ -56,7 +53,6 @@ export class BracketSpacingRule extends BaseFormattingRule {
                         }
                     } else {
                         // Remove spacing after opening brace
-
                         let pos = openBraceEnd;
 
                         while (fullText[pos] === " " || fullText[pos] === "\t") {
@@ -74,7 +70,6 @@ export class BracketSpacingRule extends BaseFormattingRule {
                 }
             }
             // Handle named imports
-
             if (ts.isNamedImports(node)) {
                 const parent = node.parent;
 
@@ -85,14 +80,12 @@ export class BracketSpacingRule extends BaseFormattingRule {
                     if (node.elements.length > 0) {
                         if (config.bracketSpacing) {
                             // Add spacing after opening brace
-
                             const afterOpenBrace = fullText[openBraceEnd];
 
                             if (afterOpenBrace !== " ") {
                                 changes.push({pos: openBraceEnd, type: "add", text: " "});
                             }
                             // Add spacing before closing brace
-
                             const beforeCloseBrace = fullText[closeBraceStart - 1];
 
                             if (beforeCloseBrace !== " ") {
@@ -100,7 +93,6 @@ export class BracketSpacingRule extends BaseFormattingRule {
                             }
                         } else {
                             // Remove spacing after opening brace
-
                             let pos = openBraceEnd;
 
                             while (fullText[pos] === " " || fullText[pos] === "\t") {

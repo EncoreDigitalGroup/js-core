@@ -61,9 +61,7 @@ export class IndexGenerationRule extends BaseFormattingRule {
 
     private isTestDirectory(dirName: string): boolean {
         // Common test directory patterns (not configurable)
-
         const testDirectories = [
-
             "__tests__",
             "tests",
             "test",
@@ -79,9 +77,7 @@ export class IndexGenerationRule extends BaseFormattingRule {
 
     private isTestFile(fileName: string): boolean {
         // Common test file patterns (not configurable)
-
         const testPatterns = [
-
             /\.test\.(ts|tsx|js|jsx)$/,
             /\.spec\.(ts|tsx|js|jsx)$/,
             /\.(test|spec)\.(ts|tsx|js|jsx)$/,
@@ -108,7 +104,6 @@ export class IndexGenerationRule extends BaseFormattingRule {
                         continue;
                     }
                     // Check if subdirectory has an index file
-
                     const subIndexPath = path.join(dir, entry.name, options.indexFileName);
 
                     if (fs.existsSync(subIndexPath)) {
@@ -116,12 +111,10 @@ export class IndexGenerationRule extends BaseFormattingRule {
                     }
                 } else if (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) {
                     // Skip .d.ts files when processing regular .ts files
-
                     if (entry.name.endsWith(".d.ts")) {
                         continue;
                     }
                     // Always skip test files (not configurable)
-
                     if (this.isTestFile(entry.name)) {
                         continue;
                     }
@@ -194,13 +187,11 @@ ${exports.join("\n")}
 
             for (const entry of entries) {
                 // Skip index.ts itself
-
                 if (entry.name === "index.ts") {
                     continue;
                 }
 
                 // Check for directories with index.ts
-
                 if (entry.isDirectory()) {
                     // Always skip test directories (not configurable)
                     if (this.isTestDirectory(entry.name)) {
@@ -214,7 +205,6 @@ ${exports.join("\n")}
                     }
                 }
                 // Check for .d.ts files (like generated.d.ts)
-
                 else if (entry.name.endsWith(".d.ts")) {
                     const moduleName = entry.name.slice(0, -3); // Remove .ts but keep .d
 
@@ -265,7 +255,6 @@ ${exports}
             }
 
             // Update main src/index.ts if configured
-
             if (config?.updateMainIndex !== false) {
                 const srcDir = path.join(projectRoot, "src");
                 const mainIndexPath = path.join(srcDir, "index.ts");

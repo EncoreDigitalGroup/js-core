@@ -3,11 +3,10 @@
 * All Rights Reserved.
 */
 
-import { BaseFormattingRule } from "../../BaseFormattingRule";
+import {BaseFormattingRule} from "../../BaseFormattingRule";
 
 
 /** Statement types for categorization */
-
 enum StatementType {
     Declaration = "declaration",// const, let, var, function, class, etc.
     Control = "control",// if, else, switch, case
@@ -18,12 +17,12 @@ enum StatementType {
 }
 
 /**
-* Adds blank lines when switching between different statement types
-* Examples:
-* - Blank line between declarations and control flow
-* - Blank line between loops and expressions
-* - No blank line within the same statement type
-*/
+ * Adds blank lines when switching between different statement types
+ * Examples:
+ * - Blank line between declarations and control flow
+ * - Blank line between loops and expressions
+ * - No blank line within the same statement type
+ */
 
 export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
     readonly name = "BlankLineBetweenStatementTypesRule";
@@ -31,7 +30,6 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
     /** Determine the type of a statement */
     private getStatementType(trimmedLine: string): StatementType {
         // Control flow
-
         if (trimmedLine.startsWith("if ") ||
 
             trimmedLine.startsWith("if(") ||
@@ -44,7 +42,6 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             return StatementType.Control;
         }
         // Loops
-
         if (trimmedLine.startsWith("for ") ||
 
             trimmedLine.startsWith("for(") ||
@@ -55,7 +52,6 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             return StatementType.Loop;
         }
         // Exceptions
-
         if (trimmedLine.startsWith("try ") ||
 
             trimmedLine.startsWith("try{") ||
@@ -67,7 +63,6 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             return StatementType.Exception;
         }
         // Declarations
-
         if (trimmedLine.startsWith("const ") ||
 
             trimmedLine.startsWith("let ") ||
@@ -107,21 +102,17 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
 
             const isImport = trimmedLine.startsWith("import ");
             // Check if we've left the import section
-
             if (inImportSection && !isImport && !isBlankLine && !isComment) {
                 inImportSection = false;
             }
             // Skip import section
-
             if (inImportSection || isBlankLine || isComment) {
                 result.push(line);
                 continue;
             }
             // Get statement type for non-blank, non-comment lines
-
             const currentStatementType = this.getStatementType(trimmedLine);
             // Add blank line if statement type changed
-
             if (lastStatementType !== null &&
 
                 lastStatementType !== currentStatementType &&
