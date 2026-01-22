@@ -3,141 +3,283 @@
 * All Rights Reserved.
 */
 
-import * as ts from "typescript";
 import { BaseFormattingRule } from "../../BaseFormattingRule";
 
+/** A fix to apply to a closing bracket */
+interface BracketFix {
+    position: number;
+    line: number;
+    column: number;
+    targetIndent: number;
+}
+
+/** Information about an opening bracket */
+interface BracketInfo {
+    char: string;
+    position: number;
+    line: number;
+    lineIndent: number;
+}
 
 /**
 * Fixes structural indentation issues where closing braces/brackets
 * are not properly aligned with their opening statements.
 *
-* This rule ensures that closing braces (}, ]), and parentheses ())
-* are indented to match the indentation level of their opening line,
-* not pushed to column 0 or other incorrect positions.
+* Uses a stack-based approach to properly match opening and closing
+* brackets, ensuring each closing bracket is indented to match its
+* corresponding opening bracket's line indentation.
 */
 export class StructuralIndentationRule extends BaseFormattingRule {
 readonly name = "StructuralIndentationRule";
 
-private getLineIndentLevel(line: string, indentWidth: number, indentChar: string): number {
-        const leadingWhitespace = line.match(/^[\t ]*/)?.[0] || "";
+private skipString(source: string, start: number, quote: string): number {
+        let i = start + 1;
+        const isTemplate = quote === "`";
 
-        if (indentChar === "\t") {
-            return (leadingWhitespace.match(/\t/g) || []).length;
+        while (i < source.length) {
+            const char = source[i];
+
+            // Handle escape sequences
+            if (char === "\\") {
+                i += 2;
+                continue;
+            }
+
+            // Handle template literal expressions ${...}
+            if (isTemplate && char === "$" && source[i + 1] === "{") {
+                i += 2;
+                let braceCount = 1;
+                while (i < source.length && braceCount > 0) {
+                    if (source[i] === "{") braceCount++;
+                    else if (source[i] === "}") braceCount--;
+                    else if (source[i] === '"' || source[i] === "'" || source[i] === "`") {
+                        i = this.skipString(source, i, source[i]);
+                        continue;
+                    }
+                    i++;
+                }
+                continue;
+            }
+
+            // End of string
+            if (char === quote) {
+                return i + 1;
+            }
+
+            i++;
         }
+
+        return i;
+    }
+
+private isRegexStart(source: string, index: number): boolean {
+        // Look backwards to determine if this / starts a regex
+        let i = index - 1;
+        while (i >= 0 && (source[i] === " " || source[i] === "\t")) {
+            i--;
+        }
+
+        if (i < 0) return true;
+
+        const char = source[i];
+        // After these characters, / is likely a regex
+        const regexPreceders = ["(", ",", "=", ":", "[", "!", "&", "|", "?", "{", "}", ";", "\n", "return", "case"];
+
+        if (regexPreceders.includes(char)) {
+            return true;
+        }
+
+        // Check for keywords
+        const keywords = ["return", "case", "typeof", "void", "delete", "throw", "in", "instanceof"];
+        for (const kw of keywords) {
+            if (index >= kw.length && source.substring(index - kw.length, index).endsWith(kw)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+private skipRegex(source: string, start: number): number {
+        let i = start + 1;
+        let inCharClass = false;
+
+        while (i < source.length) {
+            const char = source[i];
+
+            if (char === "\\") {
+                i += 2;
+                continue;
+            }
+
+            if (char === "[") {
+                inCharClass = true;
+            } else if (char === "]") {
+                inCharClass = false;
+            } else if (char === "/" && !inCharClass) {
+                // Skip flags
+                i++;
+                while (i < source.length && /[gimsuy]/.test(source[i])) {
+                    i++;
+                }
+                return i;
+            } else if (char === "\n") {
+                // Regex can't span lines without escaping
+                return i;
+            }
+
+            i++;
+        }
+
+        return i;
+    }
+
+private getLineIndentLevel(line: string, indentWidth: number): number {
+        const leadingWhitespace = line.match(/^[\t ]*/)?.[0] || "";
 
         const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
         const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
 
         return tabCount + Math.floor(spaceCount / indentWidth);
-}
-
-private isBlockLikeNode(node: ts.Node): boolean {
-        return ts.isBlock(node) ||
-            ts.isObjectLiteralExpression(node) ||
-            ts.isArrayLiteralExpression(node) ||
-            ts.isClassDeclaration(node) ||
-            ts.isClassExpression(node) ||
-            ts.isInterfaceDeclaration(node) ||
-            ts.isFunctionDeclaration(node) ||
-            ts.isFunctionExpression(node) ||
-            ts.isArrowFunction(node) ||
-            ts.isMethodDeclaration(node) ||
-            ts.isConstructorDeclaration(node) ||
-            ts.isGetAccessorDeclaration(node) ||
-            ts.isSetAccessorDeclaration(node) ||
-            ts.isModuleDeclaration(node) ||
-            ts.isModuleBlock(node) ||
-            ts.isEnumDeclaration(node) ||
-            ts.isTypeLiteralNode(node) ||
-            ts.isCaseBlock(node) ||
-            ts.isIfStatement(node) ||
-            ts.isForStatement(node) ||
-            ts.isForInStatement(node) ||
-            ts.isForOfStatement(node) ||
-            ts.isWhileStatement(node) ||
-            ts.isDoStatement(node) ||
-            ts.isTryStatement(node) ||
-            ts.isCatchClause(node);
-}
-
-private checkNodeBrackets(
-        node: ts.Node,
-        sourceFile: ts.SourceFile,
-        lines: string[],
-        fixes: Map<number, number>,
-        indentWidth: number,
-        indentChar: string
-    ): void {
-        const nodeStart = node.getStart(sourceFile);
-        const nodeEnd = node.getEnd();
-        const startPos = sourceFile.getLineAndCharacterOfPosition(nodeStart);
-        const endPos = sourceFile.getLineAndCharacterOfPosition(nodeEnd);
-
-        if (startPos.line === endPos.line) {
-            return;
-        }
-
-        const startLine = lines[startPos.line];
-        const endLine = lines[endPos.line];
-        const startIndent = this.getLineIndentLevel(startLine, indentWidth, indentChar);
-        const endLineContent = endLine.trimStart();
-
-        const isClosingBracketLine = /^[}\])]/.test(endLineContent) ||
-            /^[}\])][;,]?\s*$/.test(endLineContent) ||
-            /^[}\])]\s*[;,]?\s*(\/\/.*)?$/.test(endLineContent);
-
-        if (!isClosingBracketLine) {
-            return;
-        }
-
-        if (this.isBlockLikeNode(node)) {
-            const currentEndIndent = this.getLineIndentLevel(endLine, indentWidth, indentChar);
-
-            if (currentEndIndent !== startIndent) {
-                const existingFix = fixes.get(endPos.line);
-
-                if (existingFix === undefined || startIndent > existingFix) {
-                    fixes.set(endPos.line, startIndent);
-                }
-            }
-        }
     }
 
-private analyzeBracketStructure(
-        sourceFile: ts.SourceFile,
-        lines: string[],
-        bracketStack: Array<{ char: string; line: number; indent: number }>,
-        fixes: Map<number, number>,
-        indentWidth: number,
-        indentChar: string
-    ): void {
-        const visit = (node: ts.Node): void => {
-            this.checkNodeBrackets(node, sourceFile, lines, fixes, indentWidth, indentChar);
-            ts.forEachChild(node, visit);
+private startsWithClosingBracket(trimmedLine: string): boolean {
+        return /^[}\])]/.test(trimmedLine);
+}
+
+private findBracketFixes(source: string, lines: string[], indentWidth: number): BracketFix[] {
+        const fixes: BracketFix[] = [];
+        const stack: BracketInfo[] = [];
+        // Track corrected indentation for lines that have fixes
+        const lineIndentCorrections = new Map<number, number>();
+
+        let i = 0;
+        let line = 0;
+        let column = 0;
+        let lineStart = 0;
+
+        const openBrackets: Record<string, string> = {
+            "{": "}",
+            "[": "]",
+            "(": ")"
         };
 
-        visit(sourceFile);
+        const closeBrackets: Record<string, string> = {
+            "}": "{",
+            "]": "[",
+            ")": "("
+        };
+
+        while (i < source.length) {
+            const char = source[i];
+
+            // Handle newlines
+            if (char === "\n") {
+                line++;
+                column = 0;
+                lineStart = i + 1;
+                i++;
+                continue;
+            }
+
+            // Skip string literals
+            if (char === '"' || char === "'" || char === "`") {
+                i = this.skipString(source, i, char);
+                column = i - lineStart;
+                continue;
+            }
+
+            // Skip single-line comments
+            if (char === "/" && source[i + 1] === "/") {
+                while (i < source.length && source[i] !== "\n") {
+                    i++;
+                }
+                continue;
+            }
+
+            // Skip multi-line comments
+            if (char === "/" && source[i + 1] === "*") {
+                i += 2;
+                while (i < source.length - 1 && !(source[i] === "*" && source[i + 1] === "/")) {
+                    if (source[i] === "\n") {
+                        line++;
+                        lineStart = i + 1;
+                    }
+                    i++;
+                }
+                i += 2;
+                column = i - lineStart;
+                continue;
+            }
+
+            // Skip regex literals (basic detection)
+            if (char === "/" && this.isRegexStart(source, i)) {
+                i = this.skipRegex(source, i);
+                column = i - lineStart;
+                continue;
+            }
+
+            // Handle opening brackets
+            if (openBrackets[char]) {
+                // Use corrected indent if this line has a fix, otherwise use current indent
+                const lineIndent = lineIndentCorrections.has(line)
+                    ? lineIndentCorrections.get(line)!
+                    : this.getLineIndentLevel(lines[line], indentWidth);
+                stack.push({
+                    char,
+                    position: i,
+                    line,
+                    lineIndent
+                });
+            }
+
+            // Handle closing brackets
+            if (closeBrackets[char]) {
+                const expectedOpen = closeBrackets[char];
+                // Find matching opening bracket
+                let matchIndex = -1;
+                for (let j = stack.length - 1; j >= 0; j--) {
+                    if (stack[j].char === expectedOpen) {
+                        matchIndex = j;
+                        break;
+                    }
+                }
+
+                if (matchIndex !== -1) {
+                    const openBracket = stack[matchIndex];
+                    stack.splice(matchIndex, 1);
+
+                    // Only fix if the closing bracket is on a different line
+                    if (line !== openBracket.line) {
+                        const currentIndent = this.getLineIndentLevel(lines[line], indentWidth);
+                        const trimmedLine = lines[line].trimStart();
+
+                        // Only fix if this is a line that starts with closing brackets
+                        if (this.startsWithClosingBracket(trimmedLine)) {
+                            if (currentIndent !== openBracket.lineIndent) {
+                                fixes.push({
+                                    position: i,
+                                    line,
+                                    column,
+                                    targetIndent: openBracket.lineIndent
+                                });
+                                // Record the corrected indent for this line
+                                // so any opening brackets on this line use the corrected value
+                                if (!lineIndentCorrections.has(line)) {
+                                    lineIndentCorrections.set(line, openBracket.lineIndent);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            i++;
+            column++;
+        }
+
+        return fixes;
     }
-
-private getScriptKind(filePath?: string): ts.ScriptKind {
-        if (!filePath) {
-            return ts.ScriptKind.TS;
-        }
-
-        if (filePath.endsWith(".tsx")) {
-            return ts.ScriptKind.TSX;
-        }
-
-        if (filePath.endsWith(".jsx")) {
-            return ts.ScriptKind.JSX;
-        }
-
-        if (filePath.endsWith(".js")) {
-            return ts.ScriptKind.JS;
-        }
-
-        return ts.ScriptKind.TS;
-}
 
 apply(source: string, filePath?: string): string {
         const config = this.getCodeStyleConfig();
@@ -146,34 +288,35 @@ apply(source: string, filePath?: string): string {
         }
 
         const indentWidth = config.indentWidth;
-        const indentChar = config.indentStyle === "tab" ? "\t" : " ";
         const indentUnit = config.indentStyle === "tab" ? "\t" : " ".repeat(indentWidth);
 
-        const sourceFile = ts.createSourceFile(
-            filePath || "temp.ts",
-            source,
-            ts.ScriptTarget.Latest,
-            true,
-            this.getScriptKind(filePath)
-        );
-
         const lines = source.split("\n");
-        const bracketStack: Array<{ char: string; line: number; indent: number }> = [];
-        const fixes: Map<number, number> = new Map();
+        const fixes = this.findBracketFixes(source, lines, indentWidth);
 
-        this.analyzeBracketStructure(sourceFile, lines, bracketStack, fixes, indentWidth, indentChar);
-
-        if (fixes.size === 0) {
+        if (fixes.length === 0) {
             return source;
         }
 
-        const result: string[] = [];
+        // Group fixes by line number
+        const fixesByLine = new Map<number, BracketFix[]>();
+        for (const fix of fixes) {
+            if (!fixesByLine.has(fix.line)) {
+                fixesByLine.set(fix.line, []);
+            }
+            fixesByLine.get(fix.line)!.push(fix);
+        }
 
+        // Apply fixes line by line
+        const result: string[] = [];
         for (let i = 0; i < lines.length; i++) {
-            if (fixes.has(i)) {
-                const targetIndent = fixes.get(i)!;
+            const lineFixes = fixesByLine.get(i);
+            if (lineFixes && lineFixes.length > 0) {
+                // For lines with closing brackets, use the indent of the first (outermost) bracket
+                // Sort by column to get the leftmost bracket first
+                lineFixes.sort((a, b) => a.column - b.column);
+                const primaryFix = lineFixes[0];
                 const trimmedLine = lines[i].trimStart();
-                const newIndent = indentUnit.repeat(targetIndent);
+                const newIndent = indentUnit.repeat(primaryFix.targetIndent);
                 result.push(newIndent + trimmedLine);
             } else {
                 result.push(lines[i]);
@@ -181,5 +324,5 @@ apply(source: string, filePath?: string): string {
         }
 
         return result.join("\n");
-}
+    }
 }

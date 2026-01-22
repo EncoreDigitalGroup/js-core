@@ -4,7 +4,7 @@
 */
 
 import * as ts from "typescript";
-import {BaseFormattingRule} from "../../BaseFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Adds or removes semicolons based on configuration using AST */
@@ -48,7 +48,7 @@ export class SemicolonRule extends BaseFormattingRule {
                     // Remove semicolon
                     changes.push({pos: nodeEnd - 1, type: "remove"});
                 }
-            }
+                }
 
             // Remove incorrect semicolons from interfaces, classes, and enums
             if (ts.isInterfaceDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) {

@@ -3,7 +3,7 @@
 * All Rights Reserved.
 */
 
-import {BaseFormattingRule} from "../../BaseFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Statement types for categorization */
@@ -17,12 +17,12 @@ enum StatementType {
 }
 
 /**
- * Adds blank lines when switching between different statement types
- * Examples:
- * - Blank line between declarations and control flow
- * - Blank line between loops and expressions
- * - No blank line within the same statement type
- */
+* Adds blank lines when switching between different statement types
+* Examples:
+* - Blank line between declarations and control flow
+* - Blank line between loops and expressions
+* - No blank line within the same statement type
+*/
 
 export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
     readonly name = "BlankLineBetweenStatementTypesRule";
@@ -40,7 +40,7 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("case ") ||
             trimmedLine.startsWith("default:")) {
             return StatementType.Control;
-        }
+            }
         // Loops
         if (trimmedLine.startsWith("for ") ||
 
@@ -50,7 +50,7 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("do ") ||
             trimmedLine.startsWith("do{")) {
             return StatementType.Loop;
-        }
+            }
         // Exceptions
         if (trimmedLine.startsWith("try ") ||
 
@@ -61,7 +61,7 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("finally{") ||
             trimmedLine.startsWith("throw ")) {
             return StatementType.Exception;
-        }
+            }
         // Declarations
         if (trimmedLine.startsWith("const ") ||
 
@@ -74,7 +74,7 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("enum ") ||
             trimmedLine.startsWith("export ")) {
             return StatementType.Declaration;
-        }
+            }
         // Everything else (expressions, calls, etc.)
         return StatementType.Expression;
     }
@@ -119,7 +119,7 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
                 result.length > 0 &&
                 result[result.length - 1].trim() !== "") {
                 result.push("");
-            }
+                }
             result.push(line);
             lastStatementType = currentStatementType;
         }

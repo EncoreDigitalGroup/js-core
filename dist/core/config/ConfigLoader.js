@@ -79,7 +79,7 @@ const config: CoreConfig = {
         semicolons: "always",
         indentWidth: 4,
         lineWidth: 120,
-    },
+        },
 
     // Import organization
     imports: {
@@ -106,7 +106,7 @@ const config: CoreConfig = {
     // JSON file sorting
     packageJson: { enabled: true },
     tsConfig: { enabled: true },
-};
+    };
 
 export default config;
 `;

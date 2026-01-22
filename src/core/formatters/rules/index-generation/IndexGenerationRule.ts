@@ -209,11 +209,11 @@ ${exports.join("\n")}
                     const moduleName = entry.name.slice(0, -3); // Remove .ts but keep .d
 
                     modules.push(moduleName);
-                }
+        }
             }
 
             return modules.sort();
-        } catch (error) {
+                } catch (error) {
             console.warn(`Warning: Failed to discover modules in ${srcDir}: ${(error as Error).message}`);
 
             return [];
@@ -234,7 +234,7 @@ ${exports}
         } catch (error) {
             console.warn(`Warning: Failed to write main index file: ${(error as Error).message}`);
         }
-    }
+            }
 
     private generateIndexFiles(currentFilePath: string): void {
         try {
@@ -274,7 +274,7 @@ ${exports}
         const config = this.getIndexGenerationConfig();
         if (!config?.enabled || !filePath) {
             return source;
-        }
+}
 
         // This rule operates on the file system, not on individual file content
         // We'll trigger index generation when processing any file in the project

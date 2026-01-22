@@ -4,7 +4,7 @@
 */
 
 import * as ts from "typescript";
-import {BaseFormattingRule} from "../../BaseFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 interface ImportInfo {
@@ -212,7 +212,7 @@ export class ImportOrganizationRule extends BaseFormattingRule {
                 lastGroup !== null &&
                 lastGroup !== importInfo.group) {
                 importLines.push("");
-            }
+                }
 
             let importText = printer.printNode(ts.EmitHint.Unspecified, importInfo.statement, sourceFile);
 

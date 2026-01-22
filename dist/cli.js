@@ -30,25 +30,6 @@ function _interopNamespaceDefault(e) {
 const fs__namespace = /* @__PURE__ */ _interopNamespaceDefault(fs);
 const glob__namespace = /* @__PURE__ */ _interopNamespaceDefault(glob);
 const path__namespace = /* @__PURE__ */ _interopNamespaceDefault(path);
-async function formatSingleFile(filePath, config, dryRun) {
-  const container = new Container.Container();
-  ServiceRegistration.ServiceRegistration.registerServices(container, config);
-  const pipeline = container.resolve("FormatterPipeline");
-  try {
-    const context = await pipeline.formatFile(filePath, dryRun);
-    if (context.changed) {
-      if (dryRun) {
-        console.info(`Would format: ${filePath}`);
-      } else {
-        console.log(`📊  Formatted: ${filePath}`);
-      }
-    } else {
-      console.info(`No changes needed: ${filePath}`);
-    }
-  } catch (error) {
-    console.error(`Error formatting file ${filePath}:`, error.message);
-  }
-}
 async function formatDirectory(targetDir, config, dryRun) {
   const container = new Container.Container();
   ServiceRegistration.ServiceRegistration.registerServices(container, config);
@@ -85,6 +66,25 @@ async function formatDirectory(targetDir, config, dryRun) {
     console.info(`Would format ${formattedCount} of ${files.length} files.`);
   } else {
     console.info(`Formatted ${formattedCount} of ${files.length} files.`);
+  }
+}
+async function formatSingleFile(filePath, config, dryRun) {
+  const container = new Container.Container();
+  ServiceRegistration.ServiceRegistration.registerServices(container, config);
+  const pipeline = container.resolve("FormatterPipeline");
+  try {
+    const context = await pipeline.formatFile(filePath, dryRun);
+    if (context.changed) {
+      if (dryRun) {
+        console.info(`Would format: ${filePath}`);
+      } else {
+        console.log(`📊  Formatted: ${filePath}`);
+      }
+    } else {
+      console.info(`No changes needed: ${filePath}`);
+    }
+  } catch (error) {
+    console.error(`Error formatting file ${filePath}:`, error.message);
   }
 }
 function isSupportedFile(filePath) {

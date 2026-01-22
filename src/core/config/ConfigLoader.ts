@@ -71,7 +71,7 @@ const config: CoreConfig = {
         semicolons: "always",
         indentWidth: 4,
         lineWidth: 120,
-    },
+        },
 
     // Import organization
     imports: {
@@ -98,7 +98,7 @@ const config: CoreConfig = {
     // JSON file sorting
     packageJson: { enabled: true },
     tsConfig: { enabled: true },
-};
+    };
 
 export default config;
 `;
@@ -114,7 +114,7 @@ export default config;
         return {
             size: this.configCache.size,
             keys: Array.from(this.configCache.keys())
-        };
+};
     }
 
     /**
@@ -128,7 +128,7 @@ export default config;
         } catch {
             return 0;
         }
-    }
+            }
 
     /**
     * Checks if a tsfmt.config.ts file exists in the project
@@ -152,8 +152,8 @@ export default config;
                 target: ts.ScriptTarget.ES2015,
                 esModuleInterop: true,
                 allowSyntheticDefaultImports: true,
-            },
-        });
+},
+});
 
         return result.outputText;
     }
@@ -198,7 +198,7 @@ export default config;
             }
 
             return config;
-        } catch (error) {
+            } catch (error) {
             throw new Error(`Failed to load ${this.CONFIG_FILE_NAME}: ${error instanceof Error ? error.message : String(error)}`);
         }
     }

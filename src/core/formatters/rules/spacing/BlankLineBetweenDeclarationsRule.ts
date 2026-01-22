@@ -3,18 +3,18 @@
 * All Rights Reserved.
 */
 
-import {BaseFormattingRule} from "../../BaseFormattingRule";
+import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /**
- * Adds blank lines between declarations with different keywords
- * KEY ENHANCEMENT: Works at ALL brace depths (not just top level)
- *
- * Examples:
- * - No blank line between consecutive "const" declarations
- * - No blank line between consecutive "export" statements
- * - Blank line when keyword changes (const → let, export → const, etc.)
- */
+* Adds blank lines between declarations with different keywords
+* KEY ENHANCEMENT: Works at ALL brace depths (not just top level)
+*
+* Examples:
+* - No blank line between consecutive "const" declarations
+* - No blank line between consecutive "export" statements
+* - Blank line when keyword changes (const → let, export → const, etc.)
+*/
 
 export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
     readonly name = "BlankLineBetweenDeclarationsRule";
@@ -120,7 +120,7 @@ export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
                     declarationKeyword !== lastDeclarationKeyword) {
                     result.push("");
                     lastNonBlankLineWasDeclarationEnd = false;
-                }
+                    }
             }
             result.push(line);
             // Track declaration ends BEFORE updating brace depth
