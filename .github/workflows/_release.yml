@@ -39,6 +39,7 @@ jobs:
                 with:
                     node-version: '24'
                     registry-url: 'https://registry.npmjs.org'
+                    token: "${{ secrets.GITHUB_TOKEN }}"
                     
             -   run: npm ci
             -   run: npm test
