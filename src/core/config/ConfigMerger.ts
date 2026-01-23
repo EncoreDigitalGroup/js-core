@@ -28,9 +28,9 @@ export class ConfigMerger {
                     result[key] !== null &&
                     !Array.isArray(result[key])) {
                     result[key] = this.deepMerge(result[key] as any, source[key] as any);
-                } else {
+                    } else {
                     result[key] = source[key] as T[Extract<keyof T, string>];
-                }
+                    }
             }
         }
 

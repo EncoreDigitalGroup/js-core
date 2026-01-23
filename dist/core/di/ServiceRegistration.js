@@ -13,6 +13,7 @@ const DocBlockCommentRule = require("../formatters/rules/style/DocBlockCommentRu
 const IndentationRule = require("../formatters/rules/style/IndentationRule.js");
 const QuoteStyleRule = require("../formatters/rules/style/QuoteStyleRule.js");
 const SemicolonRule = require("../formatters/rules/style/SemicolonRule.js");
+const StructuralIndentationRule = require("../formatters/rules/style/StructuralIndentationRule.js");
 const FormatterPipeline = require("../pipeline/FormatterPipeline.js");
 class ServiceRegistration {
   static registerServices(container, config) {
@@ -21,6 +22,7 @@ class ServiceRegistration {
     container.singleton(SemicolonRule.SemicolonRule);
     container.singleton(BracketSpacingRule.BracketSpacingRule);
     container.singleton(IndentationRule.IndentationRule);
+    container.singleton(StructuralIndentationRule.StructuralIndentationRule);
     container.singleton(BlockSpacingRule.BlockSpacingRule);
     container.singleton(DocBlockCommentRule.DocBlockCommentRule);
     container.singleton(ImportOrganizationRule.ImportOrganizationRule);

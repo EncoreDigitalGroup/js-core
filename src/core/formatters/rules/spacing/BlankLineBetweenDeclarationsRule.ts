@@ -96,13 +96,11 @@ export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
 
             const isDeclarationStart = declarationKeyword !== null;
             // Check if we've left the import section
-
             if (inImportSection && !isImport && !isBlankLine && !isComment) {
                 inImportSection = false;
             }
             // KEY ENHANCEMENT: Removed "braceDepth === 0" check
             // Now works at ALL depths, not just top level
-
             if (!inImportSection) {
                 // Add blank line before block comments that precede declarations
                 if (isBlockCommentStart &&
@@ -112,9 +110,8 @@ export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
                     result[result.length - 1].trim() !== "") {
                     result.push("");
                     lastNonBlankLineWasDeclarationEnd = false;
-                }
+                    }
                 // Add blank line before declaration starts ONLY if the keyword is different
-
                 else if (isDeclarationStart &&
 
                     lastNonBlankLineWasDeclarationEnd &&
@@ -123,11 +120,10 @@ export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
                     declarationKeyword !== lastDeclarationKeyword) {
                     result.push("");
                     lastNonBlankLineWasDeclarationEnd = false;
-                }
+                    }
             }
             result.push(line);
             // Track declaration ends BEFORE updating brace depth
-
             const hasClosingElement = trimmedLine === "}" ||
 
                 trimmedLine.endsWith("}") ||
@@ -138,13 +134,11 @@ export class BlankLineBetweenDeclarationsRule extends BaseFormattingRule {
             if (!isBlankLine && hasClosingElement) {
                 lastNonBlankLineWasDeclarationEnd = true;
                 // Update the last declaration keyword when a declaration ends
-
                 if (isDeclarationStart) {
                     lastDeclarationKeyword = declarationKeyword;
                 }
             } else if (!isBlankLine && !isComment) {
                 // Don't reset if the line is just closing braces
-
                 if (!isBlockCommentStart && trimmedLine !== "" && !isJustClosingBraces) {
                     lastNonBlankLineWasDeclarationEnd = isDeclarationStart;
 

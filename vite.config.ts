@@ -13,10 +13,10 @@ export default defineConfig({
                 index: resolve(__dirname, "src/index.ts"),
                 "sortPackage": resolve(__dirname, "src/sortPackage.ts"),
                 "sortTSConfig": resolve(__dirname, "src/sortTSConfig.ts"),
-},
+            },
             formats: ["cjs"],
             fileName: (format, entryName) => `${entryName}.js`,
-},
+        },
         rollupOptions: {
             external: [
                 "fs",
@@ -34,12 +34,12 @@ export default defineConfig({
                 preserveModulesRoot: "src",
                 entryFileNames: "[name].js",
                 format: "cjs"
-},
-},
+            },
+        },
         minify: false,
-},
+    },
     plugins: [transformGenericsPlugin()],
     esbuild: {
         target: "node22",
-},
+    },
 });

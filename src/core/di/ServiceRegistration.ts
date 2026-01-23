@@ -4,7 +4,7 @@
 */
 
 import { CoreConfig } from "../config";
-import { QuoteStyleRule, SemicolonRule, BracketSpacingRule, IndentationRule, BlockSpacingRule, DocBlockCommentRule, ImportOrganizationRule, ClassMemberSortingRule, FileDeclarationSortingRule, BlankLineBetweenDeclarationsRule, BlankLineBetweenStatementTypesRule, BlankLineBeforeReturnsRule, IndexGenerationRule } from "../formatters";
+import { QuoteStyleRule, SemicolonRule, BracketSpacingRule, IndentationRule, StructuralIndentationRule, BlockSpacingRule, DocBlockCommentRule, ImportOrganizationRule, ClassMemberSortingRule, FileDeclarationSortingRule, BlankLineBetweenDeclarationsRule, BlankLineBetweenStatementTypesRule, BlankLineBeforeReturnsRule, IndexGenerationRule } from "../formatters";
 import { FormatterPipeline } from "../pipeline";
 import { Container } from "./Container";
 
@@ -20,6 +20,7 @@ export class ServiceRegistration {
         container.singleton(SemicolonRule);
         container.singleton(BracketSpacingRule);
         container.singleton(IndentationRule);
+        container.singleton(StructuralIndentationRule);
         container.singleton(BlockSpacingRule);
         container.singleton(DocBlockCommentRule);
         container.singleton(ImportOrganizationRule);

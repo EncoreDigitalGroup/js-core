@@ -24,7 +24,7 @@ export class ASTTransformer {
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments,
-});
+        });
 
         return printer.printNode(ts.EmitHint.Unspecified, node, sourceFile);
     }
@@ -53,7 +53,7 @@ export class ASTTransformer {
         const printer = ts.createPrinter({
             newLine: ts.NewLineKind.LineFeed,
             removeComments: false,
-});
+        });
 
         // Print the file content
 

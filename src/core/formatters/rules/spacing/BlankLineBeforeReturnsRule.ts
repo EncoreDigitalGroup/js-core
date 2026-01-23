@@ -10,7 +10,6 @@ import { BaseFormattingRule } from "../../BaseFormattingRule";
 * Adds blank lines before return statements
 * Works at all brace depths (not just top level)
 */
-
 export class BlankLineBeforeReturnsRule extends BaseFormattingRule {
     readonly name = "BlankLineBeforeReturnsRule";
 

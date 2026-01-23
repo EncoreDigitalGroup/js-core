@@ -7,7 +7,6 @@ import { BaseFormattingRule } from "../../BaseFormattingRule";
 
 
 /** Statement types for categorization */
-
 enum StatementType {
     Declaration = "declaration",// const, let, var, function, class, etc.
     Control = "control",// if, else, switch, case
@@ -31,7 +30,6 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
     /** Determine the type of a statement */
     private getStatementType(trimmedLine: string): StatementType {
         // Control flow
-
         if (trimmedLine.startsWith("if ") ||
 
             trimmedLine.startsWith("if(") ||
@@ -42,9 +40,8 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("case ") ||
             trimmedLine.startsWith("default:")) {
             return StatementType.Control;
-        }
+            }
         // Loops
-
         if (trimmedLine.startsWith("for ") ||
 
             trimmedLine.startsWith("for(") ||
@@ -53,9 +50,8 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("do ") ||
             trimmedLine.startsWith("do{")) {
             return StatementType.Loop;
-        }
+            }
         // Exceptions
-
         if (trimmedLine.startsWith("try ") ||
 
             trimmedLine.startsWith("try{") ||
@@ -65,9 +61,8 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("finally{") ||
             trimmedLine.startsWith("throw ")) {
             return StatementType.Exception;
-        }
+            }
         // Declarations
-
         if (trimmedLine.startsWith("const ") ||
 
             trimmedLine.startsWith("let ") ||
@@ -79,7 +74,7 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
             trimmedLine.startsWith("enum ") ||
             trimmedLine.startsWith("export ")) {
             return StatementType.Declaration;
-        }
+            }
         // Everything else (expressions, calls, etc.)
         return StatementType.Expression;
     }
@@ -107,28 +102,24 @@ export class BlankLineBetweenStatementTypesRule extends BaseFormattingRule {
 
             const isImport = trimmedLine.startsWith("import ");
             // Check if we've left the import section
-
             if (inImportSection && !isImport && !isBlankLine && !isComment) {
                 inImportSection = false;
             }
             // Skip import section
-
             if (inImportSection || isBlankLine || isComment) {
                 result.push(line);
                 continue;
             }
             // Get statement type for non-blank, non-comment lines
-
             const currentStatementType = this.getStatementType(trimmedLine);
             // Add blank line if statement type changed
-
             if (lastStatementType !== null &&
 
                 lastStatementType !== currentStatementType &&
                 result.length > 0 &&
                 result[result.length - 1].trim() !== "") {
                 result.push("");
-            }
+                }
             result.push(line);
             lastStatementType = currentStatementType;
         }

@@ -71,7 +71,7 @@ const config: CoreConfig = {
         semicolons: "always",
         indentWidth: 4,
         lineWidth: 120,
-    },
+        },
 
     // Import organization
     imports: {
@@ -98,7 +98,7 @@ const config: CoreConfig = {
     // JSON file sorting
     packageJson: { enabled: true },
     tsConfig: { enabled: true },
-};
+    };
 
 export default config;
 `;
@@ -114,7 +114,7 @@ export default config;
         return {
             size: this.configCache.size,
             keys: Array.from(this.configCache.keys())
-};
+        };
     }
 
     /**
@@ -152,8 +152,8 @@ export default config;
                 target: ts.ScriptTarget.ES2015,
                 esModuleInterop: true,
                 allowSyntheticDefaultImports: true,
-},
-});
+            },
+        });
 
         return result.outputText;
     }

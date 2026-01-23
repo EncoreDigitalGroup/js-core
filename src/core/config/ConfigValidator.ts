@@ -75,7 +75,7 @@ export class ConfigValidator {
             valid: errors.length === 0,
             errors,
             warnings,
-};
+        };
     }
 
     /**

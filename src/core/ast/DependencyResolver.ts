@@ -99,7 +99,7 @@ export class DependencyResolver {
                 dependencies: getDependencies(item),
                 originalIndex: index,
                 sortedIndex: index,
-});
+            });
         });
         // Filter dependencies to only include symbols in our scope
 
