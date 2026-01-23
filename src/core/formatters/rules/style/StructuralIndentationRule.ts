@@ -78,13 +78,13 @@ private skipString(source: string, start: number, quote: string): { pos: number;
 
             // End of string
             if (char === quote) {
-                return { pos: i + 1, newlines };
+                return {pos: i + 1, newlines};
             }
 
             i++;
         }
 
-        return { pos: i, newlines };
+        return {pos: i, newlines};
 }
 
 private isRegexStart(source: string, index: number): boolean {

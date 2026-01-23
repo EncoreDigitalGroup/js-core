@@ -174,7 +174,7 @@ describe("ConfigLoader", () => {
             const result = ConfigLoader.loadConfig(tempDir, false);
 
             expect(result.codeStyle?.quoteStyle).toBe("invalid");
-});
+        });
     });
 
     describe("loadConfigWithoutValidation", () => {
@@ -230,8 +230,8 @@ describe("ConfigLoader", () => {
             const stats = ConfigLoader.getCacheStats();
             expect(stats.size).toBe(0);
             expect(stats.keys).toHaveLength(0);
-});
-            });
+        });
+    });
 
     describe("getCacheStats", () => {
         it("should return cache statistics", () => {
@@ -263,7 +263,7 @@ describe("ConfigLoader", () => {
             expect(() => {
                 ConfigLoader.createSampleConfig(tempDir);
             }).toThrow("Configuration file already exists");
-});
+        });
 
         it("should overwrite existing file when overwrite is true", () => {
             mockedFs.existsSync.mockReturnValue(true);
