@@ -22,15 +22,6 @@ jobs:
         secrets:
             token: ${{ secrets.GITHUB_TOKEN }}
 
-    PublishToGitHub:
-        name: Publish to GitHub
-        permissions: write-all
-        uses: ./.github/workflows/npmPublish.yml
-        with:
-            registryUrl: "npm.pkg.github.com"
-        secrets:
-            token: "${{ secrets.GITHUB_TOKEN }}"
-
     PublishToNPM:
         runs-on: ubuntu-latest
         steps:
