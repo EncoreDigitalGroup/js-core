@@ -114,6 +114,11 @@ class FormatterPipeline {
     }
     return files;
   }
+  /** Check if source code contains a tsfmt-ignore directive */
+  shouldIgnoreFile(source) {
+    const header = source.slice(0, 1e3);
+    return /(?:\/\/|\/\*|\*)\s*tsfmt-ignore|^\s*tsfmt-ignore\s*$/m.test(header);
+  }
   /**
   * Format a file using the configured formatters in sequence
   * @param filePath - Absolute path to the file to format
@@ -123,6 +128,16 @@ class FormatterPipeline {
   */
   async formatFile(filePath, dryRun = false) {
     const originalSource = await fs__namespace.readFile(filePath, "utf-8");
+    if (this.shouldIgnoreFile(originalSource)) {
+      return {
+        filePath,
+        originalSource,
+        currentSource: originalSource,
+        executions: [],
+        changed: false,
+        dryRun
+      };
+    }
     const context = {
       filePath,
       originalSource,

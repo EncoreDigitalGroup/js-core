@@ -160,6 +160,20 @@ export class FormatterPipeline {
         return files;
     }
 
+    /** Check if source code contains a tsfmt-ignore directive */
+    private shouldIgnoreFile(source: string): boolean {
+        // Check the first 1000 characters for the ignore directive
+        // This covers file headers, copyright notices, and initial comments
+        const header = source.slice(0, 1000);
+
+        // Match tsfmt-ignore in various comment formats:
+        // - // tsfmt-ignore (single-line comment)
+        // - /* tsfmt-ignore */ (inline block comment)
+        // - * tsfmt-ignore (inside multi-line block comment)
+        // - tsfmt-ignore on its own line in a block comment
+        return /(?:\/\/|\/\*|\*)\s*tsfmt-ignore|^\s*tsfmt-ignore\s*$/m.test(header);
+    }
+
     /**
     * Format a file using the configured formatters in sequence
     * @param filePath - Absolute path to the file to format
@@ -170,6 +184,18 @@ export class FormatterPipeline {
     async formatFile(filePath: string, dryRun = false): Promise<PipelineContext> {
         // Read original source
         const originalSource = await fs.readFile(filePath, "utf-8");
+
+        // Check for tsfmt-ignore directive
+        if (this.shouldIgnoreFile(originalSource)) {
+            return {
+                filePath,
+                originalSource,
+                currentSource: originalSource,
+                executions: [],
+                changed: false,
+                dryRun,
+            };
+        }
 
         // Initialize pipeline context
         const context: PipelineContext = {

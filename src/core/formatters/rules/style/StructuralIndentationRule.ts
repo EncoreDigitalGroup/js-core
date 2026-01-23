@@ -5,6 +5,7 @@
 
 import { BaseFormattingRule } from "../../BaseFormattingRule";
 
+
 /** A fix to apply to a closing bracket */
 interface BracketFix {
     position: number;
@@ -32,12 +33,20 @@ interface BracketInfo {
 export class StructuralIndentationRule extends BaseFormattingRule {
 readonly name = "StructuralIndentationRule";
 
-private skipString(source: string, start: number, quote: string): number {
+private skipString(source: string, start: number, quote: string): { pos: number; newlines: number } {
         let i = start + 1;
+        let newlines = 0;
         const isTemplate = quote === "`";
 
         while (i < source.length) {
             const char = source[i];
+
+            // Count newlines
+            if (char === "\n") {
+                newlines++;
+                i++;
+                continue;
+            }
 
             // Handle escape sequences
             if (char === "\\") {
@@ -50,10 +59,16 @@ private skipString(source: string, start: number, quote: string): number {
                 i += 2;
                 let braceCount = 1;
                 while (i < source.length && braceCount > 0) {
-                    if (source[i] === "{") braceCount++;
-                    else if (source[i] === "}") braceCount--;
-                    else if (source[i] === '"' || source[i] === "'" || source[i] === "`") {
-                        i = this.skipString(source, i, source[i]);
+                    if (source[i] === "\n") {
+                        newlines++;
+                    } else if (source[i] === "{") {
+                        braceCount++;
+                    } else if (source[i] === "}") {
+                        braceCount--;
+                    } else if (source[i] === '"' || source[i] === "'" || source[i] === "`") {
+                        const result = this.skipString(source, i, source[i]);
+                        i = result.pos;
+                        newlines += result.newlines;
                         continue;
                     }
                     i++;
@@ -63,14 +78,14 @@ private skipString(source: string, start: number, quote: string): number {
 
             // End of string
             if (char === quote) {
-                return i + 1;
+                return { pos: i + 1, newlines };
             }
 
             i++;
         }
 
-        return i;
-    }
+        return { pos: i, newlines };
+}
 
 private isRegexStart(source: string, index: number): boolean {
         // Look backwards to determine if this / starts a regex
@@ -98,7 +113,7 @@ private isRegexStart(source: string, index: number): boolean {
         }
 
         return false;
-    }
+}
 
 private skipRegex(source: string, start: number): number {
         let i = start + 1;
@@ -132,7 +147,7 @@ private skipRegex(source: string, start: number): number {
         }
 
         return i;
-    }
+}
 
 private getLineIndentLevel(line: string, indentWidth: number): number {
         const leadingWhitespace = line.match(/^[\t ]*/)?.[0] || "";
@@ -141,7 +156,7 @@ private getLineIndentLevel(line: string, indentWidth: number): number {
         const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
 
         return tabCount + Math.floor(spaceCount / indentWidth);
-    }
+}
 
 private startsWithClosingBracket(trimmedLine: string): boolean {
         return /^[}\])]/.test(trimmedLine);
@@ -184,7 +199,17 @@ private findBracketFixes(source: string, lines: string[], indentWidth: number): 
 
             // Skip string literals
             if (char === '"' || char === "'" || char === "`") {
-                i = this.skipString(source, i, char);
+                const result = this.skipString(source, i, char);
+                i = result.pos;
+                line += result.newlines;
+                if (result.newlines > 0) {
+                    // Find the last newline position to update lineStart
+                    let lastNewline = i - 1;
+                    while (lastNewline >= 0 && source[lastNewline] !== "\n") {
+                        lastNewline--;
+                    }
+                    lineStart = lastNewline + 1;
+                }
                 column = i - lineStart;
                 continue;
             }
@@ -279,7 +304,7 @@ private findBracketFixes(source: string, lines: string[], indentWidth: number): 
         }
 
         return fixes;
-    }
+}
 
 apply(source: string, filePath?: string): string {
         const config = this.getCodeStyleConfig();
@@ -324,5 +349,5 @@ apply(source: string, filePath?: string): string {
         }
 
         return result.join("\n");
-    }
+}
 }

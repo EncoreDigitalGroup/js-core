@@ -255,6 +255,82 @@ describe("FormatterPipeline", () => {
             expect(context.changed).toBe(false);
             expect(context.executions[0].changed).toBe(false);
         });
+        it("should skip formatting files with // tsfmt-ignore comment", async () => {
+            const source = "// tsfmt-ignore\nconst foo = 'single quotes';";
+
+            await fs.writeFile(testFilePath, source, "utf-8");
+
+            const config: CoreConfig = {
+                ...ConfigDefaults.getDefaultConfig(),
+                indexGeneration: {enabled: false},
+                codeStyle: {enabled: true, quoteStyle: "double"},
+                sorting: {enabled: false},
+                imports: {enabled: false},
+                spacing: {enabled: false},
+            };
+
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+            const pipeline = new FormatterPipeline(config, container);
+            const context = await pipeline.formatFile(testFilePath, false);
+
+            expect(context.changed).toBe(false);
+            expect(context.executions).toHaveLength(0);
+            expect(context.currentSource).toBe(source);
+
+            const fileContent = await fs.readFile(testFilePath, "utf-8");
+            expect(fileContent).toBe(source);
+        });
+        it("should skip formatting files with /* tsfmt-ignore */ comment", async () => {
+            const source = "/* tsfmt-ignore */\nconst foo = 'single quotes';";
+
+            await fs.writeFile(testFilePath, source, "utf-8");
+
+            const config: CoreConfig = {
+                ...ConfigDefaults.getDefaultConfig(),
+                indexGeneration: {enabled: false},
+                codeStyle: {enabled: true, quoteStyle: "double"},
+                sorting: {enabled: false},
+                imports: {enabled: false},
+                spacing: {enabled: false},
+            };
+
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+            const pipeline = new FormatterPipeline(config, container);
+            const context = await pipeline.formatFile(testFilePath, false);
+
+            expect(context.changed).toBe(false);
+            expect(context.executions).toHaveLength(0);
+        });
+        it("should skip formatting files with tsfmt-ignore in header comment", async () => {
+            const source = [
+                "/*",
+                "* Copyright notice",
+                "* tsfmt-ignore",
+                "*/",
+                "const foo = 'single quotes';"
+            ].join("\n");
+
+            await fs.writeFile(testFilePath, source, "utf-8");
+
+            const config: CoreConfig = {
+                ...ConfigDefaults.getDefaultConfig(),
+                indexGeneration: {enabled: false},
+                codeStyle: {enabled: true, quoteStyle: "double"},
+                sorting: {enabled: false},
+                imports: {enabled: false},
+                spacing: {enabled: false},
+            };
+
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+            const pipeline = new FormatterPipeline(config, container);
+            const context = await pipeline.formatFile(testFilePath, false);
+
+            expect(context.changed).toBe(false);
+            expect(context.executions).toHaveLength(0);
+        });
     });
     describe("formatFiles", () => {
         it("should format multiple files", async () => {

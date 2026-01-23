@@ -8,9 +8,15 @@ class StructuralIndentationRule extends BaseFormattingRule.BaseFormattingRule {
   }
   skipString(source, start, quote) {
     let i = start + 1;
+    let newlines = 0;
     const isTemplate = quote === "`";
     while (i < source.length) {
       const char = source[i];
+      if (char === "\n") {
+        newlines++;
+        i++;
+        continue;
+      }
       if (char === "\\") {
         i += 2;
         continue;
@@ -19,10 +25,16 @@ class StructuralIndentationRule extends BaseFormattingRule.BaseFormattingRule {
         i += 2;
         let braceCount = 1;
         while (i < source.length && braceCount > 0) {
-          if (source[i] === "{") braceCount++;
-          else if (source[i] === "}") braceCount--;
-          else if (source[i] === '"' || source[i] === "'" || source[i] === "`") {
-            i = this.skipString(source, i, source[i]);
+          if (source[i] === "\n") {
+            newlines++;
+          } else if (source[i] === "{") {
+            braceCount++;
+          } else if (source[i] === "}") {
+            braceCount--;
+          } else if (source[i] === '"' || source[i] === "'" || source[i] === "`") {
+            const result = this.skipString(source, i, source[i]);
+            i = result.pos;
+            newlines += result.newlines;
             continue;
           }
           i++;
@@ -30,11 +42,11 @@ class StructuralIndentationRule extends BaseFormattingRule.BaseFormattingRule {
         continue;
       }
       if (char === quote) {
-        return i + 1;
+        return { pos: i + 1, newlines };
       }
       i++;
     }
-    return i;
+    return { pos: i, newlines };
   }
   isRegexStart(source, index) {
     let i = index - 1;
@@ -118,7 +130,16 @@ class StructuralIndentationRule extends BaseFormattingRule.BaseFormattingRule {
         continue;
       }
       if (char === '"' || char === "'" || char === "`") {
-        i = this.skipString(source, i, char);
+        const result = this.skipString(source, i, char);
+        i = result.pos;
+        line += result.newlines;
+        if (result.newlines > 0) {
+          let lastNewline = i - 1;
+          while (lastNewline >= 0 && source[lastNewline] !== "\n") {
+            lastNewline--;
+          }
+          lineStart = lastNewline + 1;
+        }
         column = i - lineStart;
         continue;
       }
