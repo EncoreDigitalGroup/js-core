@@ -33,7 +33,13 @@ export default defineConfig({
                 preserveModules: true,
                 preserveModulesRoot: "src",
                 entryFileNames: "[name].js",
-                format: "cjs"
+                format: "cjs",
+                banner: (chunk) => {
+                    if (chunk.name === "cli") {
+                        return "#!/usr/bin/env node";
+                    }
+                    return "";
+                },
             },
         },
         minify: false,
@@ -42,4 +48,4 @@ export default defineConfig({
     esbuild: {
         target: "node22",
     },
-});
+})
