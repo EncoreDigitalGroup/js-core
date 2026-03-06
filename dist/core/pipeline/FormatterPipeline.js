@@ -138,6 +138,16 @@ class FormatterPipeline {
         dryRun
       };
     }
+    if (this.config.skipReactFiles && /\.(tsx|jsx)$/.test(filePath)) {
+      return {
+        filePath,
+        originalSource,
+        currentSource: originalSource,
+        executions: [],
+        changed: false,
+        dryRun
+      };
+    }
     const context = {
       filePath,
       originalSource,

@@ -197,6 +197,18 @@ export class FormatterPipeline {
             };
         }
 
+        // Skip React component files if configured
+        if (this.config.skipReactFiles && /\.(tsx|jsx)$/.test(filePath)) {
+            return {
+                filePath,
+                originalSource,
+                currentSource: originalSource,
+                executions: [],
+                changed: false,
+                dryRun,
+            };
+        }
+
         // Initialize pipeline context
         const context: PipelineContext = {
             filePath,
