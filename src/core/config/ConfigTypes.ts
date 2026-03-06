@@ -196,6 +196,9 @@ export interface CoreConfig {
 
     /** Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];
+
+    /** Skip formatting for React component files (.tsx and .jsx) entirely (default: false) */
+    skipReactFiles?: boolean;
 }
 
 /** Configuration type definitions and utilities */
