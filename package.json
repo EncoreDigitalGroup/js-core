@@ -30,8 +30,8 @@
         "format": "node dist/cli.js",
         "test": "jest"
     },
-    "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "main": "dist/index.js",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
