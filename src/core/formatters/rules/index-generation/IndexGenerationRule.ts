@@ -28,6 +28,9 @@ export interface IndexGenerationConfig {
     /** Directories to process for index generation */
     directories?: string[];
 
+    /** Directories to always skip, even if listed in directories (takes priority) */
+    skipDirectories?: string[];
+
     /** Default options for index generation */
     options?: Partial<IndexGenerationOptions>;
 
@@ -88,7 +91,7 @@ export class IndexGenerationRule extends BaseFormattingRule {
         return testPatterns.some(pattern => pattern.test(fileName));
     }
 
-    private generateSingleDirectoryIndex(dir: string, options: IndexGenerationOptions): void {
+    private generateSingleDirectoryIndex(dir: string, skipPaths: Set<string>, options: IndexGenerationOptions): void {
         try {
             const entries = fs.readdirSync(dir, {withFileTypes: true});
             const exports: string[] = [];
@@ -103,8 +106,13 @@ export class IndexGenerationRule extends BaseFormattingRule {
                     if (this.isTestDirectory(entry.name)) {
                         continue;
                     }
+                    const subDir = path.join(dir, entry.name);
+
+                    if (skipPaths.has(subDir)) {
+                        continue;
+                    }
                     // Check if subdirectory has an index file
-                    const subIndexPath = path.join(dir, entry.name, options.indexFileName);
+                    const subIndexPath = path.join(subDir, options.indexFileName);
 
                     if (fs.existsSync(subIndexPath)) {
                         exports.push(`export * from "./${entry.name}";`);
@@ -145,7 +153,7 @@ ${exports.join("\n")}
         }
     }
 
-    private generateIndexExportRecursive(dir: string, options: IndexGenerationOptions): void {
+    private generateIndexExportRecursive(dir: string, skipPaths: Set<string>, options: IndexGenerationOptions): void {
         try {
             const entries = fs.readdirSync(dir, {withFileTypes: true});
 
@@ -158,25 +166,29 @@ ${exports.join("\n")}
 
                     const subDir = path.join(dir, entry.name);
 
-                    this.generateIndexExportRecursive(subDir, options);
+                    if (skipPaths.has(subDir)) {
+                        continue;
+                    }
+
+                    this.generateIndexExportRecursive(subDir, skipPaths, options);
                 }
             }
 
-            this.generateSingleDirectoryIndex(dir, options);
+            this.generateSingleDirectoryIndex(dir, skipPaths, options);
         } catch (error) {
             console.warn(`Warning: Failed to process directory ${dir}: ${(error as Error).message}`);
         }
     }
 
-    private generateIndexExport(dir: string, options: IndexGenerationOptions): void {
+    private generateIndexExport(dir: string, skipPaths: Set<string>, options: IndexGenerationOptions): void {
         if (!fs.existsSync(dir)) {
             return;
         }
 
         if (options.recursive) {
-            this.generateIndexExportRecursive(dir, options);
+            this.generateIndexExportRecursive(dir, skipPaths, options);
         } else {
-            this.generateSingleDirectoryIndex(dir, options);
+            this.generateSingleDirectoryIndex(dir, skipPaths, options);
         }
     }
 
@@ -247,11 +259,18 @@ ${exports}
             const config = this.getIndexGenerationConfig();
             const directories = config?.directories || [];
             const options = {...this.defaultOptions, ...config?.options};
+            const skipPaths = new Set(
+                (config?.skipDirectories || []).map(d => path.resolve(projectRoot, d))
+            );
 
             for (const dir of directories) {
                 const fullDirPath = path.resolve(projectRoot, dir);
 
-                this.generateIndexExport(fullDirPath, options);
+                if (skipPaths.has(fullDirPath)) {
+                    continue;
+                }
+
+                this.generateIndexExport(fullDirPath, skipPaths, options);
             }
 
             // Update main src/index.ts if configured

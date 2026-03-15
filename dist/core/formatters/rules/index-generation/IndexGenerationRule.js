@@ -62,7 +62,7 @@ class IndexGenerationRule extends BaseFormattingRule.BaseFormattingRule {
     ];
     return testPatterns.some((pattern) => pattern.test(fileName));
   }
-  generateSingleDirectoryIndex(dir, options) {
+  generateSingleDirectoryIndex(dir, skipPaths, options) {
     try {
       const entries = fs__namespace.readdirSync(dir, { withFileTypes: true });
       const exports$1 = [];
@@ -74,7 +74,11 @@ class IndexGenerationRule extends BaseFormattingRule.BaseFormattingRule {
           if (this.isTestDirectory(entry.name)) {
             continue;
           }
-          const subIndexPath = path__namespace.join(dir, entry.name, options.indexFileName);
+          const subDir = path__namespace.join(dir, entry.name);
+          if (skipPaths.has(subDir)) {
+            continue;
+          }
+          const subIndexPath = path__namespace.join(subDir, options.indexFileName);
           if (fs__namespace.existsSync(subIndexPath)) {
             exports$1.push(`export * from "./${entry.name}";`);
           }
@@ -104,7 +108,7 @@ ${exports$1.join("\n")}
       console.warn(`Warning: Failed to generate index for ${dir}: ${error.message}`);
     }
   }
-  generateIndexExportRecursive(dir, options) {
+  generateIndexExportRecursive(dir, skipPaths, options) {
     try {
       const entries = fs__namespace.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
@@ -113,22 +117,25 @@ ${exports$1.join("\n")}
             continue;
           }
           const subDir = path__namespace.join(dir, entry.name);
-          this.generateIndexExportRecursive(subDir, options);
+          if (skipPaths.has(subDir)) {
+            continue;
+          }
+          this.generateIndexExportRecursive(subDir, skipPaths, options);
         }
       }
-      this.generateSingleDirectoryIndex(dir, options);
+      this.generateSingleDirectoryIndex(dir, skipPaths, options);
     } catch (error) {
       console.warn(`Warning: Failed to process directory ${dir}: ${error.message}`);
     }
   }
-  generateIndexExport(dir, options) {
+  generateIndexExport(dir, skipPaths, options) {
     if (!fs__namespace.existsSync(dir)) {
       return;
     }
     if (options.recursive) {
-      this.generateIndexExportRecursive(dir, options);
+      this.generateIndexExportRecursive(dir, skipPaths, options);
     } else {
-      this.generateSingleDirectoryIndex(dir, options);
+      this.generateSingleDirectoryIndex(dir, skipPaths, options);
     }
   }
   discoverExportableModules(srcDir) {
@@ -180,9 +187,15 @@ ${exports$1}
       const config = this.getIndexGenerationConfig();
       const directories = config?.directories || [];
       const options = { ...this.defaultOptions, ...config?.options };
+      const skipPaths = new Set(
+        (config?.skipDirectories || []).map((d) => path__namespace.resolve(projectRoot, d))
+      );
       for (const dir of directories) {
         const fullDirPath = path__namespace.resolve(projectRoot, dir);
-        this.generateIndexExport(fullDirPath, options);
+        if (skipPaths.has(fullDirPath)) {
+          continue;
+        }
+        this.generateIndexExport(fullDirPath, skipPaths, options);
       }
       if (config?.updateMainIndex !== false) {
         const srcDir = path__namespace.join(projectRoot, "src");
