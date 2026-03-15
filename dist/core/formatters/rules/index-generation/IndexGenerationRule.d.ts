@@ -7,6 +7,7 @@ export interface IndexGenerationOptions {
 export interface IndexGenerationConfig {
     enabled?: boolean;
     directories?: string[];
+    skipDirectories?: string[];
     options?: Partial<IndexGenerationOptions>;
     updateMainIndex?: boolean;
 }
