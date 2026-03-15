@@ -25,12 +25,19 @@
         "vite": "^7.0.0"
     },
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && tsc --emitDeclarationOnly --declarationDir dist",
         "dev": "tsx src/cli.ts",
         "format": "node dist/cli.js",
         "test": "jest"
     },
-    "main": "dist/cli.js",
+    "types": "dist/index.d.ts",
+    "main": "dist/index.js",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "require": "./dist/index.js"
+        }
+    },
     "files": [
         "dist",
         "README.md"
