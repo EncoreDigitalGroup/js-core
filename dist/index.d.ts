@@ -1,8 +1,5 @@
-// Auto-generated exports - do not edit manually
-// Run tsfmt to regenerate
-
 export * from "./build-plugins";
 export * from "./core";
 export * from "./formatters";
 export * from "./shared";
-export {tsfmt} from "./tsfmt";
+export { tsfmt } from "./tsfmt";
