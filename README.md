@@ -6,6 +6,51 @@ An advanced code formatting tool that goes beyond traditional pretty-printing to
 Encore Digital Group, tsfmt combines configurable formatting rules with intelligent AST analysis to automatically organize imports, sort class members, arrange file
 declarations, and apply consistent code style patterns.
 
+## Install
+
+```bash
+npm install --save-dev tsfmt
+```
+
+Or run once without installing:
+
+```bash
+npx tsfmt
+```
+
+The published package is a small Node launcher. On first run it downloads a standalone binary for your platform from this project's GitLab Generic Package Registry and
+caches it under `~/.cache/tsfmt/<version>/` (or `$XDG_CACHE_HOME/tsfmt/<version>/`). Bun is not required to run tsfmt. Set `TSFMT_BINARY_PATH` to use a local binary
+instead.
+
+Supported platforms: macOS (arm64, x64), Linux glibc and musl (x64, arm64), Windows (x64, arm64).
+
+## Usage
+
+```bash
+npx tsfmt
+npx tsfmt --dry
+npx tsfmt path/to/file.ts
+npx tsfmt path/to/project
+```
+
+With no path, tsfmt formats the current working directory. A file path must be `.ts`, `.tsx`, `.js`, or `.jsx`. A directory path also sorts `package.json` and
+`tsconfig.json` when those formatters are enabled. `--dry` reports what would change and writes nothing.
+
+## Configuration
+
+Zero-config by default. Optional `tsfmt.config.ts` in the project root (or next to a single file being formatted):
+
+```ts
+import {tsfmt} from "tsfmt";
+
+export default tsfmt({
+    codeStyle: {quoteStyle: "double"},
+    spacing: {enabled: true},
+});
+```
+
+`tsfmt()` merges your overrides with the defaults. The npm package ships TypeScript types for this helper; it does not ship a runtime JavaScript library.
+
 ## What tsfmt Does
 
 tsfmt is a comprehensive code formatter that operates on multiple levels:

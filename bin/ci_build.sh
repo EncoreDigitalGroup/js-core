@@ -14,7 +14,7 @@ cd "$GITHUB_WORKSPACE" || {
 }
 
 # Run format and capture exit code
-npm run build
+bun run build
 BUILD_EXIT_CODE=$?
 
 # If build failed, exit with the same code
@@ -24,7 +24,7 @@ if [ $BUILD_EXIT_CODE -ne 0 ]; then
 fi
 
 # Run format and capture exit code
-npm run format
+bun run format
 FORMAT_EXIT_CODE=$?
 
 # If format failed, exit with the same code
@@ -49,4 +49,4 @@ else
   git push origin --force
 fi
 
-npm test
+bun run test

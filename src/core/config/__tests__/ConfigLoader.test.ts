@@ -3,30 +3,26 @@
 * All Rights Reserved.
 */
 
+import {afterEach, beforeEach, describe, expect, it, spyOn} from "bun:test";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { ConfigDefaults } from "../ConfigDefaults";
-import { ConfigLoader } from "../ConfigLoader";
+import {ConfigDefaults} from "../ConfigDefaults";
+import {ConfigLoader} from "../ConfigLoader";
 
-
-const mockedFs = fs as jest.Mocked<typeof fs>;
-
-// Mock fs module
-jest.mock("fs");
 
 describe("ConfigLoader", () => {
     let tempDir: string;
     let configPath: string;
 
     beforeEach(() => {
-        tempDir = path.join(os.tmpdir(), `config-loader-test-${Date.now()}`);
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "config-loader-test-"));
         configPath = path.join(tempDir, ConfigLoader.CONFIG_FILE_NAME);
-        jest.clearAllMocks();
     });
 
     afterEach(() => {
         ConfigLoader.clearCache();
+        fs.rmSync(tempDir, {recursive: true, force: true});
     });
 
     describe("CONFIG_FILE_NAME", () => {
@@ -37,31 +33,28 @@ describe("ConfigLoader", () => {
 
     describe("hasConfigFile", () => {
         it("should return true when config file exists", () => {
-            mockedFs.existsSync.mockReturnValue(true);
+            fs.writeFileSync(configPath, "export default {};");
 
             const result = ConfigLoader.hasConfigFile(tempDir);
 
             expect(result).toBe(true);
-            expect(mockedFs.existsSync).toHaveBeenCalledWith(configPath);
         });
 
         it("should return false when config file does not exist", () => {
-            mockedFs.existsSync.mockReturnValue(false);
-
             const result = ConfigLoader.hasConfigFile(tempDir);
 
             expect(result).toBe(false);
-            expect(mockedFs.existsSync).toHaveBeenCalledWith(configPath);
         });
 
         it("should use current working directory by default", () => {
             const cwd = process.cwd();
             const expectedPath = path.join(cwd, ConfigLoader.CONFIG_FILE_NAME);
-            mockedFs.existsSync.mockReturnValue(true);
+            const existsSpy = spyOn(fs, "existsSync").mockReturnValue(true);
 
             ConfigLoader.hasConfigFile();
 
-            expect(mockedFs.existsSync).toHaveBeenCalledWith(expectedPath);
+            expect(existsSpy).toHaveBeenCalledWith(expectedPath);
+            existsSpy.mockRestore();
         });
     });
 
@@ -84,8 +77,6 @@ describe("ConfigLoader", () => {
 
     describe("loadConfig", () => {
         it("should return default config when no config file exists", () => {
-            mockedFs.existsSync.mockReturnValue(false);
-
             const result = ConfigLoader.loadConfig(tempDir);
 
             expect(result).toEqual(ConfigDefaults.getDefaultConfig());
@@ -93,35 +84,26 @@ describe("ConfigLoader", () => {
 
         it("should load and merge user config when file exists", () => {
             const userConfig = {codeStyle: {quoteStyle: "single" as const}};
-            const configContent = `export default ${JSON.stringify(userConfig)};`;
-
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
+            fs.writeFileSync(configPath, `export default ${JSON.stringify(userConfig)};`);
 
             const result = ConfigLoader.loadConfig(tempDir);
 
             expect(result.codeStyle?.quoteStyle).toBe("single");
-            expect(result.codeStyle?.enabled).toBe(true); // From defaults
+            expect(result.codeStyle?.enabled).toBe(true);
         });
 
         it("should handle TypeScript config files", () => {
             const configContent = `
-                import { CoreConfig } from "tsfmt";
+                import { tsfmt } from "tsfmt";
 
-                const config: CoreConfig = {
+                export default tsfmt({
                     codeStyle: {
                         quoteStyle: "single",
                         semicolons: "never"
                     }
-                };
-
-                export default config;
+                });
             `;
-
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
+            fs.writeFileSync(configPath, configContent);
 
             const result = ConfigLoader.loadConfig(tempDir);
 
@@ -130,12 +112,9 @@ describe("ConfigLoader", () => {
         });
 
         it("should fall back to default config on load error", () => {
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockImplementation(() => {
-                throw new Error("File read error");
-            });
+            fs.writeFileSync(configPath, "throw new Error('File read error');");
 
-            const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+            const consoleSpy = spyOn(console, "error").mockImplementation(() => undefined);
 
             const result = ConfigLoader.loadConfig(tempDir);
 
@@ -147,13 +126,9 @@ describe("ConfigLoader", () => {
 
         it("should validate config by default", () => {
             const invalidConfig = {codeStyle: {quoteStyle: "invalid"}};
-            const configContent = `export default ${JSON.stringify(invalidConfig)};`;
+            fs.writeFileSync(configPath, `export default ${JSON.stringify(invalidConfig)};`);
 
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
-
-            const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+            const consoleSpy = spyOn(console, "error").mockImplementation(() => undefined);
 
             const result = ConfigLoader.loadConfig(tempDir);
 
@@ -165,11 +140,7 @@ describe("ConfigLoader", () => {
 
         it("should skip validation when requested", () => {
             const invalidConfig = {codeStyle: {quoteStyle: "invalid"}};
-            const configContent = `export default ${JSON.stringify(invalidConfig)};`;
-
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
+            fs.writeFileSync(configPath, `export default ${JSON.stringify(invalidConfig)};`);
 
             const result = ConfigLoader.loadConfig(tempDir, false);
 
@@ -179,8 +150,6 @@ describe("ConfigLoader", () => {
 
     describe("loadConfigWithoutValidation", () => {
         it("should call loadConfig with validation disabled", () => {
-            mockedFs.existsSync.mockReturnValue(false);
-
             const result = ConfigLoader.loadConfigWithoutValidation(tempDir);
 
             expect(result).toEqual(ConfigDefaults.getDefaultConfig());
@@ -190,41 +159,28 @@ describe("ConfigLoader", () => {
     describe("reloadConfig", () => {
         it("should clear cache and reload config", () => {
             const userConfig = {codeStyle: {quoteStyle: "single" as const}};
-            const configContent = `export default ${JSON.stringify(userConfig)};`;
+            fs.writeFileSync(configPath, `export default ${JSON.stringify(userConfig)};`);
 
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
-
-            // Load once to populate cache
             ConfigLoader.loadConfig(tempDir);
 
-            // Clear call history
-            jest.clearAllMocks();
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
+            const readSpy = spyOn(fs, "readFileSync");
 
             const result = ConfigLoader.reloadConfig(tempDir);
 
             expect(result.codeStyle?.quoteStyle).toBe("single");
-            expect(mockedFs.readFileSync).toHaveBeenCalled(); // Should read file again
+            expect(readSpy).toHaveBeenCalled();
+
+            readSpy.mockRestore();
         });
     });
 
     describe("clearCache", () => {
         it("should clear the configuration cache", () => {
             const userConfig = {codeStyle: {quoteStyle: "single" as const}};
-            const configContent = `export default ${JSON.stringify(userConfig)};`;
+            fs.writeFileSync(configPath, `export default ${JSON.stringify(userConfig)};`);
 
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
-
-            // Load config to populate cache
             ConfigLoader.loadConfig(tempDir);
 
-            // Clear cache
             ConfigLoader.clearCache();
 
             const stats = ConfigLoader.getCacheStats();
@@ -246,19 +202,14 @@ describe("ConfigLoader", () => {
 
     describe("createSampleConfig", () => {
         it("should create a sample configuration file", () => {
-            mockedFs.existsSync.mockReturnValue(false);
-
             ConfigLoader.createSampleConfig(tempDir);
 
-            expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-                configPath,
-                expect.stringContaining("const config: CoreConfig"),
-                "utf-8"
-            );
+            expect(fs.existsSync(configPath)).toBe(true);
+            expect(fs.readFileSync(configPath, "utf-8")).toContain("export default tsfmt({");
         });
 
         it("should throw error if file exists and overwrite is false", () => {
-            mockedFs.existsSync.mockReturnValue(true);
+            fs.writeFileSync(configPath, "export default {};");
 
             expect(() => {
                 ConfigLoader.createSampleConfig(tempDir);
@@ -266,26 +217,19 @@ describe("ConfigLoader", () => {
         });
 
         it("should overwrite existing file when overwrite is true", () => {
-            mockedFs.existsSync.mockReturnValue(true);
+            fs.writeFileSync(configPath, "export default {};");
 
             ConfigLoader.createSampleConfig(tempDir, true);
 
-            expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
-                configPath,
-                expect.stringContaining("const config: CoreConfig"),
-                "utf-8"
-            );
+            expect(fs.readFileSync(configPath, "utf-8")).toContain("export default tsfmt({");
         });
 
         it("should create config with proper TypeScript syntax", () => {
-            mockedFs.existsSync.mockReturnValue(false);
-
             ConfigLoader.createSampleConfig(tempDir);
 
-            const writtenContent = (mockedFs.writeFileSync as jest.Mock).mock.calls[0][1];
-            expect(writtenContent).toContain('import { CoreConfig } from "tsfmt"');
-            expect(writtenContent).toContain("const config: CoreConfig");
-            expect(writtenContent).toContain("export default config");
+            const writtenContent = fs.readFileSync(configPath, "utf-8");
+            expect(writtenContent).toContain('import { tsfmt } from "tsfmt"');
+            expect(writtenContent).toContain("export default tsfmt({");
             expect(writtenContent).toContain("indexGeneration:");
             expect(writtenContent).toContain("codeStyle:");
             expect(writtenContent).toContain("imports:");
@@ -296,38 +240,31 @@ describe("ConfigLoader", () => {
     describe("caching behavior", () => {
         it("should cache loaded configurations", () => {
             const userConfig = {codeStyle: {quoteStyle: "single" as const}};
-            const configContent = `export default ${JSON.stringify(userConfig)};`;
-            const mtime = new Date(Date.now());
+            fs.writeFileSync(configPath, `export default ${JSON.stringify(userConfig)};`);
 
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-            mockedFs.statSync.mockReturnValue({mtime} as any);
-
-            // Load config twice
-            ConfigLoader.loadConfig(tempDir);
             ConfigLoader.loadConfig(tempDir);
 
-            // Should only read file once due to caching
-            expect(mockedFs.readFileSync).toHaveBeenCalledTimes(1);
+            const readSpy = spyOn(fs, "readFileSync");
+            ConfigLoader.loadConfig(tempDir);
+
+            expect(readSpy).toHaveBeenCalledTimes(0);
+            readSpy.mockRestore();
         });
 
         it("should reload config when file modification time changes", () => {
             const userConfig = {codeStyle: {quoteStyle: "single" as const}};
-            const configContent = `export default ${JSON.stringify(userConfig)};`;
+            fs.writeFileSync(configPath, `export default ${JSON.stringify(userConfig)};`);
 
-            mockedFs.existsSync.mockReturnValue(true);
-            mockedFs.readFileSync.mockReturnValue(configContent);
-
-            // First load with initial mtime
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now() - 1000)} as any);
             ConfigLoader.loadConfig(tempDir);
 
-            // Second load with newer mtime
-            mockedFs.statSync.mockReturnValue({mtime: new Date(Date.now())} as any);
+            const later = new Date(Date.now() + 2000);
+            fs.utimesSync(configPath, later, later);
+
+            const readSpy = spyOn(fs, "readFileSync");
             ConfigLoader.loadConfig(tempDir);
 
-            // Should read file twice due to mtime change
-            expect(mockedFs.readFileSync).toHaveBeenCalledTimes(2);
+            expect(readSpy).toHaveBeenCalled();
+            readSpy.mockRestore();
         });
     });
 });

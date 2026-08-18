@@ -10,6 +10,7 @@ import { ConfigDefaults } from "./ConfigDefaults";
 import { ConfigMerger } from "./ConfigMerger";
 import { CoreConfig } from "./ConfigTypes";
 import { ConfigValidator } from "./ConfigValidator";
+import { tsfmt } from "./tsfmt";
 
 
 /** Configuration loader that handles TypeScript config files */
@@ -23,6 +24,16 @@ export class ConfigLoader {
     /** Clears the configuration cache */
     static clearCache(): void {
         this.configCache.clear();
+    }
+
+    private static getPublishedModule(): Record<string, unknown> {
+        return {
+            tsfmt,
+            ConfigDefaults,
+            ConfigMerger,
+            ConfigLoader,
+            ConfigValidator,
+        };
     }
 
     /**
@@ -54,53 +65,40 @@ export class ConfigLoader {
 * All options are optional - defaults will be used for missing values.
 */
 
-import { CoreConfig } from "tsfmt";
+import { tsfmt } from "tsfmt";
 
-const config: CoreConfig = {
-    // Enable/disable index file generation
+export default tsfmt({
     indexGeneration: {
         enabled: true,
-        directories: ConfigDefaults.getDefaultIndexDirectories(),
+        directories: ["src/", "packages/"],
         updateMainIndex: true,
     },
-
-    // Code style configuration
     codeStyle: {
         enabled: true,
         quoteStyle: "double",
         semicolons: "always",
         indentWidth: 4,
         lineWidth: 120,
-        },
-
-    // Import organization
+    },
     imports: {
         enabled: true,
         sortImports: true,
         removeUnused: true,
         groupImports: true,
     },
-
-    // AST-based sorting
     sorting: {
         enabled: true,
         classMembers: { enabled: true },
         fileDeclarations: { enabled: true },
     },
-
-    // Spacing rules
     spacing: {
         enabled: false,
         betweenDeclarations: true,
         beforeReturns: true,
     },
-
-    // JSON file sorting
     packageJson: { enabled: true },
     tsConfig: { enabled: true },
-    };
-
-export default config;
+});
 `;
 
         fs.writeFileSync(configPath, sampleConfig, "utf-8");
@@ -178,8 +176,10 @@ export default config;
 
             // Create a require function that can resolve relative imports
             const requireFunc = (moduleName: string) => {
+                if (moduleName === "tsfmt") {
+                    return this.getPublishedModule();
+                }
                 if (moduleName.startsWith(".")) {
-                    // Handle relative imports
                     const resolvedPath = path.resolve(path.dirname(filePath), moduleName);
                     return require(resolvedPath);
                 }

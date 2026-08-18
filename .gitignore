@@ -1,3 +1,8 @@
 node_modules
 /.claude/settings.local.json
 tmpclaude*
+.bun/
+package-lock.json
+.idea/*
+dist/*
+binaries/
