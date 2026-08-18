@@ -1,23 +1,17 @@
 /*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-import { DEFAULT_CLASS_ORDER } from "../";
-import { DEFAULT_FILE_ORDER } from "../";
-import { DefaultSortOptions } from "../../shared";
-import { CoreConfig, FormatterOrder, ConfigTypes } from "./ConfigTypes";
-
+ * Copyright (c) 2025. Encore Digital Group.
+ * All Rights Reserved.
+ */
+import {DEFAULT_CLASS_ORDER, DEFAULT_FILE_ORDER} from "../";
+import {DefaultSortOptions} from "../../shared";
+import {ConfigTypes, CoreConfig, FormatterOrder} from "./ConfigTypes";
 
 /** Provides default configuration values for tsfmt */
 export class ConfigDefaults {
     /** Default file patterns */
     static readonly DEFAULT_EXCLUDE_PATTERNS = ["node_modules/**", "dist/**", "vendor/**", "bin/**"] as const;
-
     static readonly DEFAULT_INDEX_DIRECTORIES = ["src/", "packages/"] as const;
-
     static readonly DEFAULT_JS_INCLUDE_PATTERNS = ["**/*.{js,ts,jsx,tsx}"] as const;
-
     static readonly DEFAULT_TS_INCLUDE_PATTERNS = ["**/*.{ts,tsx}"] as const;
 
     /** Get default code style configuration */

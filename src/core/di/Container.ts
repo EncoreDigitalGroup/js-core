@@ -1,26 +1,24 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+
 /**
-* Simple, purpose-built DI container for tsfmt
-* Supports magical syntax for type registration and resolution
-*/
-
+ * Simple, purpose-built DI container for tsfmt
+ * Supports magical syntax for type registration and resolution
+ */
 import "reflect-metadata";
-
 
 export class Container {
     private factories = new Map<string, () => any>();
-
     private services = new Map<string, any>();
-
     private singletons = new Map<string, any>();
 
     /** Static method to declare dependencies for a class */
     static inject(...dependencies: string[]) {
         return function (target: any) {
             Reflect.defineMetadata("custom:inject", dependencies, target);
+
             return target;
         };
     }
@@ -43,10 +41,9 @@ export class Container {
         const lines = stack.split("\n");
         for (const line of lines) {
             // Skip our own methods
-            if (line.includes("Container.extractGenericTypeName") ||
-                line.includes("Container.resolve")) {
+            if (line.includes("Container.extractGenericTypeName") || line.includes("Container.resolve")) {
                 continue;
-                }
+            }
 
             // Find the first external call location
             const match = line.match(/at\s+.*\s+\((.+):(\d+):(\d+)\)/);
@@ -66,7 +63,6 @@ export class Container {
                     }
                 } catch (error) {
                     // Continue to next line if file read fails
-                    continue;
                 }
             }
         }
@@ -85,10 +81,9 @@ export class Container {
         const lines = stack.split("\n");
         for (const line of lines) {
             // Skip our own methods
-            if (line.includes("Container.extractGenericTypeNameForRegistration") ||
-                line.includes("Container.singleton")) {
+            if (line.includes("Container.extractGenericTypeNameForRegistration") || line.includes("Container.singleton")) {
                 continue;
-                }
+            }
 
             // Find the first external call location
             const match = line.match(/at\s+.*\s+\((.+):(\d+):(\d+)\)/);
@@ -108,7 +103,6 @@ export class Container {
                     }
                 } catch (error) {
                     // Continue to next line if file read fails
-                    continue;
                 }
             }
         }
@@ -123,9 +117,9 @@ export class Container {
 
     /** Check if a value is a constructor function */
     private isConstructorFunction(value: any): value is new (...args: any[]) => any {
-        return typeof value === "function" &&
-            value.prototype &&
-            value.prototype.constructor === value;
+        return typeof value === "function"
+            && value.prototype
+            && value.prototype.constructor === value;
     }
 
     /** Register a service instance */
@@ -141,6 +135,7 @@ export class Container {
             if (instance === undefined) {
                 throw new Error(`Service '${name}' found but is undefined`);
             }
+
             return instance;
         }
 
@@ -150,9 +145,11 @@ export class Container {
             if (factory === undefined) {
                 throw new Error(`Factory for service '${name}' found but is undefined`);
             }
+
             const instance = factory();
             this.singletons.set(name, instance);
             this.factories.delete(name); // Remove factory after first use
+
             return instance;
         }
 
@@ -162,6 +159,7 @@ export class Container {
             if (instance === undefined) {
                 throw new Error(`Service '${name}' found but is undefined`);
             }
+
             return instance;
         }
 
@@ -185,7 +183,6 @@ export class Container {
     private resolveDependencies(constructor: new (...args: any[]) => any): any[] {
         // Get parameter types from custom metadata (tsx-compatible approach)
         const deps = Reflect.getMetadata("custom:inject", constructor);
-
         if (deps) {
             // Use explicitly declared dependencies
             return deps.map((depName: string) => {
@@ -225,6 +222,7 @@ export class Container {
             };
 
             this.factories.set(key, factory);
+
             return;
         } else {
             // Extract type name from the generic parameter using stack trace

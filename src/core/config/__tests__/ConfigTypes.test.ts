@@ -1,10 +1,8 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-import { ConfigTypes, FormatterOrder } from "../ConfigTypes";
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+import {ConfigTypes, FormatterOrder} from "../ConfigTypes";
 
 describe("ConfigTypes", () => {
     describe("option getters", () => {

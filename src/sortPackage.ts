@@ -1,19 +1,17 @@
 /*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-
+ * Copyright (c) 2025. Encore Digital Group.
+ * All Rights Reserved.
+ */
 import fs from "fs";
 import path from "path";
-import { sortPackageJson as baseSortPackageJson } from "sort-package-json";
-import { sortExportsKeys } from "./formatters";
-import { DefaultSortOptions, SortOptions } from "./shared";
-
+import {sortPackageJson as baseSortPackageJson} from "sort-package-json";
+import {sortExportsKeys} from "./formatters";
+import {DefaultSortOptions, SortOptions} from "./shared";
 
 export function sortPackageJson(packageObj: Record<string, any>, options: SortOptions = {}): Record<string, any> {
     const sortOrder = options.customSortOrder || DefaultSortOptions.customSortOrder;
-    // Sort using the base library first
 
+    // Sort using the base library first
     let sortedPackage = baseSortPackageJson(packageObj, {
         sortOrder,
     });
@@ -28,7 +26,6 @@ export function sortPackageJson(packageObj: Record<string, any>, options: SortOp
 export function sortPackageFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
     const packagePath = filePath || path.join(process.cwd(), "package.json");
     const indentation = options.indentation || (DefaultSortOptions.indentation as number);
-
     try {
         const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
         const sortedPackageJson = sortPackageJson(packageJson, options);

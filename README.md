@@ -112,18 +112,36 @@ tsfmt enforces these opinionated defaults designed for enterprise-grade codebase
 
 ## Architecture
 
-tsfmt uses a sophisticated pipeline-based architecture:
+tsfmt uses a parse-once, ts-morph-based pipeline architecture:
 
-**Formatter Pipeline**
+**Parse-Once Pipeline**
 
-- Executes formatters in a specific order: CodeStyle → ImportOrganization → ASTTransformation → Spacing
-- Each formatter can be independently enabled/disabled
-- Pipeline maintains context and tracks changes across transformations
+- Each file is parsed exactly once into a shared `FormatContext`, built on `ts-morph` (a trivia-preserving
+  wrapper over the TypeScript compiler API), and threaded through every rule in the pipeline
+- Rules execute in a specific order — IndexGeneration → CodeStyle → ImportOrganization → ASTTransformation →
+  Spacing — and every rule implements a single native `applyToContext(context)` contract that mutates the
+  shared model in place; there is no per-rule string round-trip and no re-parsing between rules
+- The file is emitted once, at the end of the pipeline, from the final state of the shared model
+- Each formatter order can be independently enabled/disabled, and the pipeline tracks changes across all
+  transformations
+- `.tsx`/`.jsx` files are parsed with `ts-morph`'s `ScriptKind` derived from the real file extension, so JSX
+  trivia (text, expressions) is preserved correctly instead of being corrupted by a `.ts`-only parser
 
-**AST Analysis Engine**
+**Structural-vs-Region Rule Split**
 
-- Built on TypeScript compiler API for accurate parsing
-- Dependency resolution prevents breaking member/declaration relationships
+- Structural rules (sorting, import organization, quote style, and similar) operate directly on the AST —
+  they query and rewrite `ts-morph` nodes, so they are inherently JSX-safe because they only ever touch
+  real syntax nodes
+- Region rules (whitespace/blank-line/indentation rules that work over raw text) instead consult
+  `FormatContext.getProtectedRanges()` to skip character ranges that fall inside JSX text, JSX expressions,
+  or template literals, so they never rewrite whitespace embedded in markup or string content
+- Region rules are the only place a `replaceWithText` re-parse still happens, since they mutate text
+  directly rather than AST nodes; this is an inherent property of text-level whitespace formatting, not a
+  transitional bridge
+
+**Dependency Resolution**
+
+- Dependency resolution prevents breaking member/declaration relationships during structural sorting
 - Handles complex scenarios like method dependencies and forward references
 
 **Configuration System**

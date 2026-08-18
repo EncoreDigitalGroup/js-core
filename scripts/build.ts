@@ -6,9 +6,7 @@ import {
     selectCompileTargets,
 } from "./build_lib";
 
-
 const mode = parseBuildMode(process.argv.slice(2));
-
 if (mode.emitTypes) {
     await emitDeclarationFiles();
 }

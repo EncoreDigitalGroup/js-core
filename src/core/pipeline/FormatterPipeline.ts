@@ -1,18 +1,16 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
 import * as fs from "fs/promises";
 import * as path from "path";
-import { CoreConfig, FormatterOrder } from "../config";
-import { Container } from "../di";
-import { IFormattingRule } from "../formatters";
-
+import {CoreConfig, FormatterOrder} from "../config";
+import {Container} from "../di";
+import {FormatContext, IFormattingRule} from "../formatters";
 
 /*
-* Tracks the state of a single formatter execution
-*/
+ * Tracks the state of a single formatter execution
+ */
 export interface FormatterExecution {
     formatterName: string;
     order: FormatterOrder;
@@ -39,12 +37,11 @@ export class FormatterError extends Error {
 }
 
 /**
-* Orchestrates the execution of multiple formatters in a defined order.
-* Implements fail-fast error handling and supports dry-run mode.
-*/
+ * Orchestrates the execution of multiple formatters in a defined order.
+ * Implements fail-fast error handling and supports dry-run mode.
+ */
 export class FormatterPipeline {
     private formatterOrder: FormatterOrder[];
-
     private rules: Map<FormatterOrder, IFormattingRule[]> = new Map();
 
     constructor(
@@ -58,6 +55,7 @@ export class FormatterPipeline {
             FormatterOrder.ASTTransformation,
             FormatterOrder.Spacing,
         ];
+
         this.initializeRules();
     }
 
@@ -77,7 +75,6 @@ export class FormatterPipeline {
     private async getFilesRecursively(dirPath: string, extensions: string[]): Promise<string[]> {
         const files: string[] = [];
         const entries = await fs.readdir(dirPath, {withFileTypes: true});
-
         for (const entry of entries) {
             const fullPath = path.join(dirPath, entry.name);
 
@@ -88,7 +85,6 @@ export class FormatterPipeline {
                 }
 
                 const subFiles = await this.getFilesRecursively(fullPath, extensions);
-
                 files.push(...subFiles);
             } else if (entry.isFile()) {
                 if (extensions.some(ext => entry.name.endsWith(ext))) {
@@ -115,12 +111,12 @@ export class FormatterPipeline {
     }
 
     /**
-    * Format a file using the configured formatters in sequence
-    * @param filePath - Absolute path to the file to format
-    * @param dryRun - If true, don't write changes to disk
-    * @returns Pipeline context with execution details
-    * @throws FormatterError if any formatter fails (fail-fast)
-    */
+     * Format a file using the configured formatters in sequence
+     * @param filePath - Absolute path to the file to format
+     * @param dryRun - If true, don't write changes to disk
+     * @returns Pipeline context with execution details
+     * @throws FormatterError if any formatter fails (fail-fast)
+     */
     async formatFile(filePath: string, dryRun = false): Promise<PipelineContext> {
         // Read original source
         const originalSource = await fs.readFile(filePath, "utf-8");
@@ -159,10 +155,12 @@ export class FormatterPipeline {
             dryRun,
         };
 
+        // Single parse-once, shared, trivia-preserving model threaded through every rule
+        const formatContext = new FormatContext(originalSource, filePath);
+
         // Execute rules in order
         for (const order of this.formatterOrder) {
             const rulesAtOrder = this.rules.get(order);
-
             if (!rulesAtOrder || rulesAtOrder.length === 0) {
                 continue;
             }
@@ -173,11 +171,13 @@ export class FormatterPipeline {
                     order,
                     changed: false,
                 };
-
                 try {
-                    // Execute rule
-                    const beforeSource = context.currentSource;
-                    const afterSource = rule.apply(context.currentSource, filePath);
+                    // Execute rule against the shared, parse-once model; every rule mutates it directly.
+                    const beforeSource = formatContext.getText();
+
+                    rule.applyToContext(formatContext);
+
+                    const afterSource = formatContext.getText();
 
                     // Track changes
                     execution.changed = beforeSource !== afterSource;
@@ -186,6 +186,7 @@ export class FormatterPipeline {
                     if (execution.changed) {
                         context.changed = true;
                     }
+
                     context.executions.push(execution);
                 } catch (error) {
                     // Fail-fast: stop pipeline immediately on error
@@ -197,6 +198,9 @@ export class FormatterPipeline {
             }
         }
 
+        // Read the final text once after all rules have run
+        context.currentSource = formatContext.getText();
+
         // Write to disk if changes were made and not in dry-run mode
         if (context.changed && !dryRun) {
             await fs.writeFile(filePath, context.currentSource, "utf-8");
@@ -206,18 +210,17 @@ export class FormatterPipeline {
     }
 
     /**
-    * Format multiple files in sequence
-    * @param filePaths - Array of file paths to format
-    * @param dryRun - If true, don't write changes to disk
-    * @returns Array of pipeline contexts for each file
-    * @throws FormatterError if any formatter fails for any file
-    */
+     * Format multiple files in sequence
+     * @param filePaths - Array of file paths to format
+     * @param dryRun - If true, don't write changes to disk
+     * @returns Array of pipeline contexts for each file
+     * @throws FormatterError if any formatter fails for any file
+     */
     async formatFiles(filePaths: string[], dryRun = false): Promise<PipelineContext[]> {
         const results: PipelineContext[] = [];
 
         for (const filePath of filePaths) {
             const context = await this.formatFile(filePath, dryRun);
-
             results.push(context);
         }
 
@@ -225,15 +228,14 @@ export class FormatterPipeline {
     }
 
     /**
-    * Format all files in a directory recursively
-    * @param dirPath - Directory path to format
-    * @param dryRun - If true, don't write changes to disk
-    * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
-    * @returns Array of pipeline contexts for each file
-    */
+     * Format all files in a directory recursively
+     * @param dirPath - Directory path to format
+     * @param dryRun - If true, don't write changes to disk
+     * @param extensions - File extensions to include (default: .ts, .tsx, .js, .jsx)
+     * @returns Array of pipeline contexts for each file
+     */
     async formatDirectory(dirPath: string, dryRun = false, extensions: string[] = [".ts", ".tsx", ".js", ".jsx"]): Promise<PipelineContext[]> {
         const files = await this.getFilesRecursively(dirPath, extensions);
-
         return this.formatFiles(files, dryRun);
     }
 
@@ -263,9 +265,11 @@ export class FormatterPipeline {
             this.addRuleByName("SemicolonRule", FormatterOrder.CodeStyle);
             this.addRuleByName("BracketSpacingRule", FormatterOrder.CodeStyle);
             this.addRuleByName("IndentationRule", FormatterOrder.CodeStyle);
+            this.addRuleByName("LogicalOperatorPlacementRule", FormatterOrder.CodeStyle);
             this.addRuleByName("StructuralIndentationRule", FormatterOrder.CodeStyle);
             this.addRuleByName("BlockSpacingRule", FormatterOrder.CodeStyle);
             this.addRuleByName("DocBlockCommentRule", FormatterOrder.CodeStyle);
+            this.addRuleByName("StatementSpacingRule", FormatterOrder.CodeStyle);
         }
 
         if (this.config.imports?.enabled) {
@@ -281,13 +285,5 @@ export class FormatterPipeline {
                 this.addRuleByName("FileDeclarationSortingRule", FormatterOrder.ASTTransformation);
             }
         }
-
-        if (this.config.spacing?.enabled) {
-            this.addRuleByName("BlankLineBetweenDeclarationsRule", FormatterOrder.Spacing);
-            this.addRuleByName("BlankLineBetweenStatementTypesRule", FormatterOrder.Spacing);
-            this.addRuleByName("BlankLineBeforeReturnsRule", FormatterOrder.Spacing);
-        }
     }
 }
-
-

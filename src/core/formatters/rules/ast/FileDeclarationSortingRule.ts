@@ -1,13 +1,11 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
 import * as ts from "typescript";
-import { ASTAnalyzer } from "../../../ast";
-import { DependencyResolver } from "../../../ast";
-import { BaseFormattingRule } from "../../BaseFormattingRule";
-
+import {ASTAnalyzer, DependencyResolver} from "../../../ast";
+import {BaseFormattingRule} from "../../BaseFormattingRule";
+import {FormatContext} from "../../FormatContext";
 
 /** Types of top-level declarations in a file */
 export enum DeclarationType {
@@ -37,7 +35,6 @@ export interface FileDeclaration {
 
 /** Default order for file declarations */
 export const DEFAULT_FILE_ORDER: DeclarationType[] = [
-
     DeclarationType.Interface,
     DeclarationType.TypeAlias,
     DeclarationType.Enum,
@@ -58,7 +55,6 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
     private getDeclarationType(node: ts.Statement): DeclarationType {
         const exported = ASTAnalyzer.isExported(node);
         const defaultExp = ASTAnalyzer.isDefaultExport(node);
-
         if (defaultExp) {
             return DeclarationType.DefaultExport;
         }
@@ -101,8 +97,10 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         const isExported = ASTAnalyzer.isExported(node);
         const isDefaultExport = ASTAnalyzer.isDefaultExport(node);
         const text = node.getFullText(sourceFile);
+
         // Extract dependencies
         const allDependencies = ASTAnalyzer.extractFileDeclarationReferences(node, allDeclarationNames);
+
         // Remove self-reference
         const dependencies = new Set(Array.from(allDependencies).filter(dep => dep !== name));
 
@@ -118,10 +116,6 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         };
     }
 
-    private createSourceFile(source: string, filePath: string): ts.SourceFile {
-        return ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, filePath.endsWith(".tsx") || filePath.endsWith(".jsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
-    }
-
     /** Sort file declarations according to configuration */
     private sortFileDeclarations(declarations: FileDeclaration[]): FileDeclaration[] {
         const config = this.getSortingConfig()?.fileDeclarations;
@@ -130,23 +124,38 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         return [...declarations].sort((a, b) => {
             const aTypeIndex = order.indexOf(a.type);
             const bTypeIndex = order.indexOf(b.type);
-            // Sort by type first
 
+            // Sort by type first
             if (aTypeIndex !== bTypeIndex) {
                 return aTypeIndex - bTypeIndex;
             }
+
             // Within the same type, sort alphabetically by name
             return a.name.localeCompare(b.name);
         });
     }
 
-    apply(source: string, filePath?: string): string {
+    /**
+     * Re-anchors a declaration's `getFullText()` (leading trivia included) to the enclosing
+     * scope's indentation: strips only the leading blank lines that separated it from whatever
+     * preceded it in its *original* position, leaving the declaration's own indentation, leading
+     * comments, and internal (multi-line body) formatting completely untouched. Never `.trim()`s
+     * to column 0 the way the pre-migration reconstruction did.
+     */
+    private reanchorToEnclosingIndent(fullText: string): string {
+        return fullText.replace(/^\n+/, "");
+    }
+
+    override applyToContext(context: FormatContext): void {
         const config = this.getSortingConfig()?.fileDeclarations;
         if (!config?.enabled) {
-            return source;
+            return;
         }
 
-        const sourceFile = this.createSourceFile(source, filePath || "temp.ts");
+        // The shared project already parses this file with the correct ScriptKind (TSX for
+        // .tsx/.jsx), so JSX-bearing top-level declarations are structurally sound on this tree.
+        const sourceFile = context.sourceFile.compilerNode;
+        const originalText = context.getText();
 
         // Separate imports from other declarations
         const imports: ts.Statement[] = [];
@@ -162,16 +171,14 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         });
 
         if (otherStatements.length === 0) {
-            return source;
+            return;
         }
 
         // Analyze and sort declarations
         const allDeclarationNames = new Set<string>(otherStatements.map(stmt =>
-
             ASTAnalyzer.getDeclarationName(stmt)).filter(n => n));
 
         const analyzedDeclarations = otherStatements.map((stmt, index) =>
-
             this.analyzeDeclaration(stmt, sourceFile, index, allDeclarationNames)
         );
 
@@ -183,28 +190,25 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
 
         // Check if reordering is needed
         const orderChanged = sortedDeclarations.some((decl, index) => decl.originalIndex !== index);
-
         if (!orderChanged) {
-            return source;
+            return;
         }
 
-        // Reconstruct file with reordered declarations using original text
+        // Reconstruct file with reordered declarations using each declaration's original text,
+        // re-anchored to the enclosing scope's indentation — never trimmed to column 0.
         const firstDeclaration = otherStatements[0];
         const lastDeclaration = otherStatements[otherStatements.length - 1];
         const declarationsStart = firstDeclaration.getFullStart();
         const declarationsEnd = lastDeclaration.getEnd();
 
         // Build new declarations section from sorted texts
-        const declarationTexts = sortedDeclarations.map(d => d.text.trim());
+        const declarationTexts = sortedDeclarations.map(d => this.reanchorToEnclosingIndent(d.text));
         const newDeclarations = declarationTexts.join("\n\n");
 
         // Replace the declarations section (add spacing between imports and declarations)
-        let formatted = source.substring(0, declarationsStart) + "\n\n" + newDeclarations + source.substring(declarationsEnd);
-
-        // Remove trailing semicolons that TypeScript printer adds after closing braces
-        formatted = formatted.replace(/(\n;)+\s*$/, "\n");
-
-        return formatted;
+        const formatted = originalText.substring(0, declarationsStart) + "\n\n" + newDeclarations + originalText.substring(declarationsEnd);
+        if (formatted !== originalText) {
+            context.sourceFile.replaceWithText(formatted);
+        }
     }
 }
-

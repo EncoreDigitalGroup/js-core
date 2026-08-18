@@ -1,8 +1,6 @@
-import { resolve } from "path";
-import { defineConfig } from "vite";
-import { transformGenericsPlugin } from "./src";
-
-
+import {resolve} from "path";
+import {defineConfig} from "vite";
+import {transformGenericsPlugin} from "./src";
 export default defineConfig({
     build: {
         target: "node22",
@@ -38,6 +36,7 @@ export default defineConfig({
                     if (chunk.name === "cli") {
                         return "#!/usr/bin/env node";
                     }
+
                     return "";
                 },
             },

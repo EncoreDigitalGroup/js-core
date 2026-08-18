@@ -1,7 +1,6 @@
 import {describe, expect, it} from "bun:test";
 import {genericPackageUrl, hostPlatforms, parseBuildMode, platforms} from "./build_lib";
 
-
 describe("genericPackageUrl", () => {
     it("builds the public Generic Package URL from the repo remote", () => {
         const url = genericPackageUrl(

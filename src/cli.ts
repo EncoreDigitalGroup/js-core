@@ -2,23 +2,23 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
 import "reflect-metadata";
-import { FormatterPipeline } from "./core";
-import { CoreConfig, ConfigLoader } from "./core";
-import { Container, ServiceRegistration } from "./core";
-import { sortPackageFile } from "./sortPackage";
-import { sortTsConfigFile } from "./sortTSConfig";
-
+import {ConfigLoader, Container, CoreConfig, FormatterPipeline, ServiceRegistration} from "./core";
+import {sortPackageFile} from "./sortPackage";
+import {sortTsConfigFile} from "./sortTSConfig";
 
 /** Format files in a directory using the FormatterPipeline */
 async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
     const container = new Container();
     ServiceRegistration.registerServices(container, config);
+
     // Get include/exclude patterns
     const include = config.sorting?.include || ["**/*.{ts,tsx,js,jsx}"];
     const exclude = config.sorting?.exclude || [];
+
     // Always exclude these critical directories
     const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
     const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
+
     // Find files to format
     const files = include.flatMap(pattern => glob.sync(pattern, {
         cwd: targetDir,
@@ -28,8 +28,10 @@ async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: bo
 
     if (files.length === 0) {
         console.info("No files found to format.");
+
         return;
     }
+
     console.info(`Formatting ${files.length} files...`);
 
     // Resolve pipeline from DI container
@@ -41,7 +43,6 @@ async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: bo
     for (const file of files) {
         try {
             const context = await pipeline.formatFile(file, dryRun);
-
             if (context.changed) {
                 formattedCount++;
 
@@ -65,11 +66,10 @@ async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: bo
 async function formatSingleFile(filePath: string, config: CoreConfig, dryRun: boolean): Promise<void> {
     const container = new Container();
     ServiceRegistration.registerServices(container, config);
-    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
 
+    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
     try {
         const context = await pipeline.formatFile(filePath, dryRun);
-
         if (context.changed) {
             if (dryRun) {
                 console.info(`Would format: ${filePath}`);
@@ -93,13 +93,13 @@ function isSupportedFile(filePath: string): boolean {
 /** Main CLI function */
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
+
     // Parse command line arguments
     let target = process.cwd();
     let dryRun = false;
 
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
-
         if (arg === "--dry") {
             dryRun = true;
         } else if (!arg.startsWith("-")) {
@@ -109,7 +109,6 @@ async function main(): Promise<void> {
             process.exit(1);
         }
     }
-
     try {
         // Determine if target is a file or directory
         const targetStat = fs.existsSync(target) ? fs.statSync(target) : null;
@@ -137,18 +136,19 @@ async function main(): Promise<void> {
                 process.exit(1);
             }
 
-            if (config.codeStyle?.enabled ||
-                config.imports?.enabled ||
-                config.sorting?.enabled ||
-                config.spacing?.enabled) {
+            if (config.codeStyle?.enabled
+                || config.imports?.enabled
+                || config.sorting?.enabled
+                || config.spacing?.enabled) {
                 await formatSingleFile(target, config, dryRun);
-                }
+            }
 
             if (dryRun) {
                 console.info("Dry run completed. No files were modified.");
             } else {
                 console.info("Formatting completed successfully.");
             }
+
             return;
         }
 
@@ -157,9 +157,9 @@ async function main(): Promise<void> {
             // Sort package.json
             if (config.packageJson?.enabled) {
                 const packagePath = path.join(target, "package.json");
-
                 if (fs.existsSync(packagePath)) {
                     console.log(`📦  Processing ${packagePath}...`);
+
                     sortPackageFile(packagePath, {
                         customSortOrder: config.packageJson.customSortOrder,
                         indentation: config.packageJson.indentation,
@@ -171,9 +171,9 @@ async function main(): Promise<void> {
             // Sort tsconfig.json
             if (config.tsConfig?.enabled) {
                 const tsconfigPath = path.join(target, "tsconfig.json");
-
                 if (fs.existsSync(tsconfigPath)) {
                     console.log(`🔧  Processing ${tsconfigPath}...`);
+
                     sortTsConfigFile(tsconfigPath, {
                         indentation: config.tsConfig.indentation,
                         dryRun,
@@ -182,12 +182,12 @@ async function main(): Promise<void> {
             }
 
             // Format files using the pipeline
-            if (config.codeStyle?.enabled ||
-                config.imports?.enabled ||
-                config.sorting?.enabled ||
-                config.spacing?.enabled) {
+            if (config.codeStyle?.enabled
+                || config.imports?.enabled
+                || config.sorting?.enabled
+                || config.spacing?.enabled) {
                 await formatDirectory(target, config, dryRun);
-                }
+            }
 
             if (dryRun) {
                 console.info("Dry run completed. No files were modified.");
@@ -202,4 +202,4 @@ async function main(): Promise<void> {
 }
 
 // Run the CLI
-main()
+main();

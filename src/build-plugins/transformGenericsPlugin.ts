@@ -1,14 +1,12 @@
 /**
-* Custom Vite plugin to transform generic addRule calls to explicit string-based calls
-* This enables the clean developer experience of `this.addRule<RuleName>(order)`
-* while ensuring it works in compiled JavaScript where generics are stripped
-*
-* Auto-discovers rule mappings by parsing the FormatterPipeline source code
-*/
-
-import { readFileSync } from "fs";
-import { resolve } from "path";
-
+ * Custom Vite plugin to transform generic addRule calls to explicit string-based calls
+ * This enables the clean developer experience of `this.addRule<RuleName>(order)`
+ * while ensuring it works in compiled JavaScript where generics are stripped
+ *
+ * Auto-discovers rule mappings by parsing the FormatterPipeline source code
+ */
+import {readFileSync} from "fs";
+import {resolve} from "path";
 
 export function transformGenericsPlugin() {
     // Move the discovery function outside the plugin object
@@ -51,6 +49,7 @@ export function transformGenericsPlugin() {
                 } else if (sourceCode[i] === "}") {
                     braceCount--;
                 }
+
                 endIndex = i;
             }
 
@@ -59,16 +58,15 @@ export function transformGenericsPlugin() {
             // Parse addRule calls to build mapping
             const orderToRuleMap: { [key: string]: string[] } = {};
             const addRuleRegex = /this\.addRule<([^>]+)>\(FormatterOrder\.([^)]+)\)/g;
-
             let match;
             while ((match = addRuleRegex.exec(initRulesBody)) !== null) {
                 const ruleName = match[1].trim();
                 const orderName = match[2].trim();
                 const orderKey = `ConfigTypes.FormatterOrder.${orderName}`;
-
                 if (!orderToRuleMap[orderKey]) {
                     orderToRuleMap[orderKey] = [];
                 }
+
                 orderToRuleMap[orderKey].push(ruleName);
             }
 
@@ -99,14 +97,14 @@ export function transformGenericsPlugin() {
                     // Transform all addRule calls in the file
                     chunk.code = chunk.code.replace(/this\.addRule\s*\(\s*([^)]+)\s*\)/g, (match: any, orderParam: any) => {
                         const orderKey = orderParam.trim();
-
                         if (orderToRuleMap[orderKey as keyof typeof orderToRuleMap]) {
                             const rules = orderToRuleMap[orderKey as keyof typeof orderToRuleMap];
                             const currentIndex = orderIndices[orderKey] || 0;
-
                             if (currentIndex < rules.length) {
                                 const ruleName = rules[currentIndex];
+
                                 orderIndices[orderKey] = currentIndex + 1;
+
                                 return `this.addRuleByName("${ruleName}", ${orderParam})`;
                             }
                         }

@@ -1,12 +1,10 @@
 /*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-
+ * Copyright (c) 2025. Encore Digital Group.
+ * All Rights Reserved.
+ */
 import fs from "fs";
 import path from "path";
-import { DefaultSortOptions, SortOptions } from "./shared/types";
-
+import {DefaultSortOptions, SortOptions} from "./shared/types";
 
 function sortObjectKeysAlphabetically(obj: Record<string, any>): Record<string, any> {
     if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
@@ -29,7 +27,6 @@ export function sortTsConfig(tsConfig: Record<string, any>): Record<string, any>
 export function sortTsConfigFile(filePath?: string, options: SortOptions = {}): Record<string, any> {
     const tsConfigPath = filePath || path.join(process.cwd(), "tsconfig.json");
     const indentation = options.indentation || (DefaultSortOptions.indentation as number);
-
     try {
         const tsConfig = JSON.parse(fs.readFileSync(tsConfigPath, "utf8"));
         const sortedTsConfig = sortTsConfig(tsConfig);

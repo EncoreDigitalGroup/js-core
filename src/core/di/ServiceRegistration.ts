@@ -1,13 +1,25 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-import { CoreConfig } from "../config";
-import { QuoteStyleRule, SemicolonRule, BracketSpacingRule, IndentationRule, StructuralIndentationRule, BlockSpacingRule, DocBlockCommentRule, ImportOrganizationRule, ClassMemberSortingRule, FileDeclarationSortingRule, BlankLineBetweenDeclarationsRule, BlankLineBetweenStatementTypesRule, BlankLineBeforeReturnsRule, IndexGenerationRule } from "../formatters";
-import { FormatterPipeline } from "../pipeline";
-import { Container } from "./Container";
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+import {CoreConfig} from "../config";
+import {
+    BlockSpacingRule,
+    BracketSpacingRule,
+    ClassMemberSortingRule,
+    DocBlockCommentRule,
+    FileDeclarationSortingRule,
+    ImportOrganizationRule,
+    IndentationRule,
+    IndexGenerationRule,
+    LogicalOperatorPlacementRule,
+    QuoteStyleRule,
+    SemicolonRule,
+    StatementSpacingRule,
+    StructuralIndentationRule
+} from "../formatters";
+import {FormatterPipeline} from "../pipeline";
+import {Container} from "./Container";
 
 /** Simple service registration for our custom DI container */
 export class ServiceRegistration {
@@ -20,15 +32,14 @@ export class ServiceRegistration {
         container.singleton(SemicolonRule);
         container.singleton(BracketSpacingRule);
         container.singleton(IndentationRule);
+        container.singleton(LogicalOperatorPlacementRule);
         container.singleton(StructuralIndentationRule);
         container.singleton(BlockSpacingRule);
         container.singleton(DocBlockCommentRule);
+        container.singleton(StatementSpacingRule);
         container.singleton(ImportOrganizationRule);
         container.singleton(ClassMemberSortingRule);
         container.singleton(FileDeclarationSortingRule);
-        container.singleton(BlankLineBetweenDeclarationsRule);
-        container.singleton(BlankLineBetweenStatementTypesRule);
-        container.singleton(BlankLineBeforeReturnsRule);
         container.singleton(IndexGenerationRule);
 
         // Register formatter pipeline

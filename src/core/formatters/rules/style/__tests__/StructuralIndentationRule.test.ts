@@ -5,18 +5,28 @@
 
 // tsfmt-ignore
 
-import { CoreConfig } from "../../../../config";
-import { Container } from "../../../../di";
-import { StructuralIndentationRule } from "../StructuralIndentationRule";
+import {CoreConfig} from "../../../../config";
+import {Container} from "../../../../di";
+import {FormatContext} from "../../../FormatContext";
+import {StructuralIndentationRule} from "../StructuralIndentationRule";
 
 
 describe("StructuralIndentationRule", () => {
-    let rule: StructuralIndentationRule;
-    let container: Container;
     let config: CoreConfig;
 
+    function run(source: string, filePath: string): string {
+        const container = new Container();
+
+        container.singleton<CoreConfig>(config);
+        const rule = new StructuralIndentationRule(container);
+        const context = new FormatContext(source, filePath);
+
+        rule.applyToContext(context);
+
+        return context.getText();
+    }
+
     beforeEach(() => {
-        container = new Container();
         config = {
             codeStyle: {
                 enabled: true,
@@ -24,11 +34,9 @@ describe("StructuralIndentationRule", () => {
                 indentWidth: 4
             }
         } as CoreConfig;
-        container.singleton<CoreConfig>(config);
-        rule = new StructuralIndentationRule(container);
     });
 
-    describe("apply", () => {
+    describe("applyToContext", () => {
         it("should fix a single misaligned closing brace", () => {
             // Input has }; at column 0, should be at 4 spaces
             const input = [
@@ -49,7 +57,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -76,7 +84,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -105,7 +113,7 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -119,7 +127,7 @@ describe("StructuralIndentationRule", () => {
             ].join("\n");
 
             // No change expected - array at top level, ] at column 0 is correct
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -131,7 +139,7 @@ describe("StructuralIndentationRule", () => {
                 "];"  // Already correct
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -160,7 +168,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -175,7 +183,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -187,7 +195,7 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -201,7 +209,7 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -213,7 +221,7 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -227,7 +235,7 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -252,7 +260,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -273,7 +281,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -294,12 +302,12 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
         it("should handle empty source code", () => {
-            const result = rule.apply("");
+            const result = run("", "test.ts");
             expect(result).toBe("");
         });
 
@@ -309,14 +317,14 @@ describe("StructuralIndentationRule", () => {
                 "const y = 2;"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
         it("should handle single-line objects (no change needed)", () => {
             const input = "const obj = { a: 1, b: 2 };";
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -335,7 +343,7 @@ describe("StructuralIndentationRule", () => {
                 "    }};",  // Fixed: leftmost bracket determines indent (4 spaces)
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -346,7 +354,7 @@ describe("StructuralIndentationRule", () => {
                 "}; // trailing comment"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -367,7 +375,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -392,7 +400,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
 
@@ -420,7 +428,69 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
+            expect(result).toBe(expected);
+        });
+
+        it("does not corrupt indentation around a self-closing JSX tag with an expression container (the regex-literal tokenizer bug)", () => {
+            // Pre-migration, the tokenizer's regex-literal heuristic misread the `/>` right after
+            // `{x}` as the start of a regex literal (a `}` immediately before a `/` is one of its
+            // regex-preceding characters), corrupting the scan. Since `{x}` is a protected JSX
+            // expression range, the rule must leave this whole construct untouched.
+            const input = [
+                "function Component() {",
+                "    return (",
+                "        <div>",
+                "            <Foo bar={x} />",
+                "            <span>after</span>",
+                "        </div>",
+                "    );",
+                "}"
+            ].join("\n");
+
+            const result = run(input, "test.tsx");
+            expect(result).toBe(input);
+        });
+
+        it("does not corrupt indentation around an apostrophe inside JSX text (the string-literal tokenizer bug)", () => {
+            // Pre-migration, the tokenizer's naive string-literal scanner treated the apostrophe in
+            // "It's" as opening a string literal and consumed characters — including real brackets —
+            // until it found another apostrophe or backtick, corrupting bracket tracking for whatever
+            // code came after. Since the JSX text is a protected range, the rule must leave it
+            // untouched and, critically, must still correctly fix real misaligned code that follows it.
+            const input = [
+                "function outer() {",
+                "    function Component() {",
+                "        return (",
+                "            <div>",
+                "                <p>It's fine</p>",
+                "            </div>",
+                "        );",
+                "    }",
+                "    const obj = {",
+                "        a: 1",
+                "};",  // Wrong: should be 4 spaces — a real fix outside the JSX text
+                "    return Component;",
+                "}"
+            ].join("\n");
+
+            const expected = [
+                "function outer() {",
+                "    function Component() {",
+                "        return (",
+                "            <div>",
+                "                <p>It's fine</p>",
+                "            </div>",
+                "        );",
+                "    }",
+                "    const obj = {",
+                "        a: 1",
+                "    };",  // Fixed to 4 spaces
+                "    return Component;",
+                "}"
+            ].join("\n");
+
+            const result = run(input, "test.tsx");
             expect(result).toBe(expected);
         });
     });
@@ -434,9 +504,6 @@ describe("StructuralIndentationRule", () => {
                     indentWidth: 4
                 }
             } as CoreConfig;
-            container = new Container();
-            container.singleton<CoreConfig>(config);
-            rule = new StructuralIndentationRule(container);
         });
 
         it("should fix misaligned braces using tabs", () => {
@@ -458,7 +525,7 @@ describe("StructuralIndentationRule", () => {
                 "}"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(expected);
         });
     });
@@ -471,9 +538,6 @@ describe("StructuralIndentationRule", () => {
                     indentWidth: 4
                 }
             } as CoreConfig;
-            container = new Container();
-            container.singleton<CoreConfig>(config);
-            rule = new StructuralIndentationRule(container);
 
             const input = [
                 "const obj = {",
@@ -481,7 +545,7 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
 
@@ -492,9 +556,6 @@ describe("StructuralIndentationRule", () => {
                     indentStyle: "space"
                 }
             } as CoreConfig;
-            container = new Container();
-            container.singleton<CoreConfig>(config);
-            rule = new StructuralIndentationRule(container);
 
             const input = [
                 "const obj = {",
@@ -502,7 +563,53 @@ describe("StructuralIndentationRule", () => {
                 "};"
             ].join("\n");
 
-            const result = rule.apply(input);
+            const result = run(input, "test.ts");
+            expect(result).toBe(input);
+        });
+
+        it("aligns a block's closing brace to the statement start when the condition spans lines", () => {
+            // The opening `{` sits on a deeper-indented continuation line of a multi-line `if`
+            // condition; its closing `}` must align to the `if` (8 spaces), not the `{` line (12).
+            const input = [
+                "class C {",
+                "    method() {",
+                "        if (a",
+                "            || b",
+                "            || c) {",
+                "            return 1;",
+                "            }",
+                "    }",
+                "}"
+            ].join("\n");
+
+            const expected = [
+                "class C {",
+                "    method() {",
+                "        if (a",
+                "            || b",
+                "            || c) {",
+                "            return 1;",
+                "        }",
+                "    }",
+                "}"
+            ].join("\n");
+
+            const result = run(input, "test.ts");
+            expect(result).toBe(expected);
+        });
+
+        it("does not over-indent a closing brace when the body has a regex literal with brackets", () => {
+            // The regex literals contain `{`, `(`, `[` which must not be counted as real brackets;
+            // detection depends on recognizing the regex right after `return`.
+            const input = [
+                "class C {",
+                "    m(s) {",
+                "        return /[{([,]$/.test(s) || /(a|b)$/.test(s);",
+                "    }",
+                "}"
+            ].join("\n");
+
+            const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
     });

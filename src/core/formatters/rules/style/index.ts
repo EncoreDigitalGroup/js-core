@@ -3,6 +3,8 @@
 
 export * from "./DocBlockCommentRule";
 export * from "./IndentationRule";
+export * from "./LogicalOperatorPlacementRule";
 export * from "./QuoteStyleRule";
 export * from "./SemicolonRule";
+export * from "./StatementSpacingRule";
 export * from "./StructuralIndentationRule";

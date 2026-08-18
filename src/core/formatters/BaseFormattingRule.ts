@@ -1,17 +1,16 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-import { CoreConfig } from "../config";
-import { Container } from "../di";
-import { IFormattingRule } from "./IFormattingRule";
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+import {CoreConfig} from "../config";
+import {Container} from "../di";
+import {FormatContext} from "./FormatContext";
+import {IFormattingRule} from "./IFormattingRule";
 
 /**
-* Base class for all formatting rules that provides container access
-* Eliminates the need for each rule to implement the container constructor boilerplate
-*/
+ * Base class for all formatting rules that provides container access
+ * Eliminates the need for each rule to implement the container constructor boilerplate
+ */
 export abstract class BaseFormattingRule implements IFormattingRule {
     protected readonly config: CoreConfig;
 
@@ -27,8 +26,11 @@ export abstract class BaseFormattingRule implements IFormattingRule {
         }
     }
 
-    /** Apply the formatting rule to the source code */
-    abstract apply(source: string, filePath?: string): string;
+    /**
+     * Apply the formatting rule to the shared, parse-once model in place.
+     * Every rule implements this natively and mutates the shared model directly with no re-parse.
+     */
+    abstract applyToContext(context: FormatContext): void;
 
     /** Helper method to get the core configuration */
     protected getConfig(): CoreConfig {

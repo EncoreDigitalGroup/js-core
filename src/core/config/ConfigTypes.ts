@@ -1,12 +1,8 @@
 /*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-import { MemberType } from "../";
-import { DeclarationType } from "../";
-import { IndexGenerationConfig } from "../";
-
+ * Copyright (c) 2025. Encore Digital Group.
+ * All Rights Reserved.
+ */
+import {DeclarationType, IndexGenerationConfig, MemberType} from "../";
 
 /** Configuration for class member sorting */
 export interface ClassMemberConfig {
@@ -170,7 +166,6 @@ export enum FormatterOrder {
     Spacing = "Spacing"
 }
 
-
 /** Main configuration interface for tsfmt */
 export interface CoreConfig {
     /** Configuration for automatic index.ts file generation */
@@ -197,7 +192,13 @@ export interface CoreConfig {
     /** Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];
 
-    /** Skip formatting for React component files (.tsx and .jsx) entirely (default: false) */
+    /**
+     * Explicit opt-out: skip formatting for React component files (.tsx and .jsx) entirely
+     * (default: false — unset is treated as `false`, so `.tsx`/`.jsx` files are formatted).
+     * The ts-morph parse-once pipeline formats `.tsx`/`.jsx` safely, so this key is no longer a
+     * corruption guard against clobbering those files — it exists purely for callers who want to
+     * exclude React files from formatting for other reasons.
+     */
     skipReactFiles?: boolean;
 }
 

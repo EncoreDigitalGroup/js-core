@@ -1,11 +1,9 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-import { ConfigDefaults } from "../ConfigDefaults";
-import { FormatterOrder } from "../ConfigTypes";
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+import {ConfigDefaults} from "../ConfigDefaults";
+import {FormatterOrder} from "../ConfigTypes";
 
 describe("ConfigDefaults", () => {
     describe("constants", () => {
@@ -69,7 +67,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultIndexGenerationConfig", () => {
             it("should return correct default index generation config", () => {
                 const config = ConfigDefaults.getDefaultIndexGenerationConfig();
-
                 expect(config.enabled).toBe(true);
                 expect(config.directories).toEqual(["src/", "packages/"]);
                 expect(config.options.fileExtension).toBe(".ts");
@@ -82,7 +79,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultCodeStyleConfig", () => {
             it("should return correct default code style config", () => {
                 const config = ConfigDefaults.getDefaultCodeStyleConfig();
-
                 expect(config.enabled).toBe(true);
                 expect(config.quoteStyle).toBe("double");
                 expect(config.semicolons).toBe("always");
@@ -98,7 +94,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultImportConfig", () => {
             it("should return correct default import config", () => {
                 const config = ConfigDefaults.getDefaultImportConfig();
-
                 expect(config.enabled).toBe(true);
                 expect(config.sortImports).toBe(true);
                 expect(config.removeUnused).toBe(true);
@@ -112,7 +107,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultSortingConfig", () => {
             it("should return correct default sorting config", () => {
                 const config = ConfigDefaults.getDefaultSortingConfig();
-
                 expect(config.enabled).toBe(true);
                 expect(config.classMembers?.enabled).toBe(true);
                 expect(config.classMembers?.groupByVisibility).toBe(false);
@@ -127,7 +121,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultSpacingConfig", () => {
             it("should return correct default spacing config", () => {
                 const config = ConfigDefaults.getDefaultSpacingConfig();
-
                 expect(config.enabled).toBe(false);
                 expect(config.betweenDeclarations).toBe(true);
                 expect(config.beforeReturns).toBe(true);
@@ -138,7 +131,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultPackageJsonConfig", () => {
             it("should return correct default package.json config", () => {
                 const config = ConfigDefaults.getDefaultPackageJsonConfig();
-
                 expect(config.enabled).toBe(true);
                 expect(config.indentation).toBe(4);
                 expect(config.customSortOrder).toBeDefined();
@@ -148,7 +140,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultTsConfigConfig", () => {
             it("should return correct default tsconfig.json config", () => {
                 const config = ConfigDefaults.getDefaultTsConfigConfig();
-
                 expect(config.enabled).toBe(true);
                 expect(config.indentation).toBe(4);
             });
@@ -157,7 +148,6 @@ describe("ConfigDefaults", () => {
         describe("getDefaultFormatterOrder", () => {
             it("should return correct default formatter order", () => {
                 const order = ConfigDefaults.getDefaultFormatterOrder();
-
                 expect(order).toEqual([
                     FormatterOrder.IndexGeneration,
                     FormatterOrder.CodeStyle,
@@ -165,6 +155,7 @@ describe("ConfigDefaults", () => {
                     FormatterOrder.ASTTransformation,
                     FormatterOrder.Spacing
                 ]);
+
                 expect(order).toHaveLength(5);
             });
         });
@@ -173,7 +164,6 @@ describe("ConfigDefaults", () => {
     describe("getDefaultConfig", () => {
         it("should return a complete default configuration", () => {
             const config = ConfigDefaults.getDefaultConfig();
-
             expect(config).toBeDefined();
             expect(config.indexGeneration).toBeDefined();
             expect(config.codeStyle).toBeDefined();
@@ -187,7 +177,6 @@ describe("ConfigDefaults", () => {
 
         it("should have all sections enabled by default except spacing", () => {
             const config = ConfigDefaults.getDefaultConfig();
-
             expect(config.indexGeneration?.enabled).toBe(true);
             expect(config.codeStyle?.enabled).toBe(true);
             expect(config.imports?.enabled).toBe(true);
@@ -200,7 +189,6 @@ describe("ConfigDefaults", () => {
         it("should return a new object each time", () => {
             const config1 = ConfigDefaults.getDefaultConfig();
             const config2 = ConfigDefaults.getDefaultConfig();
-
             expect(config1).not.toBe(config2);
             expect(config1).toEqual(config2);
         });
@@ -210,7 +198,6 @@ describe("ConfigDefaults", () => {
         describe("getMinimalConfig", () => {
             it("should return a minimal configuration", () => {
                 const config = ConfigDefaults.getMinimalConfig();
-
                 expect(config.indexGeneration?.enabled).toBe(true);
                 expect(config.codeStyle?.enabled).toBe(true);
                 expect(config.imports?.enabled).toBe(true);
@@ -227,7 +214,6 @@ describe("ConfigDefaults", () => {
         describe("getDisabledConfig", () => {
             it("should return a configuration with all features disabled", () => {
                 const config = ConfigDefaults.getDisabledConfig();
-
                 expect(config.indexGeneration?.enabled).toBe(false);
                 expect(config.codeStyle?.enabled).toBe(false);
                 expect(config.imports?.enabled).toBe(false);

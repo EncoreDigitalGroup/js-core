@@ -1,26 +1,25 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
 import * as fs from "fs";
 import * as path from "path";
-import { BaseFormattingRule } from "../../BaseFormattingRule";
-
+import {BaseFormattingRule} from "../../BaseFormattingRule";
+import {FormatContext} from "../../FormatContext";
 
 /** Options for configuring how index files are generated */
-
 export interface IndexGenerationOptions {
     /** File extension to match (e.g., ".tsx", ".ts") */
     fileExtension: string;
+
     /** Name of the index file to generate (e.g., "index.tsx", "index.ts") */
     indexFileName: string;
+
     /** Whether to recursively scan subdirectories */
     recursive: boolean;
 }
 
 /** Configuration for index file generation */
-
 export interface IndexGenerationConfig {
     /** Whether to generate index files (default: false) */
     enabled?: boolean;
@@ -39,7 +38,6 @@ export interface IndexGenerationConfig {
 }
 
 /** Rule that generates index.ts files for directories */
-
 export class IndexGenerationRule extends BaseFormattingRule {
     private readonly defaultOptions: IndexGenerationOptions = {
         fileExtension: ".ts",
@@ -48,14 +46,13 @@ export class IndexGenerationRule extends BaseFormattingRule {
     };
 
     readonly name = "IndexGenerationRule";
-
     private findProjectRoot(filePath: string): string | null {
         let current = path.dirname(filePath);
-
         while (current !== path.dirname(current)) {
             if (fs.existsSync(path.join(current, "package.json"))) {
                 return current;
             }
+
             current = path.dirname(current);
         }
 
@@ -73,9 +70,9 @@ export class IndexGenerationRule extends BaseFormattingRule {
             ".storybook",
         ];
 
-        return testDirectories.includes(dirName.toLowerCase()) ||
-            dirName.endsWith(".test") ||
-            dirName.endsWith(".spec");
+        return testDirectories.includes(dirName.toLowerCase())
+            || dirName.endsWith(".test")
+            || dirName.endsWith(".spec");
     }
 
     private isTestFile(fileName: string): boolean {
@@ -106,14 +103,14 @@ export class IndexGenerationRule extends BaseFormattingRule {
                     if (this.isTestDirectory(entry.name)) {
                         continue;
                     }
-                    const subDir = path.join(dir, entry.name);
 
+                    const subDir = path.join(dir, entry.name);
                     if (skipPaths.has(subDir)) {
                         continue;
                     }
+
                     // Check if subdirectory has an index file
                     const subIndexPath = path.join(subDir, options.indexFileName);
-
                     if (fs.existsSync(subIndexPath)) {
                         exports.push(`export * from "./${entry.name}";`);
                     }
@@ -122,13 +119,13 @@ export class IndexGenerationRule extends BaseFormattingRule {
                     if (entry.name.endsWith(".d.ts")) {
                         continue;
                     }
+
                     // Always skip test files (not configurable)
                     if (this.isTestFile(entry.name)) {
                         continue;
                     }
 
                     const exportName = entry.name.replace(/\.(ts|tsx)$/, "");
-
                     exports.push(`export * from "./${exportName}";`);
                 }
             }
@@ -146,7 +143,6 @@ ${exports.join("\n")}
 `;
 
             const indexPath = path.join(dir, options.indexFileName);
-
             fs.writeFileSync(indexPath, content, "utf8");
         } catch (error) {
             console.warn(`Warning: Failed to generate index for ${dir}: ${(error as Error).message}`);
@@ -156,7 +152,6 @@ ${exports.join("\n")}
     private generateIndexExportRecursive(dir: string, skipPaths: Set<string>, options: IndexGenerationOptions): void {
         try {
             const entries = fs.readdirSync(dir, {withFileTypes: true});
-
             for (const entry of entries) {
                 if (entry.isDirectory()) {
                     // Always skip test directories (not configurable)
@@ -165,7 +160,6 @@ ${exports.join("\n")}
                     }
 
                     const subDir = path.join(dir, entry.name);
-
                     if (skipPaths.has(subDir)) {
                         continue;
                     }
@@ -211,15 +205,14 @@ ${exports.join("\n")}
                     }
 
                     const indexPath = path.join(srcDir, entry.name, "index.ts");
-
                     if (fs.existsSync(indexPath)) {
                         modules.push(entry.name);
                     }
                 }
+
                 // Check for .d.ts files (like generated.d.ts)
                 else if (entry.name.endsWith(".d.ts")) {
                     const moduleName = entry.name.slice(0, -3); // Remove .ts but keep .d
-
                     modules.push(moduleName);
                 }
             }
@@ -235,13 +228,11 @@ ${exports.join("\n")}
     private updateMainIndex(indexPath: string, modules: string[]): void {
         try {
             const exports = modules.map(mod => `export * from "./${mod}";`).join("\n");
-
             const content = `// Auto-generated exports - do not edit manually
 // Run tsfmt to regenerate
 
 ${exports}
 `;
-
             fs.writeFileSync(indexPath, content, "utf8");
         } catch (error) {
             console.warn(`Warning: Failed to write main index file: ${(error as Error).message}`);
@@ -251,7 +242,6 @@ ${exports}
     private generateIndexFiles(currentFilePath: string): void {
         try {
             const projectRoot = this.findProjectRoot(currentFilePath);
-
             if (!projectRoot) {
                 return;
             }
@@ -265,7 +255,6 @@ ${exports}
 
             for (const dir of directories) {
                 const fullDirPath = path.resolve(projectRoot, dir);
-
                 if (skipPaths.has(fullDirPath)) {
                     continue;
                 }
@@ -280,7 +269,6 @@ ${exports}
 
                 if (fs.existsSync(srcDir)) {
                     const modules = this.discoverExportableModules(srcDir);
-
                     this.updateMainIndex(mainIndexPath, modules);
                 }
             }
@@ -289,16 +277,10 @@ ${exports}
         }
     }
 
-    apply(source: string, filePath?: string): string {
-        const config = this.getIndexGenerationConfig();
-        if (!config?.enabled || !filePath) {
-            return source;
-        }
-
+    override applyToContext(context: FormatContext): void {
+        if (!this.getIndexGenerationConfig()?.enabled) return;
         // This rule operates on the file system, not on individual file content
         // We'll trigger index generation when processing any file in the project
-        this.generateIndexFiles(filePath);
-
-        return source;
+        this.generateIndexFiles(context.filePath);
     }
 }

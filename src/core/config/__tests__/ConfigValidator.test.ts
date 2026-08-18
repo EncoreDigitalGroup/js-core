@@ -1,11 +1,9 @@
 /*
-* Copyright (c) 2026. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-import { CoreConfig } from "../ConfigTypes";
-import { ConfigValidator } from "../ConfigValidator";
-
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+import {CoreConfig} from "../ConfigTypes";
+import {ConfigValidator} from "../ConfigValidator";
 
 describe("ConfigValidator", () => {
     describe("validate", () => {
@@ -21,10 +19,10 @@ describe("ConfigValidator", () => {
             };
 
             const result = ConfigValidator.validate(config);
-
             expect(result.valid).toBe(true);
             expect(result.errors).toHaveLength(0);
         });
+
         it("should detect invalid quote style", () => {
             const config: CoreConfig = {
                 codeStyle: {
@@ -34,10 +32,10 @@ describe("ConfigValidator", () => {
             };
 
             const result = ConfigValidator.validate(config);
-
             expect(result.valid).toBe(false);
             expect(result.errors[0]).toContain("Invalid quoteStyle: triple. Must be 'single' or 'double'.");
         });
+
         it("should detect invalid semicolon option", () => {
             const config: CoreConfig = {
                 codeStyle: {
@@ -47,10 +45,10 @@ describe("ConfigValidator", () => {
             };
 
             const result = ConfigValidator.validate(config);
-
             expect(result.valid).toBe(false);
             expect(result.errors[0]).toContain("Invalid semicolons: sometimes. Must be 'always' or 'never'.");
         });
+
         it("should detect invalid indent width", () => {
             const config: CoreConfig = {
                 codeStyle: {
@@ -60,10 +58,10 @@ describe("ConfigValidator", () => {
             };
 
             const result = ConfigValidator.validate(config);
-
             expect(result.valid).toBe(false);
             expect(result.errors[0]).toContain("Invalid indentWidth: 10. Must be between 1 and 8.");
         });
+
         it("should warn about unusual line width", () => {
             const config: CoreConfig = {
                 codeStyle: {
@@ -73,10 +71,10 @@ describe("ConfigValidator", () => {
             };
 
             const result = ConfigValidator.validate(config);
-
             expect(result.valid).toBe(true);
             expect(result.warnings[0]).toContain("Unusual lineWidth: 250. Recommended range is 80-120.");
         });
+
         it("should detect invalid import group order", () => {
             const config: CoreConfig = {
                 imports: {
@@ -86,11 +84,11 @@ describe("ConfigValidator", () => {
             };
 
             const result = ConfigValidator.validate(config);
-
             expect(result.valid).toBe(false);
             expect(result.errors[0]).toContain("Invalid group in groupOrder: invalid");
         });
     });
+
     describe("validateOrThrow", () => {
         it("should not throw for valid config", () => {
             const config: CoreConfig = {
@@ -99,8 +97,10 @@ describe("ConfigValidator", () => {
                     quoteStyle: "double",
                 },
             };
+
             expect(() => ConfigValidator.validateOrThrow(config)).not.toThrow();
         });
+
         it("should throw for invalid config", () => {
             const config: CoreConfig = {
                 codeStyle: {
@@ -108,7 +108,8 @@ describe("ConfigValidator", () => {
                     quoteStyle: "invalid" as any,
                 },
             };
+
             expect(() => ConfigValidator.validateOrThrow(config)).toThrow("Invalid configuration");
         });
     });
-})
+});

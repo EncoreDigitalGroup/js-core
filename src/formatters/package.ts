@@ -1,9 +1,7 @@
 /*
-* Copyright (c) 2025. Encore Digital Group.
-* All Rights Reserved.
-*/
-
-
+ * Copyright (c) 2025. Encore Digital Group.
+ * All Rights Reserved.
+ */
 export function sortExportsKeys(exports: Record<string, any>): Record<string, any> {
     if (!exports || typeof exports !== "object") {
         return exports;
@@ -27,6 +25,7 @@ export function sortExportsKeys(exports: Record<string, any>): Record<string, an
                     sortedSubObject[subKey] = value[subKey];
                 }
             }
+
             sortedExports[key] = sortedSubObject;
         } else {
             sortedExports[key] = value;
