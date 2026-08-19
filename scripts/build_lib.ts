@@ -1,11 +1,12 @@
-export type BuildMode = {
-    allPlatforms: boolean;
-    compile: boolean;
-    emitTypes: boolean;
-    upload: boolean;
-};
+import {chmod, rm} from "node:fs/promises";
+
+export type BuildMode =
+    | {allPlatforms: boolean; kind: "compile"}
+    | {kind: "publish"}
+    | {kind: "types-only"};
 
 export type PackageJson = {
+    optionalDependencies?: Record<string, string>;
     repository: {url: string};
     version: string;
 };
@@ -14,30 +15,51 @@ export type PlatformSpec = {
     artifactName: string;
     bunTarget: string;
     cpu: string[];
+    key: string;
     libc?: string[];
     os: string[];
 };
 
-function gitlabUploadHeaders(): Record<string, string> {
-    const privateToken = process.env.GITLAB_TOKEN;
-    const jobToken = process.env.CI_JOB_TOKEN;
+export type ScopedPackageManifest = {
+    cpu: string[];
+    description: string;
+    files: string[];
+    libc?: string[];
+    license: string;
+    name: string;
+    os: string[];
+    repository: {url: string};
+    version: string;
+};
 
-    if (privateToken) {
-        return {"PRIVATE-TOKEN": privateToken};
-    }
-
-    if (jobToken) {
-        return {"JOB-TOKEN": jobToken};
-    }
-
-    throw new Error("Set GITLAB_TOKEN or CI_JOB_TOKEN to upload binaries.");
+function binNameFor(spec: PlatformSpec): string {
+    return spec.artifactName.endsWith(".exe") ? "tsfmt.exe" : "tsfmt";
 }
+
+export const rootDir = `${import.meta.dir}/..`;
+
+async function runPublish(packageDir?: string): Promise<void> {
+    const args = packageDir
+        ? ["publish", packageDir, "--access", "public"]
+        : ["publish", "--access", "public"];
+
+    const proc = Bun.spawn(["bun", ...args], {
+        cwd: rootDir,
+        stderr: "inherit",
+        stdout: "inherit",
+    });
+
+    if (await proc.exited !== 0) {
+        throw new Error(`publish failed for ${packageDir ?? "tsfmt"}`);
+    }
+}
+
+const distNpmRelDir = "dist-npm";
 
 export function compileOutfile(artifactName: string): string {
     return artifactName.replace(/\.exe$/, "");
 }
 
-export const rootDir = `${import.meta.dir}/..`;
 export const binariesDir = `${rootDir}/binaries`;
 
 export async function compileStandaloneBinary(spec: PlatformSpec): Promise<void> {
@@ -93,30 +115,26 @@ export async function emitDeclarationFiles(): Promise<void> {
     }
 }
 
-export function genericPackageUrl(repoUrl: string, version: string, fileName: string): string {
-    const repo = repoUrl.replace(/\.git$/, "");
-    const parsed = new URL(repo);
-    const project = parsed.pathname.replace(/^\//, "");
-    return `${parsed.origin}/api/v4/projects/${encodeURIComponent(project)}/packages/generic/tsfmt/${version}/${fileName}`;
-}
-
 export const platforms: PlatformSpec[] = [
     {
         artifactName: "tsfmt-darwin-arm64",
         bunTarget: "bun-darwin-arm64",
         cpu: ["arm64"],
+        key: "darwin-arm64",
         os: ["darwin"],
     },
     {
         artifactName: "tsfmt-darwin-x64",
         bunTarget: "bun-darwin-x64",
         cpu: ["x64"],
+        key: "darwin-x64",
         os: ["darwin"],
     },
     {
         artifactName: "tsfmt-linux-x64",
         bunTarget: "bun-linux-x64",
         cpu: ["x64"],
+        key: "linux-x64",
         libc: ["glibc"],
         os: ["linux"],
     },
@@ -124,6 +142,7 @@ export const platforms: PlatformSpec[] = [
         artifactName: "tsfmt-linux-arm64",
         bunTarget: "bun-linux-arm64",
         cpu: ["arm64"],
+        key: "linux-arm64",
         libc: ["glibc"],
         os: ["linux"],
     },
@@ -131,6 +150,7 @@ export const platforms: PlatformSpec[] = [
         artifactName: "tsfmt-linux-x64-musl",
         bunTarget: "bun-linux-x64-musl",
         cpu: ["x64"],
+        key: "linux-x64-musl",
         libc: ["musl"],
         os: ["linux"],
     },
@@ -138,6 +158,7 @@ export const platforms: PlatformSpec[] = [
         artifactName: "tsfmt-linux-arm64-musl",
         bunTarget: "bun-linux-arm64-musl",
         cpu: ["arm64"],
+        key: "linux-arm64-musl",
         libc: ["musl"],
         os: ["linux"],
     },
@@ -145,12 +166,14 @@ export const platforms: PlatformSpec[] = [
         artifactName: "tsfmt-win32-x64.exe",
         bunTarget: "bun-windows-x64",
         cpu: ["x64"],
+        key: "win32-x64",
         os: ["win32"],
     },
     {
         artifactName: "tsfmt-win32-arm64.exe",
         bunTarget: "bun-windows-arm64",
         cpu: ["arm64"],
+        key: "win32-arm64",
         os: ["win32"],
     },
 ];
@@ -185,47 +208,116 @@ export async function loadPackageJson(): Promise<PackageJson> {
 export function parseBuildMode(argv: string[]): BuildMode {
     const args = new Set(argv);
     if (args.has("--types-only")) {
-        return {allPlatforms: false, compile: false, emitTypes: true, upload: false};
+        return {kind: "types-only"};
     }
 
-    if (args.has("--upload") && !args.has("--all") && !args.has("--types-only")) {
-        return {allPlatforms: false, compile: false, emitTypes: false, upload: true};
+    if (args.has("--publish")) {
+        return {kind: "publish"};
     }
 
-    return {
-        allPlatforms: args.has("--all"),
-        compile: true,
-        emitTypes: true,
-        upload: args.has("--upload"),
-    };
+    return {allPlatforms: args.has("--all"), kind: "compile"};
 }
 
-export async function publishBinariesToGitLab(): Promise<void> {
-    const pkg = await loadPackageJson();
-    const headers = gitlabUploadHeaders();
+export function scopedPackageName(key: string): string {
+    return `@tsfmt/${key}`;
+}
 
-    for (const spec of platforms) {
-        const filePath = `${binariesDir}/${spec.artifactName}`;
-        const file = Bun.file(filePath);
-        if (!await file.exists()) {
-            throw new Error(`Missing ${filePath}. Run bun scripts/build.ts --all first.`);
-        }
-
-        const url = genericPackageUrl(pkg.repository.url, pkg.version, spec.artifactName);
-        const response = await fetch(url, {
-            body: file,
-            headers,
-            method: "PUT",
-        });
-
-        if (!response.ok) {
-            throw new Error(`Upload failed for ${spec.artifactName}: ${response.status} ${await response.text()}`);
-        }
-
-        console.log(`Uploaded ${spec.artifactName}`);
+export async function publishPackages(_version: string): Promise<void> {
+    const npmToken = process.env.NPM_TOKEN;
+    if (!npmToken) {
+        throw new Error("Set NPM_TOKEN to publish packages.");
     }
+
+    const npmrcPath = `${rootDir}/.npmrc`;
+    await Bun.write(npmrcPath, `//registry.npmjs.org/:_authToken=${npmToken}\n`);
+    try {
+        for (const spec of platforms) {
+            await runPublish(`${distNpmRelDir}/${scopedPackageName(spec.key)}`);
+        }
+
+        await runPublish();
+    } finally {
+        await rm(npmrcPath, {force: true});
+    }
+}
+
+export function resolveReleaseVersion(): string {
+    const tag = process.env.CI_COMMIT_TAG;
+    if (!tag || !/^v\d+\.\d+\.\d+$/.test(tag)) {
+        throw new Error(`CI_COMMIT_TAG must be a valid semver tag like v1.2.3 to publish, got: ${tag ?? "(unset)"}`);
+    }
+
+    return tag.replace(/^v/, "");
+}
+
+export const distNpmDir = `${rootDir}/${distNpmRelDir}`;
+
+export function scopedPackageDir(key: string): string {
+    return `${distNpmDir}/${scopedPackageName(key)}`;
+}
+
+export async function scopedPackageManifest(spec: PlatformSpec, version: string): Promise<ScopedPackageManifest> {
+    const pkg = await loadPackageJson();
+    const manifest: ScopedPackageManifest = {
+        cpu: spec.cpu,
+        description: `tsfmt binary for ${spec.key}`,
+        files: [`bin/${binNameFor(spec)}`],
+        license: "BSD-3-Clause",
+        name: scopedPackageName(spec.key),
+        os: spec.os,
+        repository: pkg.repository,
+        version,
+    };
+
+    if (spec.libc) {
+        manifest.libc = spec.libc;
+    }
+
+    return manifest;
 }
 
 export function selectCompileTargets(allPlatforms: boolean): PlatformSpec[] {
     return allPlatforms ? platforms : hostPlatforms();
+}
+
+export async function stageScopedPackages(targets: PlatformSpec[], version: string): Promise<void> {
+    for (const spec of targets) {
+        const binaryPath = `${binariesDir}/${spec.artifactName}`;
+        const binaryFile = Bun.file(binaryPath);
+        if (!await binaryFile.exists()) {
+            throw new Error(`Missing compiled binary for ${spec.key}: ${binaryPath}. Run bun scripts/build.ts --all first.`);
+        }
+
+        const manifest = await scopedPackageManifest(spec, version);
+        const packageDir = scopedPackageDir(spec.key);
+        const binPath = `${packageDir}/bin/${binNameFor(spec)}`;
+        await Bun.write(binPath, binaryFile);
+        await chmod(binPath, 0o755);
+        await Bun.write(`${packageDir}/package.json`, `${JSON.stringify(manifest, null, 4)}\n`);
+    }
+}
+
+export async function stampVersion(version: string): Promise<void> {
+    const rootPath = `${rootDir}/package.json`;
+    const root = await Bun.file(rootPath).json() as PackageJson;
+    root.version = version;
+    root.optionalDependencies = {};
+
+    for (const spec of platforms) {
+        root.optionalDependencies[scopedPackageName(spec.key)] = version;
+    }
+
+    await Bun.write(rootPath, `${JSON.stringify(root, null, 4)}\n`);
+
+    for (const spec of platforms) {
+        const manifestPath = `${scopedPackageDir(spec.key)}/package.json`;
+        const manifestFile = Bun.file(manifestPath);
+        if (!await manifestFile.exists()) {
+            continue;
+        }
+
+        const manifest = await manifestFile.json() as ScopedPackageManifest;
+        manifest.version = version;
+        await Bun.write(manifestPath, `${JSON.stringify(manifest, null, 4)}\n`);
+    }
 }

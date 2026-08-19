@@ -24,7 +24,6 @@ include:
         file:
             - /workflows/bun/build.yml
             - /workflows/gitlab/create-release.yml
-            - /workflows/npm/publish.yml
 
 stages:
     - quality
@@ -50,11 +49,14 @@ release:
         -   if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+(-rc\d+)?$/
 
 publish:
+    extends: .bun:build
     stage: release
-    extends: .npm:publish
     interruptible: false
     needs: [ release ]
     variables:
         NPM_TOKEN: $NPM_TOKEN
+    script:
+        - bun install --frozen-lockfile
+        - bun scripts/build.ts --publish
     rules:
         -   if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/

@@ -18,9 +18,13 @@ Or run once without installing:
 npx tsfmt
 ```
 
-The published package is a small Node launcher. On first run it downloads a standalone binary for your platform from this project's GitLab Generic Package Registry and
-caches it under `~/.cache/tsfmt/<version>/` (or `$XDG_CACHE_HOME/tsfmt/<version>/`). Bun is not required to run tsfmt. Set `TSFMT_BINARY_PATH` to use a local binary
-instead.
+```bash
+bunx tsfmt
+```
+
+The published package is a small Node launcher. Installing `tsfmt` automatically pulls in the matching `@tsfmt/<platform>` binary package for your platform through npm's
+`optionalDependencies` mechanism — there is no download step and no cache directory, and the tool works offline as soon as `npm install` (or `bunx`/`npx`) has completed.
+Bun is not required to run tsfmt. Set `TSFMT_BINARY_PATH` to use a local binary instead.
 
 Supported platforms: macOS (arm64, x64), Linux glibc and musl (x64, arm64), Windows (x64, arm64).
 

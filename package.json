@@ -23,8 +23,8 @@
         "dev": "bun src/cli.ts",
         "format": "bun src/cli.ts",
         "prepack": "bun scripts/build.ts --types-only",
-        "test": "bun test",
-        "upload:binaries": "bun scripts/build.ts --upload"
+        "publish": "bun scripts/build.ts --publish",
+        "test": "bun test"
     },
     "types": "dist/index.d.ts",
     "exports": {

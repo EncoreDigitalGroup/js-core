@@ -6,3 +6,5 @@ package-lock.json
 .idea/*
 dist/*
 binaries/
+dist-npm/
+.npmrc
