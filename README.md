@@ -33,12 +33,14 @@ Supported platforms: macOS (arm64, x64), Linux glibc and musl (x64, arm64), Wind
 ```bash
 npx tsfmt
 npx tsfmt --dry
+npx tsfmt --no-gate
 npx tsfmt path/to/file.ts
 npx tsfmt path/to/project
 ```
 
 With no path, tsfmt formats the current working directory. A file path must be `.ts`, `.tsx`, `.js`, or `.jsx`. A directory path also sorts `package.json` and
-`tsconfig.json` when those formatters are enabled. `--dry` reports what would change and writes nothing.
+`tsconfig.json` when those formatters are enabled. `--dry` reports what would change and writes nothing. `--no-gate` skips the restrictions gate (see
+[Restrictions](#restrictions) below) and formats normally even if a `restrictions.imports` rule would otherwise be violated.
 
 ## Configuration
 
@@ -54,6 +56,64 @@ export default tsfmt({
 ```
 
 `tsfmt()` merges your overrides with the defaults. The npm package ships TypeScript types for this helper; it does not ship a runtime JavaScript library.
+
+## Restrictions
+
+tsfmt is also able to enforce *architectural* rules about what code may import what — for example, "this directory may not import that one" — through an optional
+`restrictions` config key. Restrictions are a separate, read-only domain from formatting: a **gate** runs across the target files before any formatting starts, and if
+a `forbid`-list or `allow`-list rule is violated, tsfmt prints each violation and exits non-zero **without formatting any file** — this holds even under `--dry`.
+
+```ts
+import {tsfmt} from "tsfmt";
+
+export default tsfmt({
+    restrictions: {
+        imports: [
+            {
+                files: ["app_modules/UIKit/resources/**/*.{ts,tsx}"],
+                forbid: [
+                    {pattern: "@/**", message: "UIKit may not import internal app modules directly."},
+                    {pattern: ["app_modules/Other/**", "**/app_modules/Other/**"], message: "No cross-module imports."},
+                ],
+            },
+        ],
+    },
+});
+```
+
+Each rule has a `files` glob list (relative to the project root, i.e. the directory `tsfmt.config.ts` lives in) and a `forbid` list of module-specifier
+glob patterns paired with the message to print when an import matches. A violation is reported as:
+
+```
+src/Foo.ts:1:1  UIKit may not import internal app modules directly.  (imports "@/internal/Foo")
+1 restriction violation(s). Formatting skipped — fix these first.
+```
+
+A rule can also carry an `allow` list instead of, or alongside, `forbid`: any import whose specifier matches none of the `allow` globs is a violation,
+reported with the rule's `message` (or a generated `Import "<spec>" is not in the allow-list.` when `message` is omitted).
+
+```ts
+import {tsfmt} from "tsfmt";
+
+export default tsfmt({
+    restrictions: {
+        imports: [
+            {
+                files: ["app_modules/UIKit/resources/**/*.{ts,tsx}"],
+                allow: ["app_modules/UIKit/**", "@/ui/**"],
+                message: "UIKit may only import from itself or the shared UI library.",
+            },
+        ],
+    },
+});
+```
+
+`allow` and `forbid` may be combined in the same rule — both are evaluated for every import, so a specifier can be reported as violating each independently.
+
+The gate is opt-in — omitting `restrictions` entirely (the default) leaves tsfmt fully unaffected — and it only runs for directory/project invocations, since
+`files` globs are authored relative to the project root; single-file invocations do not run it. An invalid `restrictions` block (e.g. a `forbid` entry missing
+`message`) is a hard failure: tsfmt prints the config error and exits non-zero rather than silently falling back to formatting. Pass `--no-gate` to skip the gate
+and format normally regardless of any restriction rules.
 
 ## What tsfmt Does
 

@@ -2,7 +2,7 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
-import {ConfigTypes, CoreConfig} from "./ConfigTypes";
+import {ConfigTypes, CoreConfig, ImportRestrictionRule} from "./ConfigTypes";
 
 /** Validation result containing errors and warnings */
 export interface ValidationResult {
@@ -75,6 +75,48 @@ export class ConfigValidator {
             errors,
             warnings,
         };
+    }
+
+    /**
+     * Validate the restrictions.imports block. Returns error strings (empty => valid).
+     * Invoked directly by the CLI gate, NOT by validate(): restriction errors must hard-fail
+     * the gate (process.exit(1)) rather than be swallowed into a defaults-fallback by loadConfig.
+     */
+    static validateRestrictions(imports: ImportRestrictionRule[]): string[] {
+        const errors: string[] = [];
+        imports.forEach((rule, i) => {
+            if (!Array.isArray(rule.files) || rule.files.length === 0) {
+                errors.push(`Invalid restrictions.imports[${i}]: 'files' must be a non-empty array.`);
+            }
+
+            const hasForbid = Array.isArray(rule.forbid) && rule.forbid.length > 0;
+            const hasAllow = Array.isArray(rule.allow) && rule.allow.length > 0;
+            if (!hasForbid && !hasAllow) {
+                errors.push(`Invalid restrictions.imports[${i}]: must have at least one of 'forbid' or 'allow'.`);
+            }
+
+            if (rule.allow !== undefined) {
+                const allowOk = Array.isArray(rule.allow) && rule.allow.length > 0 && rule.allow.every(p => typeof p === "string" && p.length > 0);
+                if (!allowOk) {
+                    errors.push(`Invalid restrictions.imports[${i}]: 'allow' must be a non-empty array of strings.`);
+                }
+            }
+
+            (rule.forbid ?? []).forEach((entry, j) => {
+                const patternOk = typeof entry.pattern === "string"
+                    ? entry.pattern.length > 0
+                    : Array.isArray(entry.pattern) && entry.pattern.length > 0;
+                if (!patternOk) {
+                    errors.push(`Invalid restrictions.imports[${i}].forbid[${j}]: 'pattern' must be a non-empty string or array.`);
+                }
+
+                if (typeof entry.message !== "string" || entry.message.length === 0) {
+                    errors.push(`Invalid restrictions.imports[${i}].forbid[${j}]: 'message' must be a non-empty string.`);
+                }
+            });
+        });
+
+        return errors;
     }
 
     /**

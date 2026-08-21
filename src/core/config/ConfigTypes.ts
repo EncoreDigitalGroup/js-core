@@ -157,6 +157,36 @@ export interface TsConfigConfig {
     indentation?: number;
 }
 
+/** A single forbidden-import entry: one or more module-specifier globs plus the message shown when matched. */
+export interface ImportRestrictionEntry {
+    /** Module-specifier glob(s) to forbid, e.g. "@/**" or ["app_modules/**", "**\/app_modules/**"]. */
+    pattern: string | string[];
+
+    /** Message printed when an import matches this entry. */
+    message: string;
+}
+
+/** One import restriction rule: which files it applies to, and what they may not (forbid) or may only (allow) import. */
+export interface ImportRestrictionRule {
+    /** File globs (relative to the config directory) this rule applies to, e.g. ["app_modules/UIKit/resources/**\/*.{ts,tsx}"]. */
+    files: string[];
+
+    /** Deny-list: imports matching any entry's pattern are violations. */
+    forbid?: ImportRestrictionEntry[];
+
+    /** Allow-list: an import whose specifier matches none of these globs is a violation. */
+    allow?: string[];
+
+    /** Message shown for allow-list violations (falls back to a generated message when omitted). */
+    message?: string;
+}
+
+/** Optional business-rule restrictions. Absent by default — tsfmt imposes no restrictions unless a project opts in. */
+export interface RestrictionsConfig {
+    /** Import restriction rules. Absent or empty means the gate does nothing. */
+    imports?: ImportRestrictionRule[];
+}
+
 /** Represents the execution order of formatters in the pipeline */
 export enum FormatterOrder {
     IndexGeneration = "IndexGeneration",
@@ -188,6 +218,12 @@ export interface CoreConfig {
 
     /** Configuration for tsconfig.json sorting */
     tsConfig?: TsConfigConfig;
+
+    /**
+     * Optional business-rule restrictions (e.g. forbidden import patterns), enforced by a read-only gate that runs
+     * before formatting. Absent by default — tsfmt imposes no restrictions unless a project opts in.
+     */
+    restrictions?: RestrictionsConfig;
 
     /** Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];

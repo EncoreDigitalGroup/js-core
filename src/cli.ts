@@ -2,16 +2,12 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
 import "reflect-metadata";
-import {ConfigLoader, Container, CoreConfig, FormatterPipeline, ServiceRegistration} from "./core";
+import {ConfigLoader, ConfigValidator, Container, CoreConfig, FormatterPipeline, RestrictionChecker, ServiceRegistration} from "./core";
 import {sortPackageFile} from "./sortPackage";
 import {sortTsConfigFile} from "./sortTSConfig";
 
-/** Format files in a directory using the FormatterPipeline */
-async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: boolean): Promise<void> {
-    const container = new Container();
-    ServiceRegistration.registerServices(container, config);
-
-    // Get include/exclude patterns
+/** Discover the files a directory run would format, using the same include/exclude globs as `formatDirectory`. */
+function discoverTargetFiles(targetDir: string, config: CoreConfig): string[] {
     const include = config.sorting?.include || ["**/*.{ts,tsx,js,jsx}"];
     const exclude = config.sorting?.exclude || [];
 
@@ -19,12 +15,48 @@ async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: bo
     const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
     const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
 
-    // Find files to format
-    const files = include.flatMap(pattern => glob.sync(pattern, {
+    return include.flatMap(pattern => glob.sync(pattern, {
         cwd: targetDir,
         ignore: finalExclude,
         absolute: true,
     }));
+}
+
+/**
+ * Read-only architectural-rules gate, run before any formatting. Exits non-zero without formatting a single file
+ * when the config is invalid or a `restrictions.imports` rule is violated; runs even under `--dry`.
+ */
+function runRestrictionGate(files: string[], config: CoreConfig, configDir: string, noGate: boolean): void {
+    if (noGate) {
+        return;
+    }
+
+    const rules = config.restrictions?.imports;
+    if (!rules || rules.length === 0) {
+        return;
+    }
+
+    const configErrors = ConfigValidator.validateRestrictions(rules);
+    if (configErrors.length > 0) {
+        configErrors.forEach(e => console.error(e));
+        process.exit(1);
+    }
+
+    const violations = new RestrictionChecker(rules, configDir).check(files);
+    if (violations.length > 0) {
+        for (const v of violations) {
+            console.error(`${path.relative(configDir, v.filePath)}:${v.line}:${v.column}  ${v.message}  (imports "${v.specifier}")`);
+        }
+
+        console.error(`${violations.length} restriction violation(s). Formatting skipped — fix these first.`);
+        process.exit(1);
+    }
+}
+
+/** Format files in a directory using the FormatterPipeline */
+async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: boolean, files: string[]): Promise<void> {
+    const container = new Container();
+    ServiceRegistration.registerServices(container, config);
 
     if (files.length === 0) {
         console.info("No files found to format.");
@@ -97,15 +129,18 @@ async function main(): Promise<void> {
     // Parse command line arguments
     let target = process.cwd();
     let dryRun = false;
+    let noGate = false;
 
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         if (arg === "--dry") {
             dryRun = true;
+        } else if (arg === "--no-gate") {
+            noGate = true;
         } else if (!arg.startsWith("-")) {
             target = path.resolve(arg);
         } else {
-            console.error(`Error: Unsupported option "${arg}". Only --dry is supported.`);
+            console.error(`Error: Unsupported option "${arg}". Only --dry and --no-gate are supported.`);
             process.exit(1);
         }
     }
@@ -154,6 +189,9 @@ async function main(): Promise<void> {
 
         // Handle directory formatting
         if (isDirectory) {
+            const files = discoverTargetFiles(target, config);
+            runRestrictionGate(files, config, configDir, noGate);
+
             // Sort package.json
             if (config.packageJson?.enabled) {
                 const packagePath = path.join(target, "package.json");
@@ -186,7 +224,7 @@ async function main(): Promise<void> {
                 || config.imports?.enabled
                 || config.sorting?.enabled
                 || config.spacing?.enabled) {
-                await formatDirectory(target, config, dryRun);
+                await formatDirectory(target, config, dryRun, files);
             }
 
             if (dryRun) {

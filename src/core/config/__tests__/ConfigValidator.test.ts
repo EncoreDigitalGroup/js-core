@@ -2,7 +2,8 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
-import {CoreConfig} from "../ConfigTypes";
+import {describe, expect, it} from "bun:test";
+import {CoreConfig, ImportRestrictionRule} from "../ConfigTypes";
 import {ConfigValidator} from "../ConfigValidator";
 
 describe("ConfigValidator", () => {
@@ -110,6 +111,89 @@ describe("ConfigValidator", () => {
             };
 
             expect(() => ConfigValidator.validateOrThrow(config)).toThrow("Invalid configuration");
+        });
+    });
+
+    describe("validateRestrictions", () => {
+        it("should return no errors for a valid rule", () => {
+            const rules: ImportRestrictionRule[] = [
+                {
+                    files: ["app_modules/UIKit/**/*.ts"],
+                    forbid: [{pattern: "@/**", message: "No internal imports."}],
+                },
+            ];
+
+            expect(ConfigValidator.validateRestrictions(rules)).toHaveLength(0);
+        });
+
+        it("should return an error for an empty files array", () => {
+            const rules: ImportRestrictionRule[] = [
+                {
+                    files: [],
+                    forbid: [{pattern: "@/**", message: "No internal imports."}],
+                },
+            ];
+
+            const errors = ConfigValidator.validateRestrictions(rules);
+            expect(errors).toContain("Invalid restrictions.imports[0]: 'files' must be a non-empty array.");
+        });
+
+        it("should return an error for a rule with neither forbid nor allow entries", () => {
+            const rules: ImportRestrictionRule[] = [
+                {
+                    files: ["app_modules/UIKit/**/*.ts"],
+                },
+            ];
+
+            const errors = ConfigValidator.validateRestrictions(rules);
+            expect(errors).toContain("Invalid restrictions.imports[0]: must have at least one of 'forbid' or 'allow'.");
+        });
+
+        it("should return no errors for a rule with only an allow list", () => {
+            const rules: ImportRestrictionRule[] = [
+                {
+                    files: ["app_modules/UIKit/**/*.ts"],
+                    allow: ["@/ui/**"],
+                },
+            ];
+
+            expect(ConfigValidator.validateRestrictions(rules)).toHaveLength(0);
+        });
+
+        it("should return an error for an empty allow array", () => {
+            const rules: ImportRestrictionRule[] = [
+                {
+                    files: ["app_modules/UIKit/**/*.ts"],
+                    allow: [],
+                },
+            ];
+
+            const errors = ConfigValidator.validateRestrictions(rules);
+            expect(errors).toContain("Invalid restrictions.imports[0]: 'allow' must be a non-empty array of strings.");
+        });
+
+        it("should return an error for a forbid entry missing message", () => {
+            const rules: ImportRestrictionRule[] = [
+                {
+                    files: ["app_modules/UIKit/**/*.ts"],
+                    forbid: [{pattern: "@/**", message: ""}],
+                },
+            ];
+
+            const errors = ConfigValidator.validateRestrictions(rules);
+            expect(errors).toContain("Invalid restrictions.imports[0].forbid[0]: 'message' must be a non-empty string.");
+        });
+
+        it("should return an error for a forbid entry with an empty pattern array", () => {
+            const rules: ImportRestrictionRule[] = [
+                {
+                    files: ["app_modules/UIKit/**/*.ts"],
+                    forbid: [{pattern: [], message: "No internal imports."}],
+                },
+            ];
+
+            const errors = ConfigValidator.validateRestrictions(rules);
+            expect(errors).toContain("Invalid restrictions.imports[0].forbid[0]: 'pattern' must be a non-empty string or array.");
         });
     });
 });
