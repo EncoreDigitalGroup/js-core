@@ -612,5 +612,21 @@ describe("StructuralIndentationRule", () => {
             const result = run(input, "test.ts");
             expect(result).toBe(input);
         });
+
+        it("is idempotent when a line's closing brackets close openers at different indents", () => {
+            // `    ));` closes `sortObjectKeys(` (indent 1) and `onObject(` (indent 0). The leftmost
+            // closer owns the line, so it must settle at indent 1 and stay there — the inner closer
+            // must not drag it to indent 0 on alternating passes (a non-idempotent oscillation).
+            const input = [
+                "const sortWireit = onObject((wireit) =>",
+                "    sortObjectKeys(",
+                "        Object.fromEntries(Object.entries(wireit).map(([name, config]) => [name, wrap(config)]))",
+                "    ));"
+            ].join("\n");
+
+            const once = run(input, "test.ts");
+            expect(once).toBe(input);
+            expect(run(once, "test.ts")).toBe(once);
+        });
     });
 });

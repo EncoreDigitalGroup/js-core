@@ -11,7 +11,7 @@
         "experimentalDecorators": true,
         "forceConsistentCasingInFileNames": true,
         "module": "CommonJS",
-        "moduleResolution": "Node",
+        "moduleResolution": "Bundler",
         "noImplicitAny": true,
         "noImplicitOverride": true,
         "noImplicitReturns": true,

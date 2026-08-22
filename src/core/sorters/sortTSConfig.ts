@@ -4,7 +4,7 @@
  */
 import fs from "fs";
 import path from "path";
-import {DefaultSortOptions, SortOptions} from "./shared/types";
+import {DefaultSortOptions, SortOptions} from "../../shared";
 
 function sortObjectKeysAlphabetically(obj: Record<string, any>): Record<string, any> {
     if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {

@@ -201,12 +201,32 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         const declarationsStart = firstDeclaration.getFullStart();
         const declarationsEnd = lastDeclaration.getEnd();
 
-        // Build new declarations section from sorted texts
-        const declarationTexts = sortedDeclarations.map(d => this.reanchorToEnclosingIndent(d.text));
+        // When no imports precede the declarations, the file's leading comment block (license header
+        // and any file-level doc comment) is the leading trivia of the first declaration. Sorting
+        // must not carry it off with that declaration, so pin it at the top of the file and strip it
+        // from that declaration's emitted text. With imports present the header sits before them and
+        // is already outside this span, preserved verbatim by `substring(0, declarationsStart)`.
+        const leadingTrivia = declarationsStart === 0 ? originalText.substring(0, firstDeclaration.getStart(sourceFile)) : "";
+        const fileHeader = leadingTrivia.includes("/*") || leadingTrivia.includes("//") ? leadingTrivia : "";
+
+        // Build new declarations section from sorted texts. The header-owning declaration is emitted
+        // without its leading trivia (that trivia is the pinned file header); every other declaration
+        // keeps its own leading comments.
+        const declarationTexts = sortedDeclarations.map(d =>
+            fileHeader && d.node === firstDeclaration
+                ? originalText.substring(d.node.getStart(sourceFile), d.node.getEnd())
+                : this.reanchorToEnclosingIndent(d.text));
+
         const newDeclarations = declarationTexts.join("\n\n");
 
-        // Replace the declarations section (add spacing between imports and declarations)
-        const formatted = originalText.substring(0, declarationsStart) + "\n\n" + newDeclarations + originalText.substring(declarationsEnd);
+        // Emit the pinned header (if any), then the declarations. When imports precede the
+        // declarations, keep them and separate them from the declarations with a blank line.
+        const importPrefix = originalText.substring(0, declarationsStart);
+        const tail = originalText.substring(declarationsEnd);
+        const formatted = fileHeader
+            ? fileHeader + newDeclarations + tail
+            : (importPrefix ? importPrefix + "\n\n" : "") + newDeclarations + tail;
+
         if (formatted !== originalText) {
             context.sourceFile.replaceWithText(formatted);
         }

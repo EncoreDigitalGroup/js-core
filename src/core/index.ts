@@ -7,3 +7,4 @@ export * from "./di";
 export * from "./formatters";
 export * from "./pipeline";
 export * from "./restrictions";
+export * from "./sorters";

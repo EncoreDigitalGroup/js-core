@@ -335,11 +335,15 @@ export class StructuralIndentationRule extends BaseFormattingRule {
 
                     // Only fix if the closing bracket is on a different line
                     if (line !== openBracket.line) {
-                        const currentIndent = this.getLineIndentLevel(lines[line], indentWidth);
                         const trimmedLine = lines[line].trimStart();
 
-                        // Only fix if this is a line that starts with closing brackets
-                        if (this.startsWithClosingBracket(trimmedLine)) {
+                        // Only fix lines that start with a closing bracket, and let the leftmost such
+                        // bracket (processed first, left-to-right) own the line's indentation: it aligns
+                        // to its opener's line. Inner closers on the same line must not override it — a
+                        // line like `    ));`, whose two parens close openers at different indents, would
+                        // otherwise flip between them on every pass (a non-idempotent oscillation).
+                        if (this.startsWithClosingBracket(trimmedLine) && !lineIndentCorrections.has(line)) {
+                            const currentIndent = this.getLineIndentLevel(lines[line], indentWidth);
                             if (currentIndent !== openBracket.lineIndent) {
                                 fixes.push({
                                     position: i,
@@ -347,13 +351,12 @@ export class StructuralIndentationRule extends BaseFormattingRule {
                                     column,
                                     targetIndent: openBracket.lineIndent
                                 });
-
-                                // Record the corrected indent for this line
-                                // so any opening brackets on this line use the corrected value
-                                if (!lineIndentCorrections.has(line)) {
-                                    lineIndentCorrections.set(line, openBracket.lineIndent);
-                                }
                             }
+
+                            // Lock this line's target indent even when no fix is needed, so later
+                            // closers on the same line don't compute a competing fix. Opening brackets
+                            // on this line also read this corrected value.
+                            lineIndentCorrections.set(line, openBracket.lineIndent);
                         }
                     }
                 }

@@ -2,9 +2,7 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
 import "reflect-metadata";
-import {ConfigLoader, ConfigValidator, Container, CoreConfig, FormatterPipeline, RestrictionChecker, ServiceRegistration} from "./core";
-import {sortPackageFile} from "./sortPackage";
-import {sortTsConfigFile} from "./sortTSConfig";
+import {ConfigLoader, ConfigValidator, Container, CoreConfig, FormatterPipeline, RestrictionChecker, ServiceRegistration, sortPackageFile, sortTsConfigFile} from "./core";
 
 /** Discover the files a directory run would format, using the same include/exclude globs as `formatDirectory`. */
 function discoverTargetFiles(targetDir: string, config: CoreConfig): string[] {

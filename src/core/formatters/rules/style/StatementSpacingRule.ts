@@ -5,7 +5,7 @@
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
 
-type LineKind = "comment" | "close" | "control" | "return" | "major" | "decl" | "expr";
+type LineKind = "comment" | "close" | "control" | "return" | "major" | "decl" | "import" | "expr";
 
 /**
  * Standardizes blank lines between statements so vertical spacing is predictable:
@@ -16,6 +16,8 @@ type LineKind = "comment" | "close" | "control" | "return" | "major" | "decl" | 
  *   tight against its declaration).
  * - Exactly one blank line when the statement kind changes (declaration -> expression, after a
  *   closing brace, etc.); none between consecutive statements of the same kind.
+ * - No blank line between consecutive imports, but exactly one blank line between the import block
+ *   and the first statement of the file body below it.
  * - A blank line between two adjacent block comments, but a doc/section comment stays glued to the
  *   code it documents.
  * - Runs of blank lines collapse to a single blank line.
@@ -64,6 +66,12 @@ export class StatementSpacingRule extends BaseFormattingRule {
 
         if (/^(return|throw)\b/.test(trimmed)) {
             return "return";
+        }
+
+        // Import (and re-export-from) statements group together with no blank line between them, but
+        // are separated from the file body that follows by exactly one blank line.
+        if (/^import\b/.test(trimmed) || /^export\b[^;]*\bfrom\s*["']/.test(trimmed)) {
+            return "import";
         }
 
         // Major declarations (types, and members that open their own body such as methods, classes,

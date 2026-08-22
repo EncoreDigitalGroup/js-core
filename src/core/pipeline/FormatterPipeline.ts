@@ -198,8 +198,15 @@ export class FormatterPipeline {
             }
         }
 
-        // Read the final text once after all rules have run
-        context.currentSource = formatContext.getText();
+        // Read the final text once after all rules have run, then normalize the end of file: no
+        // trailing blank line or newline. This is the single output chokepoint, so it applies
+        // regardless of which rule ran last or whether the source arrived with a trailing newline.
+        const normalizedSource = formatContext.getText().replace(/\s+$/, "");
+        if (normalizedSource !== originalSource) {
+            context.changed = true;
+        }
+
+        context.currentSource = normalizedSource;
 
         // Write to disk if changes were made and not in dry-run mode
         if (context.changed && !dryRun) {

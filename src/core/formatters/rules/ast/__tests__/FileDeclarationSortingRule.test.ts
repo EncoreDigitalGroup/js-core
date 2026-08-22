@@ -78,13 +78,10 @@ interface Props {
             expect(result).toContain(originalJsxBody);
         });
 
-        it("matches the pre-migration golden for a plain .ts file's reordered top-level declarations", () => {
-            // Captured from the pre-migration `FileDeclarationSortingRule.apply()` (ts.createSourceFile
-            // + string-splice reconstruction) on this exact input, with the default sorting config,
-            // before the rule was migrated to `applyToContext`. Top-level declarations sit at zero
-            // base indentation, so the pre-migration `.trim()` reconstruction and the migrated
-            // leading-blank-line-only reconstruction coincide byte-for-byte here; the migrated rule
-            // must still reproduce this exactly.
+        it("reorders a plain .ts file's top-level declarations without adding leading blank lines", () => {
+            // This input has no imports and no leading comment, so the reordered output must begin
+            // directly with the first sorted declaration — no spurious blank lines at the top of the
+            // file (the pre-fix reconstruction prepended an unconditional "\n\n" here).
             const input = `function helper() {
     return 1;
 }
@@ -98,12 +95,40 @@ interface Options {
 }
 `;
 
-            const golden = "\n\ninterface Options {\n    flag: boolean;\n}\n\nfunction helper() {\n    return 1;\n}" +
+            const golden = "interface Options {\n    flag: boolean;\n}\n\nfunction helper() {\n    return 1;\n}" +
 
                 "\n\nexport function main() {\n    return helper();\n}\n";
 
             const result = run(input, "file.ts", defaultConfig());
             expect(result).toBe(golden);
+        });
+
+        it("keeps the file's leading comment header pinned at the top when there are no imports", () => {
+            // The license/header block is the leading trivia of the first declaration in an
+            // import-less file; sorting must not carry it away with that declaration.
+            const input = `/*
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+
+/*
+ * File-level doc.
+ */
+type AnyObject = Record<string, unknown>;
+
+interface Field {
+    key: string;
+}
+`;
+
+            const result = run(input, "file.ts", defaultConfig());
+
+            // Header stays at the very top; the interface still sorts ahead of the type alias below it.
+            expect(result.startsWith("/*\n * Copyright (c) 2026. Encore Digital Group.")).toBe(true);
+            expect(result.indexOf("interface Field")).toBeLessThan(result.indexOf("type AnyObject"));
+
+            // Running the rule again is a no-op (the header does not drift on re-format).
+            expect(run(result, "file.ts", defaultConfig())).toBe(result);
         });
     });
 });

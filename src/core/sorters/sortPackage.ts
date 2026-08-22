@@ -4,15 +4,15 @@
  */
 import fs from "fs";
 import path from "path";
-import {sortPackageJson as baseSortPackageJson} from "sort-package-json";
-import {sortExportsKeys} from "./formatters";
-import {DefaultSortOptions, SortOptions} from "./shared";
+import {sortExportsKeys} from "../../formatters";
+import {DefaultSortOptions, SortOptions} from "../../shared";
+import {sortPackageJsonObject} from "./packageJsonSorter";
 
 export function sortPackageJson(packageObj: Record<string, any>, options: SortOptions = {}): Record<string, any> {
     const sortOrder = options.customSortOrder || DefaultSortOptions.customSortOrder;
 
-    // Sort using the base library first
-    let sortedPackage = baseSortPackageJson(packageObj, {
+    // Order the top-level fields first
+    let sortedPackage = sortPackageJsonObject(packageObj, {
         sortOrder,
     });
 
