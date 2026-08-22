@@ -38,19 +38,26 @@ function binNameFor(spec: PlatformSpec): string {
 
 export const rootDir = `${import.meta.dir}/..`;
 
-async function runPublish(packageDir?: string): Promise<void> {
-    const args = packageDir
-        ? ["publish", packageDir, "--access", "public"]
-        : ["publish", "--access", "public"];
+export function publishCwd(packageDir?: string): string {
+    return packageDir ? `${rootDir}/${packageDir}` : rootDir;
+}
 
-    const proc = Bun.spawn(["bun", ...args], {
-        cwd: rootDir,
-        stderr: "inherit",
-        stdout: "inherit",
-    });
+async function runPublish(npmTag: string, npmToken: string, packageDir?: string): Promise<void> {
+    const cwd = publishCwd(packageDir);
+    const npmrcPath = `${cwd}/.npmrc`;
+    await Bun.write(npmrcPath, `//registry.npmjs.org/:_authToken=${npmToken}\n`);
+    try {
+        const proc = Bun.spawn(["bun", "publish", "--access", "public", "--tag", npmTag], {
+            cwd,
+            stderr: "inherit",
+            stdout: "inherit",
+        });
 
-    if (await proc.exited !== 0) {
-        throw new Error(`publish failed for ${packageDir ?? "tsfmt"}`);
+        if (await proc.exited !== 0) {
+            throw new Error(`publish failed for ${packageDir ?? "tsfmt"}`);
+        }
+    } finally {
+        await rm(npmrcPath, {force: true});
     }
 }
 
@@ -222,29 +229,42 @@ export function scopedPackageName(key: string): string {
     return `@tsfmt/${key}`;
 }
 
-export async function publishPackages(_version: string): Promise<void> {
+export function npmDistTag(version: string): "alpha" | "beta" | "latest" | "rc" {
+    const match = /^(?:\d+\.\d+\.\d+)(?:-(alpha|beta|rc)\d+)?$/.exec(version);
+    if (!match) {
+        throw new Error(`Cannot derive npm dist-tag from version: ${version}`);
+    }
+
+    const prerelease = match[1];
+    if (prerelease === "alpha" || prerelease === "beta" || prerelease === "rc") {
+        return prerelease;
+    }
+
+    return "latest";
+}
+
+export async function publishPackages(version: string): Promise<void> {
     const npmToken = process.env.NPM_TOKEN;
     if (!npmToken) {
         throw new Error("Set NPM_TOKEN to publish packages.");
     }
 
-    const npmrcPath = `${rootDir}/.npmrc`;
-    await Bun.write(npmrcPath, `//registry.npmjs.org/:_authToken=${npmToken}\n`);
-    try {
-        for (const spec of platforms) {
-            await runPublish(`${distNpmRelDir}/${scopedPackageName(spec.key)}`);
-        }
-
-        await runPublish();
-    } finally {
-        await rm(npmrcPath, {force: true});
+    const npmTag = npmDistTag(version);
+    for (const spec of platforms) {
+        await runPublish(npmTag, npmToken, `${distNpmRelDir}/${scopedPackageName(spec.key)}`);
     }
+
+    await runPublish(npmTag, npmToken);
 }
+
+export const releaseTagPattern = /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/;
 
 export function resolveReleaseVersion(): string {
     const tag = process.env.CI_COMMIT_TAG;
-    if (!tag || !/^v\d+\.\d+\.\d+$/.test(tag)) {
-        throw new Error(`CI_COMMIT_TAG must be a valid semver tag like v1.2.3 to publish, got: ${tag ?? "(unset)"}`);
+    if (!tag || !releaseTagPattern.test(tag)) {
+        throw new Error(
+            `CI_COMMIT_TAG must be a valid release tag (vX.Y.Z, vX.Y.Z-alphaN, vX.Y.Z-betaN, or vX.Y.Z-rcN), got: ${tag ?? "(unset)"}`,
+        );
     }
 
     return tag.replace(/^v/, "");

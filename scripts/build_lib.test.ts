@@ -2,8 +2,10 @@ import {afterEach, describe, expect, it} from "bun:test";
 import {
     distNpmDir,
     hostPlatforms,
+    npmDistTag,
     parseBuildMode,
     platforms,
+    publishCwd,
     resolveReleaseVersion,
     rootDir,
     scopedPackageManifest,
@@ -88,7 +90,10 @@ describe("scopedPackageManifest", () => {
 
 describe("stageScopedPackages", () => {
     it("throws a clear error when a target's binary is missing from binariesDir", async () => {
-        const spec = platforms.find((p) => p.key === "linux-arm64-musl")!;
+        const spec = {
+            ...platforms.find((p) => p.key === "linux-arm64-musl")!,
+            artifactName: "tsfmt-does-not-exist",
+        };
         await expect(stageScopedPackages([spec], "1.2.3")).rejects.toThrow(
             /Missing compiled binary for linux-arm64-musl/,
         );
@@ -174,14 +179,71 @@ describe("resolveReleaseVersion", () => {
         expect(resolveReleaseVersion()).toBe("1.2.3");
     });
 
+    it("maps vX.Y.Z-alphaN to the matching package version", () => {
+        process.env.CI_COMMIT_TAG = "v1.2.3-alpha1";
+        expect(resolveReleaseVersion()).toBe("1.2.3-alpha1");
+    });
+
+    it("maps vX.Y.Z-betaN to the matching package version", () => {
+        process.env.CI_COMMIT_TAG = "v2.0.0-beta2";
+        expect(resolveReleaseVersion()).toBe("2.0.0-beta2");
+    });
+
+    it("maps vX.Y.Z-rcN to the matching package version", () => {
+        process.env.CI_COMMIT_TAG = "v1.2.3-rc1";
+        expect(resolveReleaseVersion()).toBe("1.2.3-rc1");
+    });
+
     it("throws when CI_COMMIT_TAG is unset", () => {
         delete process.env.CI_COMMIT_TAG;
         expect(() => resolveReleaseVersion()).toThrow();
     });
 
-    it("throws when CI_COMMIT_TAG is not a valid semver tag", () => {
+    it("throws when CI_COMMIT_TAG is not a valid release tag", () => {
         process.env.CI_COMMIT_TAG = "not-a-version";
         expect(() => resolveReleaseVersion()).toThrow();
+    });
+
+    it("throws on a prerelease tag with no number", () => {
+        process.env.CI_COMMIT_TAG = "v1.2.3-alpha";
+        expect(() => resolveReleaseVersion()).toThrow();
+    });
+
+    it("throws on the dashed vX.Y.Z-rc-N tag form", () => {
+        process.env.CI_COMMIT_TAG = "v1.2.3-rc-1";
+        expect(() => resolveReleaseVersion()).toThrow();
+    });
+});
+
+describe("npmDistTag", () => {
+    it("uses latest for a stable version", () => {
+        expect(npmDistTag("1.2.3")).toBe("latest");
+    });
+
+    it("uses alpha for an alphaN version", () => {
+        expect(npmDistTag("1.2.3-alpha1")).toBe("alpha");
+    });
+
+    it("uses beta for a betaN version", () => {
+        expect(npmDistTag("1.2.3-beta2")).toBe("beta");
+    });
+
+    it("uses rc for an rcN version", () => {
+        expect(npmDistTag("1.2.3-rc1")).toBe("rc");
+    });
+
+    it("throws on a version that is not a release tag body", () => {
+        expect(() => npmDistTag("1.2.3-rc-1")).toThrow();
+    });
+});
+
+describe("publishCwd", () => {
+    it("publishes the root package from the repo root", () => {
+        expect(publishCwd()).toBe(rootDir);
+    });
+
+    it("publishes a platform package from its staged directory", () => {
+        expect(publishCwd("dist-npm/@tsfmt/darwin-arm64")).toBe(`${rootDir}/dist-npm/@tsfmt/darwin-arm64`);
     });
 });
 
@@ -208,6 +270,18 @@ describe("stampVersion", () => {
 
             const manifest = await Bun.file(stagedManifestPath).json() as {version: string};
             expect(manifest.version).toBe("9.9.9");
+        } finally {
+            await Bun.write(rootPath, originalRoot);
+        }
+    });
+
+    it("writes a prerelease tag body onto the root package.json version", async () => {
+        const rootPath = `${rootDir}/package.json`;
+        const originalRoot = await Bun.file(rootPath).text();
+        try {
+            await stampVersion("1.2.3-rc1");
+            const root = await Bun.file(rootPath).json() as {version: string};
+            expect(root.version).toBe("1.2.3-rc1");
         } finally {
             await Bun.write(rootPath, originalRoot);
         }

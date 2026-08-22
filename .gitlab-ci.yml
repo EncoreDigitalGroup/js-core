@@ -1,18 +1,19 @@
 # GitLab CI Pipeline — tsfmt
 #
 # Required CI/CD Variables (Settings > CI/CD > Variables):
-#   ENCOREBOT_ACCESS_TOKEN  — masked; project/group access token with `api` scope,
-#                             used by the release job to create the GitLab Release
-#                             and auto-generate notes from merged MRs.
-#   NPM_TOKEN               — masked + protected; npm access token with publish
-#                             rights on the tsfmt package at registry.npmjs.org.
+#   ENCOREBOT_ACCESS_TOKEN  — masked instance-level CI access token with `api` scope.
+#                             EncoreBot must have Maintainer or Owner access to this
+#                             project so the release job can create a GitLab Release.
+#   TSFMT_NPM_RELEASE_TOKEN — masked + protected; npm access token with publish
+#                             rights on tsfmt and the @tsfmt/<platform> packages
+#                             at registry.npmjs.org.
 #
 # Required project setting:
-#   Settings > Repository > Protected tags must include v*.*.* so NPM_TOKEN is
-#   available to the publish job.
+#   Settings > Repository > Protected tags must include v*.*.* so
+#   TSFMT_NPM_RELEASE_TOKEN is available to the publish job.
 #
 # Pipeline overview:
-#   build (MR + web) → release (semver tags) → publish (stable tags only)
+#   build + test (MR + web) → release + publish (vX.Y.Z, -alphaN, -betaN, -rcN)
 
 workflow:
     auto_cancel:
@@ -39,14 +40,25 @@ build:
         -   if: $CI_PIPELINE_SOURCE == "merge_request_event"
         -   if: $CI_PIPELINE_SOURCE == "web"
 
+test:
+    stage: quality
+    extends: .bun:build
+    interruptible: true
+    variables:
+        COMMIT_BUILD: "false"
+    script:
+        - bun install --frozen-lockfile
+        - bun test
+    rules:
+        -   if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        -   if: $CI_PIPELINE_SOURCE == "web"
+
 release:
     stage: release
     extends: .gitlab:create-release
     interruptible: false
-    variables:
-        ENCOREBOT_ACCESS_TOKEN: $ENCOREBOT_ACCESS_TOKEN
     rules:
-        -   if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+(-rc\d+)?$/
+        -   if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/
 
 publish:
     extends: .bun:build
@@ -54,9 +66,9 @@ publish:
     interruptible: false
     needs: [ release ]
     variables:
-        NPM_TOKEN: $NPM_TOKEN
+        NPM_TOKEN: $TSFMT_NPM_RELEASE_TOKEN
     script:
         - bun install --frozen-lockfile
         - bun scripts/build.ts --publish
     rules:
-        -   if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+        -   if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/

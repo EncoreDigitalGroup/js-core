@@ -18,12 +18,17 @@ if (mode.kind !== "types-only") {
     const targets = selectCompileTargets(mode.kind === "publish" ? true : mode.allPlatforms);
     await compileStandaloneBinaries(targets);
 
-    const pkg = await loadPackageJson();
-    await stageScopedPackages(targets, pkg.version);
+    const version = mode.kind === "publish"
+        ? resolveReleaseVersion()
+        : (await loadPackageJson()).version;
 
     if (mode.kind === "publish") {
-        const version = resolveReleaseVersion();
         await stampVersion(version);
+    }
+
+    await stageScopedPackages(targets, version);
+
+    if (mode.kind === "publish") {
         await publishPackages(version);
     }
 }
