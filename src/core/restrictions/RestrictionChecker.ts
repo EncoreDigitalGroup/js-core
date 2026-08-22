@@ -44,6 +44,24 @@ export class RestrictionChecker {
         return this.rules.filter(rule => rule.files.some(pattern => minimatch(relativePath, pattern)));
     }
 
+    /**
+     * Check a single import specifier against a rule's `allow` list. When the rule has no `allow` list, every
+     * specifier passes. When it has one, a specifier matching none of the globs is a violation, reported with
+     * `rule.message` or a generated fallback.
+     */
+    private checkAllow(specifier: string, rule: ImportRestrictionRule): string | undefined {
+        if (!rule.allow || rule.allow.length === 0) {
+            return undefined;
+        }
+
+        const matchesAllowed = rule.allow.some(pattern => minimatch(specifier, pattern));
+        if (matchesAllowed) {
+            return undefined;
+        }
+
+        return rule.message ?? `Import "${specifier}" is not in the allow-list.`;
+    }
+
     /** Whether a module specifier matches a pattern (string) or any pattern in an array. */
     private specifierMatchesPattern(specifier: string, pattern: string | string[]): boolean {
         const patterns = Array.isArray(pattern) ? pattern : [pattern];
@@ -64,24 +82,6 @@ export class RestrictionChecker {
         return undefined;
     }
 
-    /**
-     * Check a single import specifier against a rule's `allow` list. When the rule has no `allow` list, every
-     * specifier passes. When it has one, a specifier matching none of the globs is a violation, reported with
-     * `rule.message` or a generated fallback.
-     */
-    private checkAllow(specifier: string, rule: ImportRestrictionRule): string | undefined {
-        if (!rule.allow || rule.allow.length === 0) {
-            return undefined;
-        }
-
-        const matchesAllowed = rule.allow.some(pattern => minimatch(specifier, pattern));
-        if (matchesAllowed) {
-            return undefined;
-        }
-
-        return rule.message ?? `Import "${specifier}" is not in the allow-list.`;
-    }
-
     /** Check every file; returns all violations (empty array => clean). Deterministically ordered by file, then line. */
     check(filePaths: string[]): RestrictionViolation[] {
         const violations: RestrictionViolation[] = [];
@@ -96,13 +96,11 @@ export class RestrictionChecker {
 
             const source = fs.readFileSync(filePath, "utf-8");
             const sourceFile = project.createSourceFile(filePath, source, {overwrite: true});
-
             for (const declaration of sourceFile.getImportDeclarations()) {
                 const specifier = declaration.getModuleSpecifierValue();
 
                 for (const rule of matchingRules) {
                     const messages: string[] = [];
-
                     const allowMessage = this.checkAllow(specifier, rule);
                     if (allowMessage !== undefined) {
                         messages.push(allowMessage);
@@ -118,6 +116,7 @@ export class RestrictionChecker {
                     }
 
                     const {line, column} = sourceFile.getLineAndColumnAtPos(declaration.getStart());
+
                     for (const message of messages) {
                         violations.push({filePath, line, column, specifier, message});
                     }

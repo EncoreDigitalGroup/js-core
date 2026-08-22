@@ -78,12 +78,31 @@ export class ConfigValidator {
     }
 
     /**
+     * Validate and throw if invalid
+     * @param config - Configuration to validate
+     * @throws Error if configuration is invalid
+     */
+    static validateOrThrow(config: CoreConfig): void {
+        const result = this.validate(config);
+        if (!result.valid) {
+            throw new Error(`Invalid configuration:\n${result.errors.join("\n")}`);
+        }
+
+        // Log warnings if present
+        if (result.warnings.length > 0) {
+            console.warn("Configuration warnings:");
+            result.warnings.forEach(warning => console.warn(`  - ${warning}`));
+        }
+    }
+
+    /**
      * Validate the restrictions.imports block. Returns error strings (empty => valid).
      * Invoked directly by the CLI gate, NOT by validate(): restriction errors must hard-fail
      * the gate (process.exit(1)) rather than be swallowed into a defaults-fallback by loadConfig.
      */
     static validateRestrictions(imports: ImportRestrictionRule[]): string[] {
         const errors: string[] = [];
+
         imports.forEach((rule, i) => {
             if (!Array.isArray(rule.files) || rule.files.length === 0) {
                 errors.push(`Invalid restrictions.imports[${i}]: 'files' must be a non-empty array.`);
@@ -106,6 +125,7 @@ export class ConfigValidator {
                 const patternOk = typeof entry.pattern === "string"
                     ? entry.pattern.length > 0
                     : Array.isArray(entry.pattern) && entry.pattern.length > 0;
+
                 if (!patternOk) {
                     errors.push(`Invalid restrictions.imports[${i}].forbid[${j}]: 'pattern' must be a non-empty string or array.`);
                 }
@@ -117,23 +137,5 @@ export class ConfigValidator {
         });
 
         return errors;
-    }
-
-    /**
-     * Validate and throw if invalid
-     * @param config - Configuration to validate
-     * @throws Error if configuration is invalid
-     */
-    static validateOrThrow(config: CoreConfig): void {
-        const result = this.validate(config);
-        if (!result.valid) {
-            throw new Error(`Invalid configuration:\n${result.errors.join("\n")}`);
-        }
-
-        // Log warnings if present
-        if (result.warnings.length > 0) {
-            console.warn("Configuration warnings:");
-            result.warnings.forEach(warning => console.warn(`  - ${warning}`));
-        }
     }
 }

@@ -22,37 +22,6 @@ function discoverTargetFiles(targetDir: string, config: CoreConfig): string[] {
     }));
 }
 
-/**
- * Read-only architectural-rules gate, run before any formatting. Exits non-zero without formatting a single file
- * when the config is invalid or a `restrictions.imports` rule is violated; runs even under `--dry`.
- */
-function runRestrictionGate(files: string[], config: CoreConfig, configDir: string, noGate: boolean): void {
-    if (noGate) {
-        return;
-    }
-
-    const rules = config.restrictions?.imports;
-    if (!rules || rules.length === 0) {
-        return;
-    }
-
-    const configErrors = ConfigValidator.validateRestrictions(rules);
-    if (configErrors.length > 0) {
-        configErrors.forEach(e => console.error(e));
-        process.exit(1);
-    }
-
-    const violations = new RestrictionChecker(rules, configDir).check(files);
-    if (violations.length > 0) {
-        for (const v of violations) {
-            console.error(`${path.relative(configDir, v.filePath)}:${v.line}:${v.column}  ${v.message}  (imports "${v.specifier}")`);
-        }
-
-        console.error(`${violations.length} restriction violation(s). Formatting skipped — fix these first.`);
-        process.exit(1);
-    }
-}
-
 /** Format files in a directory using the FormatterPipeline */
 async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: boolean, files: string[]): Promise<void> {
     const container = new Container();
@@ -120,6 +89,37 @@ async function formatSingleFile(filePath: string, config: CoreConfig, dryRun: bo
 function isSupportedFile(filePath: string): boolean {
     const supportedExtensions = [".ts", ".tsx", ".js", ".jsx"];
     return supportedExtensions.some(ext => filePath.endsWith(ext));
+}
+
+/**
+ * Read-only architectural-rules gate, run before any formatting. Exits non-zero without formatting a single file
+ * when the config is invalid or a `restrictions.imports` rule is violated; runs even under `--dry`.
+ */
+function runRestrictionGate(files: string[], config: CoreConfig, configDir: string, noGate: boolean): void {
+    if (noGate) {
+        return;
+    }
+
+    const rules = config.restrictions?.imports;
+    if (!rules || rules.length === 0) {
+        return;
+    }
+
+    const configErrors = ConfigValidator.validateRestrictions(rules);
+    if (configErrors.length > 0) {
+        configErrors.forEach(e => console.error(e));
+        process.exit(1);
+    }
+
+    const violations = new RestrictionChecker(rules, configDir).check(files);
+    if (violations.length > 0) {
+        for (const v of violations) {
+            console.error(`${path.relative(configDir, v.filePath)}:${v.line}:${v.column}  ${v.message}  (imports "${v.specifier}")`);
+        }
+
+        console.error(`${violations.length} restriction violation(s). Formatting skipped — fix these first.`);
+        process.exit(1);
+    }
 }
 
 /** Main CLI function */

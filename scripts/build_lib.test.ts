@@ -2,10 +2,15 @@ import {afterEach, describe, expect, it} from "bun:test";
 import {
     distNpmDir,
     hostPlatforms,
+    classifyPublishAttempt,
     npmDistTag,
+    npmPackumentUrl,
     parseBuildMode,
+    planPublish,
     platforms,
     publishCwd,
+    publishPlanIsEmpty,
+    publishRetryWaitMs,
     resolveReleaseVersion,
     rootDir,
     scopedPackageManifest,
@@ -94,6 +99,7 @@ describe("stageScopedPackages", () => {
             ...platforms.find((p) => p.key === "linux-arm64-musl")!,
             artifactName: "tsfmt-does-not-exist",
         };
+
         await expect(stageScopedPackages([spec], "1.2.3")).rejects.toThrow(
             /Missing compiled binary for linux-arm64-musl/,
         );
@@ -247,6 +253,69 @@ describe("publishCwd", () => {
     });
 });
 
+describe("npmPackumentUrl", () => {
+    it("builds a registry URL for the root package", () => {
+        expect(npmPackumentUrl("tsfmt", "0.3.0-alpha3")).toBe(
+            "https://registry.npmjs.org/tsfmt/0.3.0-alpha3",
+        );
+    });
+
+    it("percent-encodes a scoped package name", () => {
+        expect(npmPackumentUrl("@tsfmt/linux-x64", "0.3.0-alpha3")).toBe(
+            "https://registry.npmjs.org/%40tsfmt%2Flinux-x64/0.3.0-alpha3",
+        );
+    });
+});
+
+describe("planPublish", () => {
+    it("plans every package when none are on npm", async () => {
+        const plan = await planPublish("0.3.0-alpha3", async () => false);
+        expect(plan.publishRoot).toBe(true);
+        expect(plan.rootName).toBe("tsfmt");
+        expect(plan.targets).toEqual(platforms);
+        expect(publishPlanIsEmpty(plan)).toBe(false);
+    });
+
+    it("plans nothing when every package is already on npm", async () => {
+        const plan = await planPublish("0.3.0-alpha3", async () => true);
+        expect(plan.publishRoot).toBe(false);
+        expect(plan.targets).toEqual([]);
+        expect(publishPlanIsEmpty(plan)).toBe(true);
+    });
+
+    it("omits platform packages that are already on npm", async () => {
+        const exists = async (name: string) => name === "@tsfmt/linux-x64";
+        const plan = await planPublish("0.3.0-alpha3", exists);
+        expect(plan.targets.map((spec) => spec.key)).not.toContain("linux-x64");
+        expect(plan.targets).toHaveLength(platforms.length - 1);
+        expect(plan.publishRoot).toBe(true);
+    });
+});
+
+describe("classifyPublishAttempt", () => {
+    it("treats a zero exit as published", async () => {
+        expect(await classifyPublishAttempt("tsfmt", "1.0.0", 0, async () => false)).toBe("published");
+    });
+
+    it("treats a failed publish as already-published when the version is now on npm", async () => {
+        expect(await classifyPublishAttempt("@tsfmt/linux-x64", "1.0.0", 1, async () => true)).toBe(
+            "already-published",
+        );
+    });
+
+    it("retries a failed publish when the version is still missing", async () => {
+        expect(await classifyPublishAttempt("@tsfmt/linux-x64", "1.0.0", 1, async () => false)).toBe("retry");
+    });
+});
+
+describe("publishRetryWaitMs", () => {
+    it("backs off by five seconds per attempt", () => {
+        expect(publishRetryWaitMs(1)).toBe(5_000);
+        expect(publishRetryWaitMs(2)).toBe(10_000);
+        expect(publishRetryWaitMs(3)).toBe(15_000);
+    });
+});
+
 describe("stampVersion", () => {
     it("sets the version and creates optionalDependencies on a manifest that has none", async () => {
         const rootPath = `${rootDir}/package.json`;
@@ -280,6 +349,7 @@ describe("stampVersion", () => {
         const originalRoot = await Bun.file(rootPath).text();
         try {
             await stampVersion("1.2.3-rc1");
+
             const root = await Bun.file(rootPath).json() as {version: string};
             expect(root.version).toBe("1.2.3-rc1");
         } finally {

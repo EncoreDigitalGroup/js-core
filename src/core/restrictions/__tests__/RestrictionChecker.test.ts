@@ -11,12 +11,10 @@ import {RestrictionChecker} from "../RestrictionChecker";
 
 describe("RestrictionChecker", () => {
     let tempDir: string;
-
     beforeAll(() => {
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "restriction-checker-test-"));
         fs.mkdirSync(path.join(tempDir, "app_modules", "UIKit", "resources"), {recursive: true});
         fs.mkdirSync(path.join(tempDir, "app_modules", "Other"), {recursive: true});
-
         fs.writeFileSync(
             path.join(tempDir, "app_modules", "UIKit", "resources", "single-pattern.ts"),
             `import {Foo} from "@/internal/Foo";\nexport const x = Foo;\n`
@@ -57,7 +55,6 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "UIKit", "resources", "single-pattern.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(1);
         expect(violations[0].message).toBe("UIKit may not import internal modules directly.");
         expect(violations[0].specifier).toBe("@/internal/Foo");
@@ -76,7 +73,6 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "UIKit", "resources", "array-pattern.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(1);
         expect(violations[0].message).toBe("No cross-module imports.");
         expect(violations[0].specifier).toBe("app_modules/Other/Bar");
@@ -92,7 +88,6 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "Other", "unmatched.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(0);
     });
 
@@ -106,7 +101,6 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "UIKit", "resources", "clean.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(0);
     });
 
@@ -123,8 +117,8 @@ describe("RestrictionChecker", () => {
 
         // Pass in reverse order to verify the checker re-sorts, not just preserves the input order.
         const violations = new RestrictionChecker(rules, tempDir).check([nested, single]);
-
         expect(violations).toHaveLength(3);
+
         const sortedPaths = [...violations].sort((a, b) => a.filePath.localeCompare(b.filePath) || a.line - b.line);
         expect(violations).toEqual(sortedPaths);
     });
@@ -156,7 +150,6 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "UIKit", "resources", "single-pattern.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(1);
         expect(violations[0].message).toBe("UIKit may only import from its local directory.");
         expect(violations[0].specifier).toBe("@/internal/Foo");
@@ -173,7 +166,6 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "UIKit", "resources", "clean.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(0);
     });
 
@@ -187,7 +179,6 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "UIKit", "resources", "single-pattern.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(1);
         expect(violations[0].message).toBe('Import "@/internal/Foo" is not in the allow-list.');
     });
@@ -204,8 +195,8 @@ describe("RestrictionChecker", () => {
 
         const filePath = path.join(tempDir, "app_modules", "UIKit", "resources", "single-pattern.ts");
         const violations = new RestrictionChecker(rules, tempDir).check([filePath]);
-
         expect(violations).toHaveLength(2);
+
         const messages = violations.map(v => v.message).sort();
         expect(messages).toEqual([
             "UIKit may not import internal modules directly.",

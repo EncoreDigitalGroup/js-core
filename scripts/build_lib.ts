@@ -6,6 +6,7 @@ export type BuildMode =
     | {kind: "types-only"};
 
 export type PackageJson = {
+    name: string;
     optionalDependencies?: Record<string, string>;
     repository: {url: string};
     version: string;
@@ -20,6 +21,14 @@ export type PlatformSpec = {
     os: string[];
 };
 
+export type PublishAttemptResult = "already-published" | "published" | "retry";
+
+export type PublishPlan = {
+    publishRoot: boolean;
+    rootName: string;
+    targets: PlatformSpec[];
+};
+
 export type ScopedPackageManifest = {
     cpu: string[];
     description: string;
@@ -32,8 +41,27 @@ export type ScopedPackageManifest = {
     version: string;
 };
 
+export type VersionExists = (name: string, version: string) => Promise<boolean>;
+
 function binNameFor(spec: PlatformSpec): string {
     return spec.artifactName.endsWith(".exe") ? "tsfmt.exe" : "tsfmt";
+}
+
+export function npmPackumentUrl(name: string, version: string): string {
+    return `https://registry.npmjs.org/${encodeURIComponent(name)}/${encodeURIComponent(version)}`;
+}
+
+export async function packageVersionExists(name: string, version: string): Promise<boolean> {
+    const response = await fetch(npmPackumentUrl(name, version));
+    if (response.status === 404) {
+        return false;
+    }
+
+    if (!response.ok) {
+        throw new Error(`npm registry lookup failed for ${name}@${version}: HTTP ${response.status}`);
+    }
+
+    return true;
 }
 
 export const rootDir = `${import.meta.dir}/..`;
@@ -42,19 +70,60 @@ export function publishCwd(packageDir?: string): string {
     return packageDir ? `${rootDir}/${packageDir}` : rootDir;
 }
 
-async function runPublish(npmTag: string, npmToken: string, packageDir?: string): Promise<void> {
+export const publishRetryAttempts = 6;
+
+export async function classifyPublishAttempt(
+    name: string,
+    version: string,
+    exitCode: number,
+    exists: VersionExists,
+): Promise<PublishAttemptResult> {
+    if (exitCode === 0) {
+        return "published";
+    }
+
+    if (await exists(name, version)) {
+        return "already-published";
+    }
+
+    return "retry";
+}
+
+export function publishRetryWaitMs(attempt: number): number {
+    return 5_000 * attempt;
+}
+
+async function runPublish(
+    name: string,
+    version: string,
+    npmTag: string,
+    npmToken: string,
+    packageDir?: string,
+    exists: VersionExists = packageVersionExists,
+): Promise<void> {
     const cwd = publishCwd(packageDir);
     const npmrcPath = `${cwd}/.npmrc`;
     await Bun.write(npmrcPath, `//registry.npmjs.org/:_authToken=${npmToken}\n`);
     try {
-        const proc = Bun.spawn(["bun", "publish", "--access", "public", "--tag", npmTag], {
-            cwd,
-            stderr: "inherit",
-            stdout: "inherit",
-        });
+        for (let attempt = 1; attempt <= publishRetryAttempts; attempt++) {
+            const proc = Bun.spawn(["bun", "publish", "--access", "public", "--tag", npmTag], {
+                cwd,
+                stderr: "inherit",
+                stdout: "inherit",
+            });
 
-        if (await proc.exited !== 0) {
-            throw new Error(`publish failed for ${packageDir ?? "tsfmt"}`);
+            const result = await classifyPublishAttempt(name, version, await proc.exited, exists);
+            if (result === "published" || result === "already-published") {
+                return;
+            }
+
+            if (attempt === publishRetryAttempts) {
+                throw new Error(`publish failed for ${name}@${version}`);
+            }
+
+            const waitMs = publishRetryWaitMs(attempt);
+            console.log(`Publish of ${name}@${version} failed (attempt ${attempt}/${publishRetryAttempts}); retrying in ${waitMs}ms`);
+            await Bun.sleep(waitMs);
         }
     } finally {
         await rm(npmrcPath, {force: true});
@@ -212,6 +281,20 @@ export async function loadPackageJson(): Promise<PackageJson> {
     return await Bun.file(`${rootDir}/package.json`).json() as PackageJson;
 }
 
+export function npmDistTag(version: string): "alpha" | "beta" | "latest" | "rc" {
+    const match = /^(?:\d+\.\d+\.\d+)(?:-(alpha|beta|rc)\d+)?$/.exec(version);
+    if (!match) {
+        throw new Error(`Cannot derive npm dist-tag from version: ${version}`);
+    }
+
+    const prerelease = match[1];
+    if (prerelease === "alpha" || prerelease === "beta" || prerelease === "rc") {
+        return prerelease;
+    }
+
+    return "latest";
+}
+
 export function parseBuildMode(argv: string[]): BuildMode {
     const args = new Set(argv);
     if (args.has("--types-only")) {
@@ -229,32 +312,64 @@ export function scopedPackageName(key: string): string {
     return `@tsfmt/${key}`;
 }
 
-export function npmDistTag(version: string): "alpha" | "beta" | "latest" | "rc" {
-    const match = /^(?:\d+\.\d+\.\d+)(?:-(alpha|beta|rc)\d+)?$/.exec(version);
-    if (!match) {
-        throw new Error(`Cannot derive npm dist-tag from version: ${version}`);
+export async function planPublish(
+    version: string,
+    exists: VersionExists = packageVersionExists,
+): Promise<PublishPlan> {
+    const pkg = await loadPackageJson();
+    const targets: PlatformSpec[] = [];
+
+    for (const spec of platforms) {
+        if (!await exists(scopedPackageName(spec.key), version)) {
+            targets.push(spec);
+        }
     }
 
-    const prerelease = match[1];
-    if (prerelease === "alpha" || prerelease === "beta" || prerelease === "rc") {
-        return prerelease;
-    }
-
-    return "latest";
+    return {
+        publishRoot: !await exists(pkg.name, version),
+        rootName: pkg.name,
+        targets,
+    };
 }
 
-export async function publishPackages(version: string): Promise<void> {
+export const publishGapMs = 10_000;
+
+export async function publishPackages(
+    version: string,
+    plan: PublishPlan,
+    exists: VersionExists = packageVersionExists,
+): Promise<void> {
     const npmToken = process.env.NPM_TOKEN;
     if (!npmToken) {
         throw new Error("Set NPM_TOKEN to publish packages.");
     }
 
     const npmTag = npmDistTag(version);
-    for (const spec of platforms) {
-        await runPublish(npmTag, npmToken, `${distNpmRelDir}/${scopedPackageName(spec.key)}`);
+    const pending: {dir?: string; name: string}[] = plan.targets.map((spec) => {
+        const name = scopedPackageName(spec.key);
+        return {dir: `${distNpmRelDir}/${name}`, name};
+    });
+
+    if (plan.publishRoot) {
+        pending.push({name: plan.rootName});
     }
 
-    await runPublish(npmTag, npmToken);
+    for (const [index, item] of pending.entries()) {
+        if (await exists(item.name, version)) {
+            console.log(`Skipping ${item.name}@${version} — already on npm`);
+            continue;
+        }
+
+        await runPublish(item.name, version, npmTag, npmToken, item.dir, exists);
+
+        if (index < pending.length - 1) {
+            await Bun.sleep(publishGapMs);
+        }
+    }
+}
+
+export function publishPlanIsEmpty(plan: PublishPlan): boolean {
+    return plan.targets.length === 0 && !plan.publishRoot;
 }
 
 export const releaseTagPattern = /^v\d+\.\d+\.\d+(-(alpha|beta|rc)\d+)?$/;
