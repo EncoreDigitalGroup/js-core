@@ -28,6 +28,7 @@ const STATEMENT_KINDS = new Set<SyntaxKind>([
 
 export class SemicolonRule extends BaseFormattingRule {
     readonly name = "SemicolonRule";
+
     override applyToContext(context: FormatContext): void {
         const config = this.getCodeStyleConfig();
         if (!config?.semicolons) {

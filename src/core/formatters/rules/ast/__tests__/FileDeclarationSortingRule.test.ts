@@ -2,7 +2,7 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
-import {CoreConfig, ConfigDefaults} from "../../../../config";
+import {ConfigDefaults, CoreConfig} from "../../../../config";
 import {Container} from "../../../../di";
 import {FormatContext} from "../../../FormatContext";
 import {FileDeclarationSortingRule} from "../FileDeclarationSortingRule";
@@ -128,6 +128,49 @@ interface Field {
             expect(result.indexOf("interface Field")).toBeLessThan(result.indexOf("type AnyObject"));
 
             // Running the rule again is a no-op (the header does not drift on re-format).
+            expect(run(result, "file.ts", defaultConfig())).toBe(result);
+        });
+
+        it("moves the first declaration's attached doc comment with it, keeping only the file header pinned", () => {
+            // The first declaration (Zebra) owns a doc comment directly above it (no blank line) and
+            // sorts after the interface below it. The file header — the copyright block, separated by
+            // a blank line — must stay pinned at the top, but Zebra's own doc comment must travel with
+            // Zebra rather than being left orphaned at the top. This reproduces the defect where the
+            // first declaration's doc comment was absorbed into the pinned header.
+            const input = `/*
+ * Copyright (c) 2026. Encore Digital Group.
+ * All Rights Reserved.
+ */
+
+/** Doc for Zebra enum. */
+export enum Zebra {
+    A = "a",
+}
+
+/** Doc for Alpha interface. */
+export interface Alpha {
+    x: number;
+}
+`;
+
+            const result = run(input, "file.ts", defaultConfig());
+
+            // The copyright header stays pinned at the very top.
+            expect(result.startsWith("/*\n * Copyright (c) 2026. Encore Digital Group.")).toBe(true);
+
+            // The interface sorts ahead of the enum, so the enum (originally first) moved.
+            expect(result.indexOf("export interface Alpha")).toBeLessThan(result.indexOf("export enum Zebra"));
+
+            // Each declaration's doc comment stays glued directly above it — nothing orphaned.
+            expect(result).toContain("/** Doc for Zebra enum. */\nexport enum Zebra {");
+            expect(result).toContain("/** Doc for Alpha interface. */\nexport interface Alpha {");
+
+            // The copyright header is not duplicated, and the enum's doc comment did not stay behind
+            // at the top of the file (it must sit with the enum, after the interface).
+            expect(result.split("Copyright (c) 2026").length - 1).toBe(1);
+            expect(result.indexOf("/** Doc for Zebra enum. */")).toBeGreaterThan(result.indexOf("export interface Alpha"));
+
+            // Re-formatting is a no-op.
             expect(run(result, "file.ts", defaultConfig())).toBe(result);
         });
     });

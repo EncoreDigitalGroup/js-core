@@ -277,9 +277,12 @@ export class FormatterPipeline {
             this.addRuleByName("BlockSpacingRule", FormatterOrder.CodeStyle);
             this.addRuleByName("DocBlockCommentRule", FormatterOrder.CodeStyle);
             this.addRuleByName("StatementSpacingRule", FormatterOrder.CodeStyle);
+            this.addRuleByName("JsxSelfClosingRule", FormatterOrder.CodeStyle);
+            this.addRuleByName("DestructuredParamRule", FormatterOrder.CodeStyle);
         }
 
         if (this.config.imports?.enabled) {
+            this.addRuleByName("ImportShorteningRule", FormatterOrder.ImportOrganization);
             this.addRuleByName("ImportOrganizationRule", FormatterOrder.ImportOrganization);
         }
 

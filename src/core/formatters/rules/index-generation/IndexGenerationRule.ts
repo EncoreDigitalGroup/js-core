@@ -4,38 +4,9 @@
  */
 import * as fs from "fs";
 import * as path from "path";
+import {IndexGenerationConfig, IndexGenerationOptions} from "../../../config/ConfigTypes";
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
-
-/** Options for configuring how index files are generated */
-export interface IndexGenerationOptions {
-    /** File extension to match (e.g., ".tsx", ".ts") */
-    fileExtension: string;
-
-    /** Name of the index file to generate (e.g., "index.tsx", "index.ts") */
-    indexFileName: string;
-
-    /** Whether to recursively scan subdirectories */
-    recursive: boolean;
-}
-
-/** Configuration for index file generation */
-export interface IndexGenerationConfig {
-    /** Whether to generate index files (default: false) */
-    enabled?: boolean;
-
-    /** Directories to process for index generation */
-    directories?: string[];
-
-    /** Directories to always skip, even if listed in directories (takes priority) */
-    skipDirectories?: string[];
-
-    /** Default options for index generation */
-    options?: Partial<IndexGenerationOptions>;
-
-    /** Whether to update the main src/index.ts file (default: true) */
-    updateMainIndex?: boolean;
-}
 
 /** Rule that generates index.ts files for directories */
 export class IndexGenerationRule extends BaseFormattingRule {
@@ -46,6 +17,7 @@ export class IndexGenerationRule extends BaseFormattingRule {
     };
 
     readonly name = "IndexGenerationRule";
+
     private findProjectRoot(filePath: string): string | null {
         let current = path.dirname(filePath);
         while (current !== path.dirname(current)) {
@@ -284,3 +256,5 @@ ${exports}
         this.generateIndexFiles(context.filePath);
     }
 }
+
+export type {IndexGenerationConfig, IndexGenerationOptions};

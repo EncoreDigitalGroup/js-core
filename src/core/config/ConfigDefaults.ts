@@ -21,11 +21,13 @@ export class ConfigDefaults {
             quoteStyle: "double" as const,
             semicolons: "always" as const,
             bracketSpacing: false,
+            typeBracketSpacing: true,
             indentStyle: "space" as const,
             indentWidth: 4,
             lineWidth: 120,
             trailingCommas: "all" as const,
             arrowParens: "avoid" as const,
+            jsxSelfClosingSpace: false,
         };
     }
 
@@ -37,7 +39,7 @@ export class ConfigDefaults {
     /** Get default index generation configuration */
     static getDefaultIndexGenerationConfig() {
         return {
-            enabled: true,
+            enabled: false,
             directories: this.getDefaultIndexDirectories(),
             options: {
                 fileExtension: ".ts",
@@ -53,6 +55,8 @@ export class ConfigDefaults {
         return {
             enabled: true,
             sortImports: true,
+            mergeDuplicates: true,
+            shortenPaths: true,
             removeUnused: true,
             removeSideEffects: false,
             groupImports: true,

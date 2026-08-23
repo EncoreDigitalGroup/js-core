@@ -1,14 +1,14 @@
 import {chmod, rm} from "node:fs/promises";
 
 export type BuildMode =
-    | {allPlatforms: boolean; kind: "compile"}
-    | {kind: "publish"}
-    | {kind: "types-only"};
+    | { allPlatforms: boolean; kind: "compile" }
+    | { kind: "publish" }
+    | { kind: "types-only" };
 
 export type PackageJson = {
     name: string;
     optionalDependencies?: Record<string, string>;
-    repository: {url: string};
+    repository: { url: string };
     version: string;
 };
 
@@ -37,7 +37,7 @@ export type ScopedPackageManifest = {
     license: string;
     name: string;
     os: string[];
-    repository: {url: string};
+    repository: { url: string };
     version: string;
 };
 
@@ -345,7 +345,7 @@ export async function publishPackages(
     }
 
     const npmTag = npmDistTag(version);
-    const pending: {dir?: string; name: string}[] = plan.targets.map((spec) => {
+    const pending: { dir?: string; name: string }[] = plan.targets.map((spec) => {
         const name = scopedPackageName(spec.key);
         return {dir: `${distNpmRelDir}/${name}`, name};
     });

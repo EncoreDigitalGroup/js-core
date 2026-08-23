@@ -13,6 +13,7 @@ import {getProtectedLineIndices} from "../../LineProtection";
  */
 export class IndentationRule extends BaseFormattingRule {
     readonly name = "IndentationRule";
+
     override applyToContext(context: FormatContext): void {
         const config = this.getCodeStyleConfig();
         if (!config?.indentStyle || !config.indentWidth) {

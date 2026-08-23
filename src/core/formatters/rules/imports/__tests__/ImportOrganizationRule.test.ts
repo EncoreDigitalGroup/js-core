@@ -105,6 +105,115 @@ export function use() {
             expect(intIndex).toBeLessThan(extIndex);
         });
 
+        it("sorts named specifiers within a single import, placing an inline type by its name", () => {
+            const input = `import {useEffect, useMemo, useRef, useState, type ReactElement} from "react";
+
+
+export function C() {
+    useEffect(useMemo(useRef(useState())));
+    const x: ReactElement = null;
+    return x;
+}
+`;
+
+            const result = run(input, "test.tsx", defaultConfig());
+            expect(result).toContain("import {type ReactElement, useEffect, useMemo, useRef, useState} from \"react\";");
+        });
+
+        it("sorts named specifiers by imported name for aliased specifiers", () => {
+            const input = `import {zebra as z, apple as a} from "mod";
+
+
+export function C() {
+    return z() + a();
+}
+`;
+
+            const result = run(input, "test.ts", defaultConfig());
+            expect(result).toContain("import {apple as a, zebra as z} from \"mod\";");
+        });
+
+        it("leaves a multi-line named-import clause untouched (never collapsed onto one line)", () => {
+            const input = `import {
+    useState,
+    useEffect,
+} from "react";
+
+
+export function C() {
+    return useState(useEffect());
+}
+`;
+
+            const result = run(input, "test.tsx", defaultConfig());
+            expect(result).toContain("import {\n    useState,\n    useEffect,\n} from \"react\";");
+        });
+
+        it("merges multiple imports from the same module into one statement", () => {
+            const input = `import D from "x";
+import {a} from "x";
+import {b, c} from "x";
+
+
+export function C() {
+    return D + a + b + c;
+}
+`;
+
+            const result = run(input, "test.ts", defaultConfig());
+            expect(result).toContain("import D, {a, b, c} from \"x\";");
+            expect(result).not.toMatch(/import \{a\} from "x"/);
+        });
+
+        it("keeps value and type-only imports of the same module in separate merged statements", () => {
+            const input = `import {a} from "x";
+import type {T1} from "x";
+import type {T2} from "x";
+
+
+export function C() {
+    const t: T1 | T2 = a;
+    return t;
+}
+`;
+
+            const result = run(input, "test.ts", defaultConfig());
+            expect(result).toContain("import {a} from \"x\";");
+            expect(result).toContain("import type {T1, T2} from \"x\";");
+        });
+
+        it("never drops an import when conflicting defaults block a merge", () => {
+            const input = `import D from "x";
+import Ns from "x";
+import {a} from "x";
+
+
+export function C() {
+    return D + Ns + a;
+}
+`;
+
+            const result = run(input, "test.ts", defaultConfig());
+            expect(result).toContain("import D from \"x\";");
+            expect(result).toContain("import Ns from \"x\";");
+            expect(result).toContain("import {a} from \"x\";");
+        });
+
+        it("does not merge when mergeDuplicates is false", () => {
+            const input = `import {a} from "x";
+import {b} from "x";
+
+
+export function C() {
+    return a + b;
+}
+`;
+
+            const result = run(input, "test.ts", defaultConfig({mergeDuplicates: false}));
+            expect(result).toContain("import {a} from \"x\";");
+            expect(result).toContain("import {b} from \"x\";");
+        });
+
         describe("plain .ts output matches the pre-migration golden", () => {
             // Captured from the pre-migration `ImportOrganizationRule.apply()` (ts.createSourceFile
             // + hand-rolled printer reconstruction) on these exact inputs, with the default import

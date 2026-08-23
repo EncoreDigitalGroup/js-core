@@ -14,6 +14,7 @@ export class FormatContext {
     readonly filePath: string;
     readonly project: Project;
     readonly sourceFile: SourceFile;
+
     constructor(source: string, filePath: string) {
         this.filePath = filePath;
         this.project = new Project({

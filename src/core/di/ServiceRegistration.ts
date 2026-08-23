@@ -7,11 +7,14 @@ import {
     BlockSpacingRule,
     BracketSpacingRule,
     ClassMemberSortingRule,
+    DestructuredParamRule,
     DocBlockCommentRule,
     FileDeclarationSortingRule,
     ImportOrganizationRule,
+    ImportShorteningRule,
     IndentationRule,
     IndexGenerationRule,
+    JsxSelfClosingRule,
     LogicalOperatorPlacementRule,
     QuoteStyleRule,
     SemicolonRule,
@@ -37,6 +40,9 @@ export class ServiceRegistration {
         container.singleton(BlockSpacingRule);
         container.singleton(DocBlockCommentRule);
         container.singleton(StatementSpacingRule);
+        container.singleton(JsxSelfClosingRule);
+        container.singleton(DestructuredParamRule);
+        container.singleton(ImportShorteningRule);
         container.singleton(ImportOrganizationRule);
         container.singleton(ClassMemberSortingRule);
         container.singleton(FileDeclarationSortingRule);

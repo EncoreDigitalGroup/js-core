@@ -2,7 +2,25 @@
  * Copyright (c) 2025. Encore Digital Group.
  * All Rights Reserved.
  */
-import {DeclarationType, IndexGenerationConfig, MemberType} from "../";
+
+/*
+ * These enums and the index-generation config interface live here, in the dependency-free config
+ * module, rather than in the rule files that use them. That keeps the public type surface
+ * (`tsfmt` + these config types) free of any transitive import of `ts-morph`/`typescript`/
+ * `reflect-metadata`, which are dev-only dependencies absent from a consumer install. The AST and
+ * index-generation rules import these definitions from here.
+ */
+
+/** Types of class members, used to order class-member sorting. */
+export enum MemberType {
+    StaticProperty = "static_property",
+    InstanceProperty = "instance_property",
+    Constructor = "constructor",
+    StaticMethod = "static_method",
+    InstanceMethod = "instance_method",
+    GetAccessor = "get_accessor",
+    SetAccessor = "set_accessor"
+}
 
 /** Configuration for class member sorting */
 export interface ClassMemberConfig {
@@ -33,6 +51,9 @@ export interface CodeStyleConfig {
     /** Bracket spacing in object literals (default: false) */
     bracketSpacing?: boolean;
 
+    /** Bracket spacing in object type literals, e.g. `{ a: string }` (default: true) */
+    typeBracketSpacing?: boolean;
+
     /** Indentation style (default: 'space') */
     indentStyle?: "tab" | "space";
 
@@ -47,6 +68,39 @@ export interface CodeStyleConfig {
 
     /** Arrow function parentheses (default: 'avoid') */
     arrowParens?: "always" | "avoid";
+
+    /** Space before the `/>` of a self-closing JSX element (default: false) */
+    jsxSelfClosingSpace?: boolean;
+}
+
+/** Options for configuring how index files are generated */
+export interface IndexGenerationOptions {
+    /** File extension to match (e.g., ".tsx", ".ts") */
+    fileExtension: string;
+
+    /** Name of the index file to generate (e.g., "index.tsx", "index.ts") */
+    indexFileName: string;
+
+    /** Whether to recursively scan subdirectories */
+    recursive: boolean;
+}
+
+/** Configuration for index file generation */
+export interface IndexGenerationConfig {
+    /** Whether to generate index files (default: false) */
+    enabled?: boolean;
+
+    /** Directories to process for index generation */
+    directories?: string[];
+
+    /** Directories to always skip, even if listed in directories (takes priority) */
+    skipDirectories?: string[];
+
+    /** Default options for index generation */
+    options?: Partial<IndexGenerationOptions>;
+
+    /** Whether to update the main src/index.ts file (default: true) */
+    updateMainIndex?: boolean;
 }
 
 /** Configuration for import organization */
@@ -56,6 +110,15 @@ export interface ImportConfig {
 
     /** Sort imports alphabetically (default: true) */
     sortImports?: boolean;
+
+    /** Merge multiple imports from the same module into one statement (default: true) */
+    mergeDuplicates?: boolean;
+
+    /**
+     * Rewrite a deep relative import to the shortest tsconfig-path alias whose barrel provably
+     * re-exports the same symbols (default: true). Reads tsconfig paths and barrel files from disk.
+     */
+    shortenPaths?: boolean;
 
     /** Remove unused imports (default: true) */
     removeUnused?: boolean;
@@ -86,6 +149,20 @@ export interface ReactComponentConfig {
 
     /** Whether to respect dependencies between members (default: true) */
     respectDependencies?: boolean;
+}
+
+/** Types of top-level declarations in a file, used to order file-level declaration sorting. */
+export enum DeclarationType {
+    Interface = "interface",
+    TypeAlias = "type_alias",
+    Enum = "enum",
+    HelperFunction = "helper_function",
+    HelperVariable = "helper_variable",
+    ExportedFunction = "exported_function",
+    ExportedVariable = "exported_variable",
+    ExportedClass = "exported_class",
+    DefaultExport = "default_export",
+    Other = "other"
 }
 
 /** Configuration for file-level declaration sorting */

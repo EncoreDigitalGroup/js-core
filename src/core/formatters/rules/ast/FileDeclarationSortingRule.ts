@@ -4,22 +4,9 @@
  */
 import * as ts from "typescript";
 import {ASTAnalyzer, DependencyResolver} from "../../../ast";
+import {DeclarationType} from "../../../config/ConfigTypes";
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
-
-/** Types of top-level declarations in a file */
-export enum DeclarationType {
-    Interface = "interface",
-    TypeAlias = "type_alias",
-    Enum = "enum",
-    HelperFunction = "helper_function",
-    HelperVariable = "helper_variable",
-    ExportedFunction = "exported_function",
-    ExportedVariable = "exported_variable",
-    ExportedClass = "exported_class",
-    DefaultExport = "default_export",
-    Other = "other"
-}
 
 /** Analyzed file declaration with metadata */
 export interface FileDeclaration {
@@ -136,6 +123,35 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
     }
 
     /**
+     * Offset in `text` where the first declaration's *own* content begins for header-pinning: the
+     * start of the doc comment attached directly above it (no blank line between the comment and the
+     * declaration), or the declaration's own start when nothing is attached. Everything before this
+     * offset — the license header and any file-level block comments separated from the declaration
+     * by a blank line — is the file header that must stay pinned at the top; the attached doc comment
+     * travels with the declaration when it is reordered.
+     */
+    private firstDeclarationContentStart(text: string, firstDeclaration: ts.Statement, sourceFile: ts.SourceFile): number {
+        const declStart = firstDeclaration.getStart(sourceFile);
+        const comments = ts.getLeadingCommentRanges(text, firstDeclaration.getFullStart()) ?? [];
+        let attachedStart = declStart;
+
+        for (let i = comments.length - 1; i >= 0; i--) {
+            const gapEnd = i === comments.length - 1 ? declStart : comments[i + 1].pos;
+            const gap = text.substring(comments[i].end, gapEnd);
+
+            // A blank line (two or more newlines) between this comment and what follows it detaches
+            // it from the declaration: it is a file-level comment, not the declaration's doc comment.
+            if ((gap.match(/\n/g) ?? []).length > 1) {
+                break;
+            }
+
+            attachedStart = comments[i].pos;
+        }
+
+        return attachedStart;
+    }
+
+    /**
      * Re-anchors a declaration's `getFullText()` (leading trivia included) to the enclosing
      * scope's indentation: strips only the leading blank lines that separated it from whatever
      * preceded it in its *original* position, leaving the declaration's own indentation, leading
@@ -202,19 +218,25 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         const declarationsEnd = lastDeclaration.getEnd();
 
         // When no imports precede the declarations, the file's leading comment block (license header
-        // and any file-level doc comment) is the leading trivia of the first declaration. Sorting
-        // must not carry it off with that declaration, so pin it at the top of the file and strip it
-        // from that declaration's emitted text. With imports present the header sits before them and
-        // is already outside this span, preserved verbatim by `substring(0, declarationsStart)`.
-        const leadingTrivia = declarationsStart === 0 ? originalText.substring(0, firstDeclaration.getStart(sourceFile)) : "";
+        // and any file-level block comment) is the leading trivia of the first declaration. Sorting
+        // must not carry that header off with the declaration, so pin it at the top of the file. But
+        // a doc comment attached directly above the first declaration (no blank line between them) is
+        // that declaration's own comment and must travel with it — so the header ends where the
+        // attached comment begins, not at the declaration node. With imports present the header sits
+        // before them and is already outside this span, preserved by `substring(0, declarationsStart)`.
+        const contentStart = declarationsStart === 0
+            ? this.firstDeclarationContentStart(originalText, firstDeclaration, sourceFile)
+            : 0;
+
+        const leadingTrivia = declarationsStart === 0 ? originalText.substring(0, contentStart) : "";
         const fileHeader = leadingTrivia.includes("/*") || leadingTrivia.includes("//") ? leadingTrivia : "";
 
         // Build new declarations section from sorted texts. The header-owning declaration is emitted
-        // without its leading trivia (that trivia is the pinned file header); every other declaration
-        // keeps its own leading comments.
+        // from its own content start (keeping any attached doc comment, dropping the pinned header);
+        // every other declaration keeps its own leading comments.
         const declarationTexts = sortedDeclarations.map(d =>
             fileHeader && d.node === firstDeclaration
-                ? originalText.substring(d.node.getStart(sourceFile), d.node.getEnd())
+                ? this.reanchorToEnclosingIndent(originalText.substring(contentStart, d.node.getEnd()))
                 : this.reanchorToEnclosingIndent(d.text));
 
         const newDeclarations = declarationTexts.join("\n\n");
@@ -232,3 +254,5 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         }
     }
 }
+
+export {DeclarationType};

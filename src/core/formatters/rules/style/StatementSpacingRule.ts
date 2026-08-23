@@ -107,16 +107,6 @@ export class StatementSpacingRule extends BaseFormattingRule {
             .filter(name => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name));
     }
 
-    /** True for a class member method/accessor (not a standalone function/class/type declaration). */
-    private isClassMethod(trimmed: string): boolean {
-        const opensBlock = /\{\s*$/.test(trimmed.replace(/\/\/.*$/, ""));
-        if (!opensBlock || /^(export|function|class|interface|enum|namespace|type|const|let|var)\b/.test(trimmed)) {
-            return false;
-        }
-
-        return /^(public\s+|private\s+|protected\s+|static\s+|readonly\s+|async\s+|get\s+|set\s+|override\s+)*(constructor\b|[\w$]+\s*[<(])/.test(trimmed);
-    }
-
     private wantsBlankBefore(prevLine: string, curLine: string): boolean {
         const prev = prevLine.trim();
         const cur = curLine.trim();
@@ -182,12 +172,17 @@ export class StatementSpacingRule extends BaseFormattingRule {
             return true;
         }
 
-        // A class method flowing directly out of a field/property declaration stays attached to that
-        // declaration block. Every other major declaration — a standalone function/class/interface/
-        // type/enum, or a method after a closing brace or another major — is separated, as is any
-        // statement following a major declaration.
+        // Every major declaration — a standalone function/class/interface/type/enum, or a class
+        // method — is separated from whatever precedes it by a blank line, including a method that
+        // follows the class's field/property declarations. The exception is an arrow-callback
+        // expression statement (`useEffect(() => {`), which the line classifier reads as a method
+        // opener but is really an expression continuing after a declaration, so it stays tight.
         if (curKind === "major") {
-            return !(prevKind === "decl" && this.isClassMethod(cur));
+            if (prevKind === "decl" && cur.endsWith("=> {")) {
+                return false;
+            }
+
+            return true;
         }
 
         if (prevKind === "major") {

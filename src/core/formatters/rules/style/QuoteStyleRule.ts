@@ -9,6 +9,7 @@ import {FormatContext} from "../../FormatContext";
 /** Converts quote style between single and double quotes using AST */
 export class QuoteStyleRule extends BaseFormattingRule {
     readonly name = "QuoteStyleRule";
+
     override applyToContext(context: FormatContext): void {
         const config = this.getCodeStyleConfig();
         if (!config?.quoteStyle) {

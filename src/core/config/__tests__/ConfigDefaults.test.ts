@@ -67,7 +67,7 @@ describe("ConfigDefaults", () => {
         describe("getDefaultIndexGenerationConfig", () => {
             it("should return correct default index generation config", () => {
                 const config = ConfigDefaults.getDefaultIndexGenerationConfig();
-                expect(config.enabled).toBe(true);
+                expect(config.enabled).toBe(false);
                 expect(config.directories).toEqual(["src/", "packages/"]);
                 expect(config.options.fileExtension).toBe(".ts");
                 expect(config.options.indexFileName).toBe("index.ts");
@@ -175,9 +175,9 @@ describe("ConfigDefaults", () => {
             expect(config.formatterOrder).toBeDefined();
         });
 
-        it("should have all sections enabled by default except spacing", () => {
+        it("should have all sections enabled by default except spacing and index generation", () => {
             const config = ConfigDefaults.getDefaultConfig();
-            expect(config.indexGeneration?.enabled).toBe(true);
+            expect(config.indexGeneration?.enabled).toBe(false);
             expect(config.codeStyle?.enabled).toBe(true);
             expect(config.imports?.enabled).toBe(true);
             expect(config.sorting?.enabled).toBe(true);

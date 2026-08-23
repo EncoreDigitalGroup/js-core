@@ -2,7 +2,7 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
-import {CoreConfig, ConfigDefaults} from "../../../../config";
+import {ConfigDefaults, CoreConfig} from "../../../../config";
 import {Container} from "../../../../di";
 import {FormatContext} from "../../../FormatContext";
 import {ClassMemberSortingRule} from "../ClassMemberSortingRule";

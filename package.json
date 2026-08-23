@@ -24,10 +24,10 @@
         "publish": "bun scripts/build.ts --publish",
         "test": "bun test"
     },
-    "types": "dist/index.d.ts",
+    "types": "dist/public.d.ts",
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts"
+            "types": "./dist/public.d.ts"
         }
     },
     "files": [

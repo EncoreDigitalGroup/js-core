@@ -12,6 +12,7 @@ import {overlapsProtectedRange} from "../../LineProtection";
  */
 export class DocBlockCommentRule extends BaseFormattingRule {
     readonly name = "DocBlockCommentRule";
+
     override applyToContext(context: FormatContext): void {
         const source = context.getText();
         const protectedRanges = context.getProtectedRanges();

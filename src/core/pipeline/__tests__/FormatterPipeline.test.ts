@@ -93,7 +93,10 @@ describe("FormatterPipeline", () => {
             const pipeline = new FormatterPipeline(config, container);
             const formatters = pipeline.getRulesAtOrder(FormatterOrder.ImportOrganization);
             expect(formatters.length).toBeGreaterThan(0);
-            expect(formatters[0].name).toBe("ImportOrganizationRule");
+
+            // Shortening runs before organization so shortened specifiers get sorted and merged.
+            expect(formatters[0].name).toBe("ImportShorteningRule");
+            expect(formatters.map(f => f.name)).toContain("ImportOrganizationRule");
         });
 
         it("should not initialize disabled formatters", () => {

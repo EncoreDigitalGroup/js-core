@@ -32,6 +32,7 @@ interface BracketInfo {
  */
 export class StructuralIndentationRule extends BaseFormattingRule {
     readonly name = "StructuralIndentationRule";
+
     private skipString(source: string, start: number, quote: string): { pos: number; newlines: number } {
         let i = start + 1;
         let newlines = 0;

@@ -7,10 +7,13 @@ import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
 
 /**
- * Adds or removes spacing inside object literals and imports using the shared AST
+ * Adds or removes spacing inside object literals, named imports, and object type literals using the
+ * shared AST. Value objects and type literals carry independent settings.
  * Examples:
  * - bracketSpacing: true  -> { foo: bar }
  * - bracketSpacing: false -> {foo: bar}
+ * - typeBracketSpacing: true  -> { foo: string }
+ * - typeBracketSpacing: false -> {foo: string}
  */
 export class BracketSpacingRule extends BaseFormattingRule {
     readonly name = "BracketSpacingRule";
@@ -34,24 +37,44 @@ export class BracketSpacingRule extends BaseFormattingRule {
                 changes.push({pos: closeBraceStart, type: "add", text: " "});
             }
         } else {
+            // Remove inner padding only for a single-line brace pair. When the run of spaces/tabs
+            // is bounded by a newline, the brace sits on its own line and those spaces are the
+            // line's indentation — never delete it, or a multi-line closing brace collapses to
+            // column 0 (and inside a protected JSX range, nothing repairs it afterwards).
             let pos = openBraceEnd;
+            const openRemovals: number[] = [];
+
             while (fullText[pos] === " " || fullText[pos] === "\t") {
-                changes.push({pos, type: "remove"});
+                openRemovals.push(pos);
                 pos++;
+            }
+
+            if (fullText[pos] !== "\n") {
+                for (const p of openRemovals) {
+                    changes.push({pos: p, type: "remove"});
+                }
             }
 
             pos = closeBraceStart - 1;
 
+            const closeRemovals: number[] = [];
+
             while (pos >= 0 && (fullText[pos] === " " || fullText[pos] === "\t")) {
-                changes.push({pos, type: "remove"});
+                closeRemovals.push(pos);
                 pos--;
+            }
+
+            if (fullText[pos] !== "\n") {
+                for (const p of closeRemovals) {
+                    changes.push({pos: p, type: "remove"});
+                }
             }
         }
     }
 
     override applyToContext(context: FormatContext): void {
         const config = this.getCodeStyleConfig();
-        if (!config || config.bracketSpacing === undefined) {
+        if (!config || (config.bracketSpacing === undefined && config.typeBracketSpacing === undefined)) {
             return;
         }
 
@@ -60,18 +83,30 @@ export class BracketSpacingRule extends BaseFormattingRule {
             const kind = node.getKind();
 
             // Object literals — never treat a JSX expression container's braces as one.
-            if (kind === SyntaxKind.ObjectLiteralExpression && node.getParent()?.getKind() !== SyntaxKind.JsxExpression) {
+            if (config.bracketSpacing !== undefined
+                && kind === SyntaxKind.ObjectLiteralExpression && node.getParent()?.getKind() !== SyntaxKind.JsxExpression) {
                 const objectLiteral = node.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
                 if (objectLiteral.getProperties().length > 0) {
-                    this.collectBraceSpacingChanges(objectLiteral, config.bracketSpacing!, changes);
+                    this.collectBraceSpacingChanges(objectLiteral, config.bracketSpacing, changes);
                 }
             }
 
             // Named imports
-            if (kind === SyntaxKind.NamedImports && node.getParent()?.getKind() === SyntaxKind.ImportClause) {
+            if (config.bracketSpacing !== undefined
+                && kind === SyntaxKind.NamedImports && node.getParent()?.getKind() === SyntaxKind.ImportClause) {
                 const namedImports = node.asKindOrThrow(SyntaxKind.NamedImports);
                 if (namedImports.getElements().length > 0) {
-                    this.collectBraceSpacingChanges(namedImports, config.bracketSpacing!, changes);
+                    this.collectBraceSpacingChanges(namedImports, config.bracketSpacing, changes);
+                }
+            }
+
+            // Object type literals (`{ kind: "group"; label: string }`) carry their own setting,
+            // distinct from value-object bracket spacing, so a codebase can keep objects tight while
+            // spacing type members.
+            if (config.typeBracketSpacing !== undefined && kind === SyntaxKind.TypeLiteral) {
+                const typeLiteral = node.asKindOrThrow(SyntaxKind.TypeLiteral);
+                if (typeLiteral.getMembers().length > 0) {
+                    this.collectBraceSpacingChanges(typeLiteral, config.typeBracketSpacing, changes);
                 }
             }
 

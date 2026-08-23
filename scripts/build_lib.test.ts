@@ -337,7 +337,7 @@ describe("stampVersion", () => {
                 Object.fromEntries(platforms.map((p) => [scopedPackageName(p.key), "9.9.9"])),
             );
 
-            const manifest = await Bun.file(stagedManifestPath).json() as {version: string};
+            const manifest = await Bun.file(stagedManifestPath).json() as { version: string };
             expect(manifest.version).toBe("9.9.9");
         } finally {
             await Bun.write(rootPath, originalRoot);
@@ -350,7 +350,7 @@ describe("stampVersion", () => {
         try {
             await stampVersion("1.2.3-rc1");
 
-            const root = await Bun.file(rootPath).json() as {version: string};
+            const root = await Bun.file(rootPath).json() as { version: string };
             expect(root.version).toBe("1.2.3-rc1");
         } finally {
             await Bun.write(rootPath, originalRoot);

@@ -103,7 +103,7 @@ describe("StatementSpacingRule", () => {
         expect(run(input)).toBe(expected);
     });
 
-    it("groups fields, attaches the first method to them, and separates methods from each other", () => {
+    it("groups fields and separates each method from the fields and from other methods", () => {
         const input = [
             "class C {",
             "    private a = 1;",
@@ -122,6 +122,7 @@ describe("StatementSpacingRule", () => {
             "class C {",
             "    private a = 1;",
             "    private b = 2;",
+            "",
             "    first() {",
             "        return this.a;",
             "    }",
@@ -157,7 +158,7 @@ describe("StatementSpacingRule", () => {
         expect(run(input)).toBe(expected);
     });
 
-    it("separates a standalone function from a preceding declaration but attaches a class method", () => {
+    it("separates a standalone function and a class method from a preceding declaration", () => {
         const moduleInput = [
             "export const a = 1;",
             "export function f() {",
@@ -184,8 +185,18 @@ describe("StatementSpacingRule", () => {
             "}"
         ].join("\n");
 
-        // The first method stays attached to the field block (no blank).
-        expect(run(classInput)).toBe(classInput);
+        // A method is a major declaration, so it is separated from the field block by a blank line.
+        const classExpected = [
+            "class C {",
+            "    readonly name = \"C\";",
+            "",
+            "    method() {",
+            "        return this.name;",
+            "    }",
+            "}"
+        ].join("\n");
+
+        expect(run(classInput)).toBe(classExpected);
     });
 
     it("keeps a first-in-block return tight when the block header contains // inside a string", () => {

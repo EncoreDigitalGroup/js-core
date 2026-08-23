@@ -5,19 +5,9 @@
 import * as ts from "typescript";
 import {ASTAnalyzer} from "../../../ast/ASTAnalyzer";
 import {DependencyResolver} from "../../../ast/DependencyResolver";
+import {MemberType} from "../../../config/ConfigTypes";
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
-
-/** Types of class members */
-export enum MemberType {
-    StaticProperty = "static_property",
-    InstanceProperty = "instance_property",
-    Constructor = "constructor",
-    StaticMethod = "static_method",
-    InstanceMethod = "instance_method",
-    GetAccessor = "get_accessor",
-    SetAccessor = "set_accessor"
-}
 
 /** Analyzed class member with metadata */
 export interface ClassMember {
@@ -236,3 +226,5 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
         }
     }
 }
+
+export {MemberType};
