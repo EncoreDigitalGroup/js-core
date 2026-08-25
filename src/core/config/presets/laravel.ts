@@ -15,10 +15,10 @@ export const laravelPreset: Partial<CoreConfig> = {
     },
     paths: {
         exclude: [
-            "public",
-            "resources/js/actions",
-            "resources/js/routes",
-            "resources/js/wayfinder"
+            "public/**",
+            "resources/js/actions/**",
+            "resources/js/routes/**",
+            "resources/js/wayfinder/**"
         ]
     }
 };
