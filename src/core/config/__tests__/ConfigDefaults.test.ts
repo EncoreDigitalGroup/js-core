@@ -2,6 +2,7 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
+import {describe, expect, it} from "bun:test";
 import {ConfigDefaults} from "../ConfigDefaults";
 import {FormatterOrder} from "../ConfigTypes";
 

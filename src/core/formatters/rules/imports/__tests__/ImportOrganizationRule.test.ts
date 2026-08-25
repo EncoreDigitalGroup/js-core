@@ -2,6 +2,7 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
+import {describe, expect, it} from "bun:test";
 import {ConfigDefaults, CoreConfig} from "../../../../config";
 import {Container} from "../../../../di";
 import {FormatContext} from "../../../FormatContext";
@@ -76,6 +77,48 @@ export function run() {
             const config = defaultConfig();
             const result = run(input, "test.ts", config);
             expect(result).toContain('import "./polyfill";');
+        });
+
+        it("preserves statements interleaved between imports and groups the imports at the top", () => {
+            // A `vi.hoisted` const and a `vi.mock` call sit between two imports — common in Vitest
+            // test files. The import-block span covers them, so they must be re-emitted (below the
+            // organized imports), never dropped as the old whole-span replacement did.
+            const input = `import {describe, test, vi} from "vitest";
+import {expectVisit} from "../support";
+
+const {routerVisit} = vi.hoisted(() => ({
+    routerVisit: vi.fn(),
+}));
+
+vi.mock("@inertiajs/react", () => ({
+    router: {visit: routerVisit},
+}));
+
+import {navigate} from "./navigate";
+
+describe("navigate", (): void => {
+    test("x", (): void => {
+        navigate(1);
+        expectVisit(routerVisit, 1);
+    });
+});
+`;
+
+            const config = defaultConfig();
+            const result = run(input, "test.ts", config);
+
+            expect(result).toContain("vi.hoisted");
+            expect(result).toContain('vi.mock("@inertiajs/react"');
+            expect(result).toContain('import {navigate} from "./navigate";');
+
+            // All three imports are consolidated at the top, above the interleaved statements.
+            const lastImportIndex = result.lastIndexOf("import {navigate}");
+            const hoistedIndex = result.indexOf("vi.hoisted");
+            const mockIndex = result.indexOf("vi.mock(");
+
+            expect(lastImportIndex).toBeGreaterThan(-1);
+            expect(lastImportIndex).toBeLessThan(hoistedIndex);
+            expect(hoistedIndex).toBeLessThan(mockIndex);
         });
 
         it("groups imports according to the configured group order", () => {

@@ -31,6 +31,19 @@ type LineKind = "comment" | "close" | "control" | "return" | "major" | "decl" | 
 export class StatementSpacingRule extends BaseFormattingRule {
     readonly name = "StatementSpacingRule";
 
+    /** True when the line opens a block/continuation, so the next line is not a fresh statement. */
+    private static opensScope(trimmed: string): boolean {
+        // Comment lines never open a code scope (and `*/` ends in `/`, which must not read as division).
+        if (trimmed.startsWith("*") || trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.endsWith("*/")) {
+            return false;
+        }
+
+        // Test the raw trailing token. A line that ends in `{`/`(`/`[`/`,` or a binary operator opens a
+        // block or continuation; a string can never end a line with one of these (its last char is a
+        // quote), so no comment-stripping — which would misfire on `//` inside a string literal.
+        return /[{([,]$/.test(trimmed) || /(\|\||&&|=>|[=?:])$/.test(trimmed);
+    }
+
     private static classify(trimmed: string): LineKind {
         if (trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*")) {
             return "comment";
@@ -85,6 +98,30 @@ export class StatementSpacingRule extends BaseFormattingRule {
             .split(",")
             .map(part => part.split(":").pop()!.trim())
             .filter(name => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name));
+    }
+
+    /**
+     * Whether a blank line between these two lines is *optional* — neither required nor forbidden by
+     * policy — so the author's choice is preserved instead of normalized. This covers a plain
+     * expression statement that consumes a variable declared on the line directly above it (e.g. a
+     * `const result = …` setup followed by an `expect(result)…` assertion). `wantsBlankBefore` treats
+     * that pair as tight (no *required* blank), but a blank the author placed there is intentional, so
+     * the apply pass keeps it when the source already had one. Anything that opens a scope or continues
+     * the previous expression is excluded — those are never a free-standing statement boundary.
+     */
+    private static blankOptionalHere(prevLine: string, curLine: string): boolean {
+        const prev = prevLine.trim();
+        const cur = curLine.trim();
+        if (StatementSpacingRule.opensScope(prev) || /^[-+|&?:.)\]]/.test(cur)) {
+            return false;
+        }
+
+        if (StatementSpacingRule.classify(prev) !== "decl" || StatementSpacingRule.classify(cur) !== "expr") {
+            return false;
+        }
+
+        const names = StatementSpacingRule.declaredNames(prev);
+        return names.some(name => new RegExp(`\\b${name}\\b`).test(cur));
     }
 
     /**
@@ -155,19 +192,6 @@ export class StatementSpacingRule extends BaseFormattingRule {
         return sawModifier ? StatementSpacingRule.fieldGroupRank(isProtected, isPrivate, isReadonly) : null;
     }
 
-    /** True when the line opens a block/continuation, so the next line is not a fresh statement. */
-    private static opensScope(trimmed: string): boolean {
-        // Comment lines never open a code scope (and `*/` ends in `/`, which must not read as division).
-        if (trimmed.startsWith("*") || trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.endsWith("*/")) {
-            return false;
-        }
-
-        // Test the raw trailing token. A line that ends in `{`/`(`/`[`/`,` or a binary operator opens a
-        // block or continuation; a string can never end a line with one of these (its last char is a
-        // quote), so no comment-stripping — which would misfire on `//` inside a string literal.
-        return /[{([,]$/.test(trimmed) || /(\|\||&&|=>|[=?:])$/.test(trimmed);
-    }
-
     /** Track entering/leaving a multi-line block comment so its interior is left untouched. */
     private static trackBlockComment(trimmed: string, onEnter: () => void, onLeave: () => void): void {
         const opens = trimmed.startsWith("/*");
@@ -226,7 +250,9 @@ export class StatementSpacingRule extends BaseFormattingRule {
         }
 
         // A statement that references a variable declared on the line directly above stays tight
-        // against it (a guard, return, or assignment consuming a freshly-declared value).
+        // against it (a guard, return, or assignment consuming a freshly-declared value). This
+        // suppresses a *required* blank; for a plain expression statement it is only optional (see
+        // `blankOptionalHere`), so an author's blank there is still preserved by the apply pass.
         if (prevKind === "decl" && curKind !== "major") {
             const names = StatementSpacingRule.declaredNames(prev);
             if (names.some(name => new RegExp(`\\b${name}\\b`).test(cur))) {
@@ -320,6 +346,10 @@ export class StatementSpacingRule extends BaseFormattingRule {
         let prevIndex = -1;
         let insideBlockComment = false;
 
+        // Whether a droppable blank line was seen since the last emitted non-blank line, so an
+        // optional blank (one policy neither requires nor forbids) can be preserved where it existed.
+        let droppedBlank = false;
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmed = line.trim();
@@ -329,6 +359,8 @@ export class StatementSpacingRule extends BaseFormattingRule {
                 if (continuesProtectedRegion(i) || insideBlockComment) {
                     result.push(line);
                     prevIndex = i;
+                } else {
+                    droppedBlank = true;
                 }
 
                 continue;
@@ -340,17 +372,22 @@ export class StatementSpacingRule extends BaseFormattingRule {
                 StatementSpacingRule.trackBlockComment(trimmed, () => (insideBlockComment = true), () => (insideBlockComment = false));
                 result.push(line);
                 prevIndex = i;
+                droppedBlank = false;
                 continue;
             }
 
+            // A blank is emitted when policy requires one, or when policy leaves it optional and the
+            // source already had one there (a boundary the author chose that must not be normalized).
             const wantsBlank = prevIndex >= 0 && StatementSpacingRule.wantsBlankBefore(lines[prevIndex], line);
-            if (wantsBlank && result.length > 0) {
+            const keepsOptionalBlank = prevIndex >= 0 && droppedBlank && StatementSpacingRule.blankOptionalHere(lines[prevIndex], line);
+            if ((wantsBlank || keepsOptionalBlank) && result.length > 0) {
                 result.push("");
             }
 
             StatementSpacingRule.trackBlockComment(trimmed, () => (insideBlockComment = true), () => (insideBlockComment = false));
             result.push(line);
             prevIndex = i;
+            droppedBlank = false;
         }
 
         const after = result.join("\n") + (source.endsWith("\n") ? "\n" : "");

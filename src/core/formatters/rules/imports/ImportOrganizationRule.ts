@@ -2,7 +2,7 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
-import {ImportDeclaration, SyntaxKind} from "ts-morph";
+import {ImportDeclaration, Node, SyntaxKind} from "ts-morph";
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
 
@@ -247,6 +247,16 @@ export class ImportOrganizationRule extends BaseFormattingRule {
     }
 
     /**
+     * Re-anchor a statement's `getFullText()` (leading trivia included) by stripping only the blank
+     * lines that separated it from whatever preceded it in its original position. Its own leading
+     * comments and internal formatting are left untouched, so an interleaved statement keeps any
+     * comment attached directly above it when it is re-emitted below the import block.
+     */
+    private reanchor(fullText: string): string {
+        return fullText.replace(/^\n+/, "");
+    }
+
+    /**
      * Sort key for a single named-import specifier: its imported name, lower-cased, with an inline
      * `type ` modifier stripped so `type ReactElement` orders next to a plain `ReactElement`. An
      * alias (`foo as bar`) still sorts by the imported name `foo`.
@@ -334,17 +344,28 @@ export class ImportOrganizationRule extends BaseFormattingRule {
         imports = this.sortImports(imports);
         imports = this.groupImports(imports);
 
-        // Rebuild only the import-block span: the exact character range from the first import's
-        // start through the original last import's end (determined from AST node positions, not
-        // a regex-derived header guess), replaced with the surviving imports' text in their final
-        // order. Everything outside that span — including the file body below the imports — is
-        // copied through untouched, so it stays byte-for-byte intact.
+        // Rebuild the whole import span: from the first import's start through the last import's end
+        // (from AST node positions, not a regex-derived header guess). Imports can be interleaved
+        // with other statements — a `vi.hoisted` const or a `vi.mock` call between two imports is
+        // common in test files — so the span may cover non-import statements. Those statements must
+        // never be dropped: they are collected in source order and re-emitted below the organized
+        // import block (safe because ESM imports hoist, so moving surrounding code below them cannot
+        // change evaluation order), while the imports themselves are consolidated at the top.
+        // Everything outside the span — including the file body below the imports — is copied through
+        // untouched, so it stays byte-for-byte intact.
         // (ts-morph's node-level `replaceText` cannot reconcile a span whose statement count or
         // order changed against the existing tree, so the new full text is applied in one go via
         // `replaceWithText`, the same primitive `BaseFormattingRule`'s legacy bridge uses.)
         const blockStart = originalDeclarations[0].getStart();
         const blockEnd = originalDeclarations[originalDeclarations.length - 1].getEnd();
-        const newBlockText = this.buildImportBlockText(imports);
+        const interleavedTexts = sourceFile.getStatements()
+            .filter(statement => !Node.isImportDeclaration(statement)
+                && statement.getStart() > blockStart
+                && statement.getEnd() < blockEnd)
+            .map(statement => this.reanchor(statement.getFullText()));
+
+        const blocks = [this.buildImportBlockText(imports), ...interleavedTexts];
+        const newBlockText = blocks.join("\n\n");
         const fullText = sourceFile.getFullText();
         const newFullText = fullText.slice(0, blockStart) + newBlockText + fullText.slice(blockEnd);
         if (newFullText !== fullText) {

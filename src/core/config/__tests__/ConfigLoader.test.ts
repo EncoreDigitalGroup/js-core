@@ -168,7 +168,9 @@ describe("ConfigLoader", () => {
             fs.writeFileSync(configPath, `export default ${JSON.stringify(invalidConfig)};`);
 
             const result = ConfigLoader.loadConfig(tempDir, false);
-            expect(result.codeStyle?.quoteStyle).toBe("invalid");
+
+            // Validation is skipped, so an out-of-union value survives; widen to string to assert it.
+            expect(result.codeStyle?.quoteStyle as string).toBe("invalid");
         });
     });
 

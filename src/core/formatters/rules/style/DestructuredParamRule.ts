@@ -100,6 +100,7 @@ export class DestructuredParamRule extends BaseFormattingRule {
         const signatureIndent = this.lineIndent(source, openParen);
         const oneIn = signatureIndent + indentUnit;
         const twoIn = signatureIndent + indentUnit + indentUnit;
+
         // A rest element (`...rest`) must be last and cannot carry a trailing comma; every other
         // member does. Track the rest so its line is emitted without one.
         const members = pattern.getElements().map(el => ({

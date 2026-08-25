@@ -119,6 +119,11 @@ export class StructuralIndentationRule extends BaseFormattingRule {
         return this.isBracelessControlHeader(prev) || this.endsWithContinuationOperator(prev);
     }
 
+    /** True when the line begins a method-chain member (`.name`), never a `...` spread or `.5` number. */
+    private startsMethodChainDot(content: string): boolean {
+        return content.startsWith(".") && this.isIdentifierStart(content[1]);
+    }
+
     /**
      * The emitted indent level (in units of indentWidth) for each line, from a single forward pass over
      * the source. Bracket bodies indent one past their opening line's emitted level, and continuation
@@ -152,6 +157,14 @@ export class StructuralIndentationRule extends BaseFormattingRule {
         // the statement rather than to the deep continuation level the `{` physically sits at.
         let multiLineParenClose: { line: number; level: number } | null = null;
 
+        // The indent level and bracket depth of the current method-chain's dots. Every `.link` in one
+        // chain aligns to the first, so once a chain establishes its level, later dots at that same
+        // bracket depth reuse it — even across an intervening line that an earlier link pushed deeper
+        // (e.g. a multi-line `.filter(a && b)` above a `.map(...)`). Cleared when the enclosing bracket
+        // closes or a fresh statement begins at or above the chain's depth.
+        let chainLevel: number | null = null;
+        let chainDepth = -1;
+
         // Compute the emitted level for a line at the moment the scan reaches its start, using the
         // bracket stack accumulated from earlier lines. Must run before this line's brackets are pushed.
         const enterLine = (lineIndex: number): void => {
@@ -182,8 +195,20 @@ export class StructuralIndentationRule extends BaseFormattingRule {
             const startsWithCloser = /^(<\/|[}\])])/.test(trimmed);
             const isContinuation = !startsWithCloser && prevCodeLine >= 0 && this.isContinuationLine(prevCode, trimmed);
             const isTernary = this.startsTernaryBranch(trimmed);
+            const isChainDot = this.startsMethodChainDot(trimmed);
             const top = stack.length > 0 ? stack[stack.length - 1] : null;
-            if (isContinuation && top !== null && top.openLine >= prevCodeLine) {
+            const depth = stack.length;
+
+            // A chain whose enclosing bracket has since closed is over; forget its level.
+            if (chainLevel !== null && depth < chainDepth) {
+                chainLevel = null;
+            }
+
+            if (isContinuation && isChainDot && chainLevel !== null && depth === chainDepth) {
+                // A later link of a chain already seen at this bracket depth aligns to the first link,
+                // regardless of how deep an earlier link's arguments were indented in between.
+                emitted[lineIndex] = chainLevel;
+            } else if (isContinuation && top !== null && top.openLine >= prevCodeLine) {
                 // A continuation that is the first line inside a bracket opened on the line it continues
                 // (e.g. `a || (b` then `&& c)`) takes the bracket's indent — the bracket already stepped
                 // it one level in past the operator line.
@@ -198,6 +223,15 @@ export class StructuralIndentationRule extends BaseFormattingRule {
                 emitted[lineIndex] = Math.max(0, emitted[prevCodeLine] + (stepsIn ? 1 : 0));
             } else {
                 emitted[lineIndex] = Math.max(0, base - (startsWithCloser ? 1 : 0));
+            }
+
+            // Record the level a chain's first dot establishes so its later dots reuse it; a fresh
+            // statement at or above the chain's depth ends the chain.
+            if (isContinuation && isChainDot) {
+                chainLevel = emitted[lineIndex];
+                chainDepth = depth;
+            } else if (!isContinuation && chainLevel !== null && depth <= chainDepth) {
+                chainLevel = null;
             }
 
             // A `/*` opener is comment text, not a continuation antecedent for the following code line.
