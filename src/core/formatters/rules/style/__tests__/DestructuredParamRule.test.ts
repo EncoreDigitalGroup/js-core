@@ -100,6 +100,30 @@ describe("DestructuredParamRule", () => {
         expect(run(input)).toBe(input);
     });
 
+    it("omits the trailing comma after a rest element (invalid JS otherwise)", () => {
+        const input = [
+            "export function C({",
+            "    onCommit,",
+            "    ...rest",
+            "}: Props): ReactElement {",
+            "    return rest;",
+            "}"
+        ].join("\n");
+
+        const expected = [
+            "export function C(",
+            "    {",
+            "        onCommit,",
+            "        ...rest",
+            "    }: Props): ReactElement {",
+            "",
+            "    return rest;",
+            "}"
+        ].join("\n");
+
+        expect(run(input)).toBe(expected);
+    });
+
     it("preserves an existing single blank line after the body brace", () => {
         const input = [
             "export function C({",

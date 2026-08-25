@@ -100,13 +100,18 @@ export class DestructuredParamRule extends BaseFormattingRule {
         const signatureIndent = this.lineIndent(source, openParen);
         const oneIn = signatureIndent + indentUnit;
         const twoIn = signatureIndent + indentUnit + indentUnit;
-        const members = pattern.getElements().map(el => el.getText());
+        // A rest element (`...rest`) must be last and cannot carry a trailing comma; every other
+        // member does. Track the rest so its line is emitted without one.
+        const members = pattern.getElements().map(el => ({
+            text: el.getText(),
+            isRest: el.getDotDotDotToken() !== undefined,
+        }));
 
         // Text between the pattern `}` and the body `{` (inclusive): `: Type): Return {`.
         const tail = source.slice(patternEnd, bodyBraceEnd);
         const rebuilt = "(\n"
             + oneIn + "{\n"
-            + members.map(m => `${twoIn}${m},`).join("\n") + "\n"
+            + members.map(m => `${twoIn}${m.text}${m.isRest ? "" : ","}`).join("\n") + "\n"
             + oneIn + "}" + tail;
 
         // Region [openParen, bodyBraceEnd) becomes the rebuilt signature. A separate zero-width edit
