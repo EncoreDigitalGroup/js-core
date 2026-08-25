@@ -113,8 +113,18 @@ describe("ConfigDefaults", () => {
                 expect(config.classMembers?.respectDependencies).toBe(true);
                 expect(config.reactComponents?.enabled).toBe(true);
                 expect(config.fileDeclarations?.enabled).toBe(true);
-                expect(config.include).toEqual(["**/*.{ts,tsx}"]);
-                expect(config.exclude).toEqual(["node_modules/**", "dist/**", "vendor/**", "bin/**"]);
+            });
+        });
+
+        describe("getDefaultPathsConfig", () => {
+            it("should return empty include and exclude arrays", () => {
+                expect(ConfigDefaults.getDefaultPathsConfig()).toEqual({include: [], exclude: []});
+            });
+        });
+
+        describe("getCriticalExcludePatterns", () => {
+            it("should include the critical build directory", () => {
+                expect(ConfigDefaults.getCriticalExcludePatterns()).toContain("build/**");
             });
         });
 
@@ -172,6 +182,7 @@ describe("ConfigDefaults", () => {
             expect(config.spacing).toBeDefined();
             expect(config.packageJson).toBeDefined();
             expect(config.tsConfig).toBeDefined();
+            expect(config.paths).toEqual({include: [], exclude: []});
             expect(config.formatterOrder).toBeDefined();
         });
 

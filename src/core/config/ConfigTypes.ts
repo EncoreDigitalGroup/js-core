@@ -190,12 +190,6 @@ export interface SortingConfig {
 
     /** Configuration for file-level declaration sorting */
     fileDeclarations?: FileDeclarationConfig;
-
-    /** File patterns to include (default: ["**\/*.{ts,tsx}"]) */
-    include?: string[];
-
-    /** Directories to exclude (default: ["node_modules/**", "dist/**", "vendor/**", "bin/**"]) */
-    exclude?: string[];
 }
 
 /** Configuration for spacing rules */
@@ -232,6 +226,15 @@ export interface TsConfigConfig {
 
     /** JSON indentation (default: 4) */
     indentation?: number;
+}
+
+/** Configuration for which files a run formats, resolved via glob. */
+export interface PathsConfig {
+    /** Glob patterns of files to format. Empty means "scan everything" (the `tsfmt .` behavior). Default: []. */
+    include?: string[];
+
+    /** Glob patterns to skip during a config-driven scan. Overridden by include, and bypassed entirely when paths are passed on the CLI. Default: []. */
+    exclude?: string[];
 }
 
 /** A single forbidden-import entry: one or more module-specifier globs plus the message shown when matched. */
@@ -295,6 +298,12 @@ export interface CoreConfig {
 
     /** Configuration for tsconfig.json sorting */
     tsConfig?: TsConfigConfig;
+
+    /**
+     * Which files a run formats, resolved via glob. `paths.include`/`paths.exclude` default to empty; empty means the
+     * full-cwd scan (`tsfmt .`). CLI positional paths replace `paths.include` in memory for the run.
+     */
+    paths?: PathsConfig;
 
     /**
      * Optional business-rule restrictions (e.g. forbidden import patterns), enforced by a read-only gate that runs

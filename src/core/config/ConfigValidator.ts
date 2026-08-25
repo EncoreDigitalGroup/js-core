@@ -2,7 +2,7 @@
  * Copyright (c) 2026. Encore Digital Group.
  * All Rights Reserved.
  */
-import {ConfigTypes, CoreConfig, ImportRestrictionRule} from "./ConfigTypes";
+import {ConfigTypes, CoreConfig, ImportRestrictionRule, PathsConfig} from "./ConfigTypes";
 
 /** Validation result containing errors and warnings */
 export interface ValidationResult {
@@ -13,6 +13,22 @@ export interface ValidationResult {
 
 /** Validates CoreConfig configuration objects */
 export class ConfigValidator {
+    /**
+     * Validate one `paths` sub-array: when present, it must be an array whose every element is a non-empty string.
+     * Pushes an error onto `errors` when the field is present but malformed; a missing field is valid.
+     */
+    private static validatePathsArray(paths: PathsConfig, key: "include" | "exclude", errors: string[]): void {
+        const value = paths[key];
+        if (value === undefined) {
+            return;
+        }
+
+        const ok = Array.isArray(value) && value.every(p => typeof p === "string" && p.length > 0);
+        if (!ok) {
+            errors.push(`Invalid paths.${key}: must be an array of non-empty strings.`);
+        }
+    }
+
     /**
      * Validate a CoreConfig object
      * @param config - Configuration to validate
@@ -62,11 +78,10 @@ export class ConfigValidator {
             }
         }
 
-        // Validate sorting config
-        if (config.sorting) {
-            if (config.sorting.include && config.sorting.include.length === 0) {
-                warnings.push("Sorting include patterns is empty - no files will be sorted.");
-            }
+        // Validate paths config
+        if (config.paths) {
+            this.validatePathsArray(config.paths, "include", errors);
+            this.validatePathsArray(config.paths, "exclude", errors);
         }
 
         // Validate spacing config (no specific validations needed currently)

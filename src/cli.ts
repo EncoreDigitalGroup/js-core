@@ -2,22 +2,66 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
 import "reflect-metadata";
-import {ConfigLoader, ConfigValidator, Container, CoreConfig, FormatterPipeline, RestrictionChecker, ServiceRegistration, sortPackageFile, sortTsConfigFile} from "./core";
+import {ConfigDefaults, ConfigLoader, ConfigValidator, Container, CoreConfig, FormatterPipeline, RestrictionChecker, ServiceRegistration, sortPackageFile, sortTsConfigFile} from "./core";
 
-/** Discover the files a directory run would format, using the same include/exclude globs as `formatDirectory`. */
-function discoverTargetFiles(targetDir: string, config: CoreConfig): string[] {
-    const include = config.sorting?.include || ["**/*.{ts,tsx,js,jsx}"];
-    const exclude = config.sorting?.exclude || [];
+/** Check if a path is a supported file type */
+function isSupportedFile(filePath: string): boolean {
+    const supportedExtensions = [".ts", ".tsx", ".js", ".jsx"];
+    return supportedExtensions.some(ext => filePath.endsWith(ext));
+}
 
-    // Always exclude these critical directories
-    const criticalExcludes = ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
-    const finalExclude = [...new Set([...exclude, ...criticalExcludes])];
+/** Detect whether a path string contains glob magic characters. */
+function hasGlobMagic(p: string): boolean {
+    return /[*?[\]{}!+@()]/.test(p);
+}
 
-    return include.flatMap(pattern => glob.sync(pattern, {
-        cwd: targetDir,
-        ignore: finalExclude,
-        absolute: true,
-    }));
+/**
+ * Resolve the concrete set of files a run formats. Two models, chosen by whether the CLI passed positional paths:
+ *
+ * - Config-driven (`cliPaths.length === 0`) — augmenting scan: a full recursive scan of the supported extensions minus
+ *   `config.paths.exclude` and the critical excludes, with `config.paths.include` globs added back on top. Include
+ *   entries override `paths.exclude` (an excluded-but-included file is added back) but never resurrect a critical dir.
+ * - CLI-driven (`cliPaths.length > 0`, already copied into `config.paths.include` by `main`) — narrowing: each entry is
+ *   expanded verbatim. A named file is always formatted; a directory is scanned with critical excludes only; a
+ *   nonexistent entry with glob magic is matched with critical excludes only. `config.paths.exclude` is never consulted.
+ */
+function discoverTargetFiles(cwd: string, config: CoreConfig, cliPaths: string[]): string[] {
+    const criticalExcludes = ConfigDefaults.getCriticalExcludePatterns();
+    const jsGlob = ConfigDefaults.getDefaultJavaScriptIncludePatterns()[0];
+    const {include = [], exclude = []} = config.paths ?? {};
+    const dedupeSupported = (files: string[]): string[] => [...new Set(files)].filter(isSupportedFile);
+
+    // Config-driven mode: augmenting full scan. An empty `include` adds nothing back, giving the plain `tsfmt .` scan.
+    if (cliPaths.length === 0) {
+        const base = glob.sync(jsGlob, {cwd, ignore: [...exclude, ...criticalExcludes], absolute: true});
+        const added = include.flatMap(p => glob.sync(p, {cwd, ignore: criticalExcludes, absolute: true}));
+        return dedupeSupported([...base, ...added]);
+    }
+
+    // CLI-driven mode: narrow to exactly the passed paths, exclude bypassed.
+    const results: string[] = [];
+
+    for (const p of include) {
+        const abs = path.resolve(cwd, p);
+        const stat = fs.existsSync(abs) ? fs.statSync(abs) : null;
+        if (stat?.isFile()) {
+            if (!isSupportedFile(abs)) {
+                console.error("Error: Unsupported file type. Supported: .ts, .tsx, .js, .jsx");
+                process.exit(1);
+            }
+
+            results.push(abs);
+        } else if (stat?.isDirectory()) {
+            results.push(...glob.sync(jsGlob, {cwd: abs, ignore: criticalExcludes, absolute: true}));
+        } else if (hasGlobMagic(p)) {
+            results.push(...glob.sync(p, {cwd, ignore: criticalExcludes, absolute: true}));
+        } else {
+            console.error(`Error: Target "${abs}" does not exist.`);
+            process.exit(1);
+        }
+    }
+
+    return dedupeSupported(results);
 }
 
 /** Format files in a directory using the FormatterPipeline */
@@ -61,34 +105,6 @@ async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: bo
     }
 }
 
-/** Format a single file using the FormatterPipeline */
-async function formatSingleFile(filePath: string, config: CoreConfig, dryRun: boolean): Promise<void> {
-    const container = new Container();
-    ServiceRegistration.registerServices(container, config);
-
-    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
-    try {
-        const context = await pipeline.formatFile(filePath, dryRun);
-        if (context.changed) {
-            if (dryRun) {
-                console.info(`Would format: ${filePath}`);
-            } else {
-                console.log(`📊  Formatted: ${filePath}`);
-            }
-        } else {
-            console.info(`No changes needed: ${filePath}`);
-        }
-    } catch (error) {
-        console.error(`Error formatting file ${filePath}:`, (error as Error).message);
-    }
-}
-
-/** Check if a path is a supported file type */
-function isSupportedFile(filePath: string): boolean {
-    const supportedExtensions = [".ts", ".tsx", ".js", ".jsx"];
-    return supportedExtensions.some(ext => filePath.endsWith(ext));
-}
-
 /**
  * Read-only architectural-rules gate, run before any formatting. Exits non-zero without formatting a single file
  * when the config is invalid or a `restrictions.imports` rule is violated; runs even under `--dry`.
@@ -124,112 +140,79 @@ function runRestrictionGate(files: string[], config: CoreConfig, configDir: stri
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
 
-    // Parse command line arguments
-    let target = process.cwd();
+    // Parse command line arguments: accumulate every non-flag argument as a positional path.
+    const cliPaths: string[] = [];
     let dryRun = false;
     let noGate = false;
 
-    for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
+    for (const arg of args) {
         if (arg === "--dry") {
             dryRun = true;
         } else if (arg === "--no-gate") {
             noGate = true;
         } else if (!arg.startsWith("-")) {
-            target = path.resolve(arg);
+            cliPaths.push(arg);
         } else {
             console.error(`Error: Unsupported option "${arg}". Only --dry and --no-gate are supported.`);
             process.exit(1);
         }
     }
     try {
-        // Determine if target is a file or directory
-        const targetStat = fs.existsSync(target) ? fs.statSync(target) : null;
-        const isFile = targetStat?.isFile() ?? false;
-        const isDirectory = targetStat?.isDirectory() ?? false;
-
-        if (!targetStat) {
-            console.error(`Error: Target "${target}" does not exist.`);
-            process.exit(1);
-        }
-
-        // For files, load config from the file's directory; for directories, use the target
-        const configDir = isFile ? path.dirname(target) : target;
-        const config = ConfigLoader.loadConfig(configDir);
+        const cwd = process.cwd();
+        const config = ConfigLoader.loadConfig(cwd);
 
         // Log if custom config is being used
-        if (ConfigLoader.hasConfigFile(configDir)) {
+        if (ConfigLoader.hasConfigFile(cwd)) {
             console.log("Using custom configuration from tsfmt.config.ts");
         }
 
-        // Handle single file formatting
-        if (isFile) {
-            if (!isSupportedFile(target)) {
-                console.error(`Error: Unsupported file type. Supported: .ts, .tsx, .js, .jsx`);
-                process.exit(1);
-            }
-
-            if (config.codeStyle?.enabled
-                || config.imports?.enabled
-                || config.sorting?.enabled
-                || config.spacing?.enabled) {
-                await formatSingleFile(target, config, dryRun);
-            }
-
-            if (dryRun) {
-                console.info("Dry run completed. No files were modified.");
-            } else {
-                console.info("Formatting completed successfully.");
-            }
-
-            return;
+        // Passing paths on the CLI replaces paths.include in memory, scoping the run to exactly those paths.
+        if (cliPaths.length > 0) {
+            config.paths = {...config.paths, include: cliPaths};
         }
 
-        // Handle directory formatting
-        if (isDirectory) {
-            const files = discoverTargetFiles(target, config);
-            runRestrictionGate(files, config, configDir, noGate);
+        const files = discoverTargetFiles(cwd, config, cliPaths);
+        runRestrictionGate(files, config, cwd, noGate);
 
-            // Sort package.json
-            if (config.packageJson?.enabled) {
-                const packagePath = path.join(target, "package.json");
-                if (fs.existsSync(packagePath)) {
-                    console.log(`📦  Processing ${packagePath}...`);
+        // Sort package.json
+        if (config.packageJson?.enabled) {
+            const packagePath = path.join(cwd, "package.json");
+            if (fs.existsSync(packagePath)) {
+                console.log(`📦  Processing ${packagePath}...`);
 
-                    sortPackageFile(packagePath, {
-                        customSortOrder: config.packageJson.customSortOrder,
-                        indentation: config.packageJson.indentation,
-                        dryRun,
-                    });
-                }
+                sortPackageFile(packagePath, {
+                    customSortOrder: config.packageJson.customSortOrder,
+                    indentation: config.packageJson.indentation,
+                    dryRun,
+                });
             }
+        }
 
-            // Sort tsconfig.json
-            if (config.tsConfig?.enabled) {
-                const tsconfigPath = path.join(target, "tsconfig.json");
-                if (fs.existsSync(tsconfigPath)) {
-                    console.log(`🔧  Processing ${tsconfigPath}...`);
+        // Sort tsconfig.json
+        if (config.tsConfig?.enabled) {
+            const tsconfigPath = path.join(cwd, "tsconfig.json");
+            if (fs.existsSync(tsconfigPath)) {
+                console.log(`🔧  Processing ${tsconfigPath}...`);
 
-                    sortTsConfigFile(tsconfigPath, {
-                        indentation: config.tsConfig.indentation,
-                        dryRun,
-                    });
-                }
+                sortTsConfigFile(tsconfigPath, {
+                    indentation: config.tsConfig.indentation,
+                    dryRun,
+                });
             }
+        }
 
-            // Format files using the pipeline
-            if (config.codeStyle?.enabled
-                || config.imports?.enabled
-                || config.sorting?.enabled
-                || config.spacing?.enabled) {
-                await formatDirectory(target, config, dryRun, files);
-            }
+        // Format files using the pipeline
+        if (config.codeStyle?.enabled
+            || config.imports?.enabled
+            || config.sorting?.enabled
+            || config.spacing?.enabled) {
+            await formatDirectory(cwd, config, dryRun, files);
+        }
 
-            if (dryRun) {
-                console.info("Dry run completed. No files were modified.");
-            } else {
-                console.info("Formatting completed successfully.");
-            }
+        if (dryRun) {
+            console.info("Dry run completed. No files were modified.");
+        } else {
+            console.info("Formatting completed successfully.");
         }
     } catch (error) {
         console.error("Error during formatting:", (error as Error).message);

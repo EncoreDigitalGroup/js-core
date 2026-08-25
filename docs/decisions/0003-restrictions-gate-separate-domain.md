@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Accepted. The consequence "the gate runs only for directory/project invocations, not single-file ones" is superseded by
+[ADR-0004](0004-paths-config-file-discovery.md): the gate now runs for every invocation, with `restrictions.files` globs resolved relative to the current working
+directory.
 
 ## Context
 

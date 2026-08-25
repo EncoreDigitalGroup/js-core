@@ -22,6 +22,7 @@ export type {
     IndexGenerationConfig,
     IndexGenerationOptions,
     PackageJsonConfig,
+    PathsConfig,
     ReactComponentConfig,
     RestrictionsConfig,
     SortingConfig,

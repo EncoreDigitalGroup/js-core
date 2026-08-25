@@ -36,11 +36,18 @@ npx tsfmt --dry
 npx tsfmt --no-gate
 npx tsfmt path/to/file.ts
 npx tsfmt path/to/project
+npx tsfmt src/a.ts src/b.ts lib/
 ```
 
-With no path, tsfmt formats the current working directory. A file path must be `.ts`, `.tsx`, `.js`, or `.jsx`. A directory path also sorts `package.json` and
-`tsconfig.json` when those formatters are enabled. `--dry` reports what would change and writes nothing. `--no-gate` skips the restrictions gate (see
-[Restrictions](#restrictions) below) and formats normally even if a `restrictions.imports` rule would otherwise be violated.
+With no path, tsfmt formats the current working directory, driven by the [`paths`](#configuration) config key (an empty `paths` scans the whole tree, the `tsfmt .`
+behavior). You can pass one or more positional paths — files, directories, or globs — and they are formatted mixed together. Every run, whether bare or with paths,
+flows through the same pipeline: the restrictions gate runs first, then `package.json`/`tsconfig.json` are sorted (when those formatters are enabled and the files exist
+in the current directory), then the discovered files are formatted. A passed file must be `.ts`, `.tsx`, `.js`, or `.jsx`.
+
+Passing paths on the command line scopes the run to exactly those paths and **bypasses** `paths.exclude` — a file named explicitly is always formatted, even if the
+config would normally exclude it (the always-on critical excludes — `node_modules`, `dist`, `build`, `vendor`, `bin` — are still pruned inside a passed directory or
+glob). `--dry` reports what would change and writes nothing. `--no-gate` skips the restrictions gate (see [Restrictions](#restrictions) below) and formats normally even
+if a `restrictions.imports` rule would otherwise be violated.
 
 ## Configuration
 
@@ -56,6 +63,31 @@ export default tsfmt({
 ```
 
 `tsfmt()` merges your overrides with the defaults. The npm package ships TypeScript types for this helper; it does not ship a runtime JavaScript library.
+
+### `paths` — which files a run formats
+
+`paths` is the single source of truth for file discovery, so `tsfmt` can be invoked with no arguments in scripts and CI:
+
+```ts
+import {tsfmt} from "tsfmt";
+
+export default tsfmt({
+    paths: {
+        include: [],
+        exclude: [],
+    },
+});
+```
+
+- **`paths.include`** — glob patterns of files to format. Default `[]`. When empty, a bare run scans the whole current-directory tree (the `tsfmt .` behavior). When
+  non-empty, its matches are **added back on top** of the scanned set, so an included file overrides `paths.exclude`. Positional CLI paths replace this array for the run.
+- **`paths.exclude`** — glob patterns to skip on a bare, config-driven run. Default `[]`. Applied on top of the always-on critical excludes (`node_modules`, `dist`,
+  `build`, `vendor`, `bin`). It is overridden by `paths.include` and bypassed entirely when paths are passed on the command line.
+
+`paths` is loaded once per invocation from the config file in the current working directory; it is not hot-reloadable.
+
+> **Migration from `sorting.include`/`sorting.exclude`:** these keys have been removed. Move any globs you set there to `paths.include`/`paths.exclude` — they were the
+> file-discovery mechanism and `paths` replaces them directly. They never scoped the AST sorting rules themselves.
 
 ## Restrictions
 
@@ -110,10 +142,10 @@ export default tsfmt({
 
 `allow` and `forbid` may be combined in the same rule — both are evaluated for every import, so a specifier can be reported as violating each independently.
 
-The gate is opt-in — omitting `restrictions` entirely (the default) leaves tsfmt fully unaffected — and it only runs for directory/project invocations, since
-`files` globs are authored relative to the project root; single-file invocations do not run it. An invalid `restrictions` block (e.g. a `forbid` entry missing
-`message`) is a hard failure: tsfmt prints the config error and exits non-zero rather than silently falling back to formatting. Pass `--no-gate` to skip the gate
-and format normally regardless of any restriction rules.
+The gate is opt-in — omitting `restrictions` entirely (the default) leaves tsfmt fully unaffected. It runs on every invocation, bare or with explicit paths (including a
+single passed file), with `files` globs resolved relative to the current working directory. An invalid `restrictions` block (e.g. a `forbid` entry missing `message`) is
+a hard failure: tsfmt prints the config error and exits non-zero rather than silently falling back to formatting. Pass `--no-gate` to skip the gate and format normally
+regardless of any restriction rules.
 
 ## What tsfmt Does
 

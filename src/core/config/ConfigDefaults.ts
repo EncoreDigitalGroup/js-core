@@ -14,6 +14,11 @@ export class ConfigDefaults {
     static readonly DEFAULT_JS_INCLUDE_PATTERNS = ["**/*.{js,ts,jsx,tsx}"] as const;
     static readonly DEFAULT_TS_INCLUDE_PATTERNS = ["**/*.{ts,tsx}"] as const;
 
+    /** Get the always-on critical exclude patterns pruned from every scan, config include, and passed directory. */
+    static getCriticalExcludePatterns(): string[] {
+        return ["node_modules/**", "dist/**", "build/**", "vendor/**", "bin/**"];
+    }
+
     /** Get default code style configuration */
     static getDefaultCodeStyleConfig() {
         return {
@@ -65,16 +70,6 @@ export class ConfigDefaults {
         };
     }
 
-    /** Get default include patterns for TypeScript files */
-    static getDefaultIncludePatterns(): string[] {
-        return [...this.DEFAULT_TS_INCLUDE_PATTERNS];
-    }
-
-    /** Get default exclude patterns for file processing */
-    static getDefaultExcludePatterns(): string[] {
-        return [...this.DEFAULT_EXCLUDE_PATTERNS];
-    }
-
     /** Get default sorting configuration */
     static getDefaultSortingConfig() {
         return {
@@ -96,8 +91,6 @@ export class ConfigDefaults {
                 order: DEFAULT_FILE_ORDER,
                 respectDependencies: true,
             },
-            include: this.getDefaultIncludePatterns(),
-            exclude: this.getDefaultExcludePatterns(),
         };
     }
 
@@ -128,6 +121,11 @@ export class ConfigDefaults {
         };
     }
 
+    /** Get default paths configuration (empty include/exclude => full-cwd scan, the `tsfmt .` behavior). */
+    static getDefaultPathsConfig() {
+        return {include: [] as string[], exclude: [] as string[]};
+    }
+
     /** Get default formatter order */
     static getDefaultFormatterOrder(): FormatterOrder[] {
         return [
@@ -149,8 +147,19 @@ export class ConfigDefaults {
             spacing: this.getDefaultSpacingConfig(),
             packageJson: this.getDefaultPackageJsonConfig(),
             tsConfig: this.getDefaultTsConfigConfig(),
+            paths: this.getDefaultPathsConfig(),
             formatterOrder: this.getDefaultFormatterOrder(),
         };
+    }
+
+    /** Get default exclude patterns for file processing */
+    static getDefaultExcludePatterns(): string[] {
+        return [...this.DEFAULT_EXCLUDE_PATTERNS];
+    }
+
+    /** Get default include patterns for TypeScript files */
+    static getDefaultIncludePatterns(): string[] {
+        return [...this.DEFAULT_TS_INCLUDE_PATTERNS];
     }
 
     /** Get default include patterns for JavaScript files */

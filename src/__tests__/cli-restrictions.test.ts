@@ -22,9 +22,10 @@ function makeProject(dir: string, configContent: string): string {
 
 const cliPath = path.join(__dirname, "..", "cli.ts");
 
-/** Run the CLI against a target directory, returning exit code and captured output. */
+/** Run the CLI with its working directory set to the project dir, returning exit code and captured output. */
 async function runCli(targetDir: string, extraArgs: string[] = []): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-    const proc = Bun.spawn(["bun", cliPath, targetDir, ...extraArgs], {
+    const proc = Bun.spawn(["bun", cliPath, ...extraArgs], {
+        cwd: targetDir,
         stdout: "pipe",
         stderr: "pipe",
     });

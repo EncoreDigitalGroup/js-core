@@ -200,6 +200,7 @@ describe("ConfigLoader", () => {
             const writtenContent = fs.readFileSync(configPath, "utf-8");
             expect(writtenContent).toContain('import { tsfmt } from "tsfmt"');
             expect(writtenContent).toContain("export default tsfmt({");
+            expect(writtenContent).toContain("paths:");
             expect(writtenContent).toContain("indexGeneration:");
             expect(writtenContent).toContain("codeStyle:");
             expect(writtenContent).toContain("imports:");

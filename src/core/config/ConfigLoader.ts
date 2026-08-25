@@ -55,6 +55,10 @@ export class ConfigLoader {
 import { tsfmt } from "tsfmt";
 
 export default tsfmt({
+    paths: {
+        include: [],
+        exclude: [],
+    },
     indexGeneration: {
         enabled: true,
         directories: ["src/", "packages/"],
