@@ -10,6 +10,7 @@
  * `reflect-metadata`, which are dev-only dependencies absent from a consumer install. The AST and
  * index-generation rules import these definitions from here.
  */
+import type {PresetName} from "./presets";
 
 /** Types of class members, used to order class-member sorting. */
 export enum MemberType {
@@ -278,6 +279,12 @@ export enum FormatterOrder {
 
 /** Main configuration interface for tsfmt */
 export interface CoreConfig {
+    /**
+     * Name of a built-in preset to load beneath your overrides (default: none). Preset values apply over
+     * tsfmt defaults; your own keys override the preset.
+     */
+    preset?: PresetName;
+
     /** Configuration for automatic index.ts file generation */
     indexGeneration?: IndexGenerationConfig;
 

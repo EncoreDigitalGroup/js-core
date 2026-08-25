@@ -59,6 +59,40 @@ describe("ConfigMerger", () => {
         });
     });
 
+    describe("preset layering", () => {
+        it("should apply preset values over defaults", () => {
+            const result = ConfigMerger.merge({preset: "laravel"});
+            expect(result.codeStyle?.quoteStyle).toBe("single"); // From preset (default is "double")
+            expect(result.codeStyle?.indentWidth).toBe(4); // Untouched default
+            expect(result.codeStyle?.enabled).toBe(true); // Untouched default
+        });
+
+        it("should let user overrides beat the preset", () => {
+            const result = ConfigMerger.merge({
+                preset: "laravel",
+                codeStyle: {quoteStyle: "double"},
+            });
+
+            expect(result.codeStyle?.quoteStyle).toBe("double"); // User wins over preset
+        });
+
+        it("should behave exactly as before when no preset is set", () => {
+            const result = ConfigMerger.merge({codeStyle: {quoteStyle: "single"}});
+            expect(result.codeStyle?.quoteStyle).toBe("single");
+            expect(result.codeStyle?.enabled).toBe(true); // From defaults
+        });
+
+        it("should be idempotent when re-merging an already-merged config", () => {
+            const once = ConfigMerger.merge({preset: "laravel"});
+            const twice = ConfigMerger.merge(once);
+            expect(twice).toEqual(once);
+        });
+
+        it("should throw for an unknown preset", () => {
+            expect(() => ConfigMerger.merge({preset: "nope" as never})).toThrow('Unknown preset "nope".');
+        });
+    });
+
     describe("mergeMultiple", () => {
         it("should merge multiple configs in order", () => {
             const config1: Partial<CoreConfig> = {

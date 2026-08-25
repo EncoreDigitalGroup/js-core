@@ -10,6 +10,7 @@
  */
 export {tsfmt} from "./core/config/tsfmt";
 export {DeclarationType, FormatterOrder, MemberType} from "./core/config/ConfigTypes";
+export type {PresetName} from "./core/config/presets";
 
 export type {
     ClassMemberConfig,

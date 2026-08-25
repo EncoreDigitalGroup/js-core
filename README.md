@@ -89,6 +89,30 @@ export default tsfmt({
 > **Migration from `sorting.include`/`sorting.exclude`:** these keys have been removed. Move any globs you set there to `paths.include`/`paths.exclude` — they were the
 > file-discovery mechanism and `paths` replaces them directly. They never scoped the AST sorting rules themselves.
 
+### `preset` — built-in presets
+
+Set `preset` to load a named bundle of config values beneath your own overrides. A preset is layered **between the built-in defaults and your config**, so its values
+replace the defaults, but any key you set yourself still wins:
+
+```ts
+import {tsfmt} from "tsfmt";
+
+export default tsfmt({
+    preset: "laravel",
+    // your own overrides go here and take precedence over the preset
+});
+```
+
+The merge order is **defaults → preset → your config**. The `laravel` preset currently sets:
+
+- `codeStyle.quoteStyle: "single"` (tsfmt's default is `"double"`)
+
+Everything the preset does not set falls through to the tsfmt defaults. An unknown preset name is an error — tsfmt prints it and falls back to the default config for that
+run. The `preset` key is typed as a union of the known preset names, so a mistyped name is also flagged in your editor.
+
+**Adding a preset:** presets live in `src/core/config/presets/`. Add a file exporting a `Partial<CoreConfig>` with only the values that differ from the defaults, then add
+one entry to the `PRESETS` map in `src/core/config/presets/index.ts`. The `preset` key's type and editor autocomplete update automatically.
+
 ## Restrictions
 
 tsfmt is also able to enforce *architectural* rules about what code may import what — for example, "this directory may not import that one" — through an optional

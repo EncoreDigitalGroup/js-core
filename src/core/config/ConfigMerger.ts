@@ -4,6 +4,7 @@
  */
 import {ConfigDefaults} from "./ConfigDefaults";
 import {CoreConfig} from "./ConfigTypes";
+import {resolvePreset} from "./presets";
 
 /** Merges user configuration with default configuration */
 export class ConfigMerger {
@@ -35,15 +36,6 @@ export class ConfigMerger {
     }
 
     /**
-     * Merge user config with default config
-     * @param userConfig - Partial user configuration
-     * @returns Complete merged configuration
-     */
-    static merge(userConfig: Partial<CoreConfig>): CoreConfig {
-        return this.deepMerge(ConfigDefaults.getDefaultConfig(), userConfig);
-    }
-
-    /**
      * Merge multiple partial configs together
      * @param configs - Array of partial configurations to merge
      * @returns Merged configuration
@@ -56,5 +48,24 @@ export class ConfigMerger {
         }
 
         return result;
+    }
+
+    /**
+     * Merge user config with default config, layering a named preset (if any) between the two.
+     * Order is defaults -> preset -> user overrides, so the user's own keys always win and the
+     * preset only fills what the user did not set.
+     * @param userConfig - Partial user configuration
+     * @returns Complete merged configuration
+     */
+    static merge(userConfig: Partial<CoreConfig>): CoreConfig {
+        const layers: Partial<CoreConfig>[] = [];
+
+        if (userConfig.preset !== undefined) {
+            layers.push(resolvePreset(userConfig.preset));
+        }
+
+        layers.push(userConfig);
+
+        return this.mergeMultiple(...layers);
     }
 }

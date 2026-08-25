@@ -9,6 +9,7 @@ import {ConfigDefaults} from "./ConfigDefaults";
 import {ConfigMerger} from "./ConfigMerger";
 import {CoreConfig} from "./ConfigTypes";
 import {ConfigValidator} from "./ConfigValidator";
+import {PRESETS, resolvePreset} from "./presets";
 import {tsfmt} from "./tsfmt";
 
 /** Configuration loader that handles TypeScript config files */
@@ -125,6 +126,8 @@ export default tsfmt({
             ConfigMerger,
             ConfigLoader,
             ConfigValidator,
+            PRESETS,
+            resolvePreset,
         };
     }
 

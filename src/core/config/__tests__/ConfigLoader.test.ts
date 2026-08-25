@@ -99,6 +99,49 @@ describe("ConfigLoader", () => {
             expect(result.codeStyle?.semicolons).toBe("never");
         });
 
+        it("should apply a preset from a config file", () => {
+            const configContent = `
+                import { tsfmt } from "tsfmt";
+
+                export default tsfmt({ preset: "laravel" });
+            `;
+            fs.writeFileSync(configPath, configContent);
+
+            const result = ConfigLoader.loadConfig(tempDir);
+            expect(result.codeStyle?.quoteStyle).toBe("single");
+            expect(result.codeStyle?.enabled).toBe(true);
+        });
+
+        it("should let user config override a preset", () => {
+            const configContent = `
+                import { tsfmt } from "tsfmt";
+
+                export default tsfmt({
+                    preset: "laravel",
+                    codeStyle: { quoteStyle: "double" }
+                });
+            `;
+            fs.writeFileSync(configPath, configContent);
+
+            const result = ConfigLoader.loadConfig(tempDir);
+            expect(result.codeStyle?.quoteStyle).toBe("double");
+        });
+
+        it("should fall back to default config when the preset name is unknown", () => {
+            const configContent = `
+                import { tsfmt } from "tsfmt";
+
+                export default tsfmt({ preset: "laravl" });
+            `;
+            fs.writeFileSync(configPath, configContent);
+
+            const consoleSpy = spyOn(console, "error").mockImplementation(() => undefined);
+            const result = ConfigLoader.loadConfig(tempDir);
+            expect(result).toEqual(ConfigDefaults.getDefaultConfig());
+            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Error loading configuration"));
+            consoleSpy.mockRestore();
+        });
+
         it("should fall back to default config on load error", () => {
             fs.writeFileSync(configPath, "throw new Error('File read error');");
 

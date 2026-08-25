@@ -5,4 +5,5 @@ export * from "./ConfigLoader";
 export * from "./ConfigMerger";
 export * from "./ConfigTypes";
 export * from "./ConfigValidator";
+export * from "./presets";
 export * from "./tsfmt";
