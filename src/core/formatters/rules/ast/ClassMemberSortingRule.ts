@@ -8,6 +8,7 @@ import {DependencyResolver} from "../../../ast/DependencyResolver";
 import {MemberType} from "../../../config/ConfigTypes";
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
+import {StatementSpacingRule} from "../style/StatementSpacingRule";
 
 /** Analyzed class member with metadata */
 export interface ClassMember {
@@ -18,6 +19,7 @@ export interface ClassMember {
     isProtected: boolean;
     isPrivate: boolean;
     isStatic: boolean;
+    isReadonly: boolean;
     hasDecorator: boolean;
     text: string;
     dependencies?: Set<string>;
@@ -77,6 +79,7 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
 
         const isProtected = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
         const isPrivate = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.PrivateKeyword);
+        const isReadonly = ASTAnalyzer.hasModifier(member, ts.SyntaxKind.ReadonlyKeyword);
 
         // Check for decorators
         const decorators = ts.canHaveDecorators(member) ? ts.getDecorators(member) : undefined;
@@ -99,6 +102,7 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             isProtected,
             isPrivate,
             isStatic,
+            isReadonly,
             hasDecorator,
             text,
             dependencies,
@@ -111,6 +115,18 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
         // First, sort by member type according to the defined order
         if (aTypeIndex !== bTypeIndex) {
             return aTypeIndex - bTypeIndex;
+        }
+
+        // Fields sort by group rank — visibility then readonly — so the class body reads public,
+        // public readonly, protected, protected readonly, private, private readonly. This mirrors the
+        // blank-line grouping StatementSpacingRule applies, so ordering and spacing stay consistent.
+        if (a.type === MemberType.StaticProperty || a.type === MemberType.InstanceProperty) {
+            const rankDiff = StatementSpacingRule.fieldGroupRank(a.isProtected, a.isPrivate, a.isReadonly)
+                - StatementSpacingRule.fieldGroupRank(b.isProtected, b.isPrivate, b.isReadonly);
+
+            if (rankDiff !== 0) {
+                return rankDiff;
+            }
         }
 
         // Within the same type, sort by visibility if configured
@@ -151,6 +167,22 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
      */
     private reanchorToEnclosingIndent(fullText: string): string {
         return fullText.replace(/^\n+/, "");
+    }
+
+    /**
+     * Join reordered member texts, inserting a blank line between a pair only when StatementSpacingRule
+     * would — so the reconstructed body already matches that rule's canonical spacing and the two rules
+     * do not fight across successive formats.
+     */
+    private joinWithPolicySpacing(memberTexts: string[]): string {
+        return memberTexts.reduce((body, text, index) => {
+            if (index === 0) {
+                return text;
+            }
+
+            const separator = StatementSpacingRule.wantsBlankBetweenBlocks(memberTexts[index - 1], text) ? "\n\n" : "\n";
+            return body + separator + text;
+        }, "");
     }
 
     override applyToContext(context: FormatContext): void {
@@ -213,9 +245,12 @@ export class ClassMemberSortingRule extends BaseFormattingRule {
             const classBodyStart = firstMember.getFullStart();
             const classBodyEnd = lastMember.getEnd();
 
-            // Build new class body from sorted member texts
+            // Build new class body from sorted member texts, separating each pair by the blank-line
+            // count StatementSpacingRule would apply between them (a blank between differing kinds or
+            // before a method, none between consecutive same-kind fields). Joining with a forced blank
+            // everywhere would disagree with that rule and oscillate across successive formats.
             const memberTexts = sortedMembers.map(m => this.reanchorToEnclosingIndent(m.text));
-            const newClassBody = memberTexts.join("\n\n");
+            const newClassBody = this.joinWithPolicySpacing(memberTexts);
 
             // Replace the class body (add leading newline for proper spacing)
             formatted = formatted.substring(0, classBodyStart) + "\n" + newClassBody + formatted.substring(classBodyEnd);

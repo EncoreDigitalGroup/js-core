@@ -4,255 +4,266 @@
  */
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
-import {findRangeContaining, getProtectedLineIndices, ProtectedRange} from "../../LineProtection";
-
-/** A fix to apply to a closing bracket */
-interface BracketFix {
-    position: number;
-    line: number;
-    column: number;
-    targetIndent: number;
-}
-
-/** Information about an opening bracket */
-interface BracketInfo {
-    char: string;
-    position: number;
-    line: number;
-    lineIndent: number;
-}
+import {findRangeContaining, ProtectedRange} from "../../LineProtection";
 
 /**
- * Fixes structural indentation issues where closing braces/brackets
- * are not properly aligned with their opening statements.
+ * Reindents code to the configured width by deriving each line's indent from actual bracket nesting
+ * rather than rescaling the whitespace already present. This converts a file indented at any width
+ * (e.g. 2-space source against a 4-space target) to the configured convention, where the old
+ * floor-division approach collapsed any indentation narrower than one level to column zero.
  *
- * Uses a stack-based approach to properly match opening and closing
- * brackets, ensuring each closing bracket is indented to match its
- * corresponding opening bracket's line indentation.
+ * A single forward pass computes the emitted indent level of every line:
+ *   - Bodies indent one level past the line that opened their bracket; brackets opened on the same
+ *     source line share one level, so `describe("x", () => {` indents its body once, not twice.
+ *   - A line that continues the previous statement (a leading `&&`/`?`/`.`, a trailing operator, or the
+ *     body of a braceless `if`/`for`/etc.) earns one extra level so its continuation indent survives —
+ *     unless a bracket opened by the statement already supplied that level. This is a heuristic: unusual
+ *     or deeply nested continuations may be misjudged, which only shifts indentation, never structure.
+ *   - Because a bracket's body indents one past its opening line's *emitted* level, a continuation
+ *     bonus compounds correctly into brackets opened on that continuation line.
+ *   - A line that begins with a closing bracket dedents one level, so it aligns with the line that
+ *     opened the bracket — including multi-closer lines such as `}]` or `));`, which align to the
+ *     opener of their leftmost (innermost) closer.
+ *
+ * The scan skips strings, comments, regex literals, and protected ranges (JSX text/expressions,
+ * template literals) so brackets inside them never shift the count.
  */
 export class StructuralIndentationRule extends BaseFormattingRule {
     readonly name = "StructuralIndentationRule";
 
-    private skipString(source: string, start: number, quote: string): { pos: number; newlines: number } {
-        let i = start + 1;
-        let newlines = 0;
-        const isTemplate = quote === "`";
-
-        while (i < source.length) {
-            const char = source[i];
-
-            // Count newlines
-            if (char === "\n") {
-                newlines++;
-                i++;
-                continue;
-            }
-
-            // Handle escape sequences
-            if (char === "\\") {
-                i += 2;
-                continue;
-            }
-
-            // Handle template literal expressions ${...}
-            if (isTemplate && char === "$" && source[i + 1] === "{") {
-                i += 2;
-
-                let braceCount = 1;
-                while (i < source.length && braceCount > 0) {
-                    if (source[i] === "\n") {
-                        newlines++;
-                    } else if (source[i] === "{") {
-                        braceCount++;
-                    } else if (source[i] === "}") {
-                        braceCount--;
-                    } else if (source[i] === '"' || source[i] === "'" || source[i] === "`") {
-                        const result = this.skipString(source, i, source[i]);
-                        i = result.pos;
-                        newlines += result.newlines;
-                        continue;
-                    }
-
-                    i++;
-                }
-
-                continue;
-            }
-
-            // End of string
-            if (char === quote) {
-                return {pos: i + 1, newlines};
-            }
-
-            i++;
+    /** True for the leading `a-z A-Z _ $` of a method-chain member (never a `.` that begins a spread). */
+    private isIdentifierStart(char: string | undefined): boolean {
+        if (char === undefined) {
+            return false;
         }
 
-        return {pos: i, newlines};
+        return (char >= "a" && char <= "z") || (char >= "A" && char <= "Z") || char === "_" || char === "$";
     }
 
-    private isRegexStart(source: string, index: number): boolean {
-        // Look backwards to determine if this / starts a regex
-        let i = index - 1;
-        while (i >= 0 && (source[i] === " " || source[i] === "\t")) {
-            i--;
-        }
-
-        if (i < 0) return true;
-        const char = source[i];
-
-        // After these characters, / is likely a regex
-        const regexPreceders = ["(", ",", "=", ":", "[", "!", "&", "|", "?", "{", "}", ";", "\n", "return", "case"];
-        if (regexPreceders.includes(char)) {
+    /** True when the line opens a ternary branch: a `?` value or a `:` value (not `?.`/`??`/`?:`/`?=`). */
+    private startsTernaryBranch(content: string): boolean {
+        // `?` branch: a `?` not forming `?.`, `??`, `?:`, or `?=`.
+        if (content.startsWith("?") && content[1] !== undefined && !".?:=".includes(content[1])) {
             return true;
         }
 
-        // Check for a preceding keyword, measured from the last non-space char (i), not the `/`
-        // position — otherwise the whitespace between `return` and `/regex/` hides the keyword.
-        const end = i + 1;
-        const keywords = ["return", "case", "typeof", "void", "delete", "throw", "in", "instanceof"];
-        for (const kw of keywords) {
-            if (end >= kw.length && source.substring(end - kw.length, end) === kw) {
-                const before = source[end - kw.length - 1];
-                if (before === undefined || !/[A-Za-z0-9_$]/.test(before)) {
-                    return true;
-                }
-            }
+        // `:` branch: a bare `:` or one followed by a value or a closing paren.
+        return content.startsWith(":") && (content.length === 1 || content[1] === " " || content[1] === "\t" || content[1] === ")");
+    }
+
+    /**
+     * True when the line opens with a token that can only continue the preceding expression: a boolean
+     * or bitwise operator, a union/intersection type member (a single `|`/`&`), a nullish/arithmetic/
+     * concat operator, a method-chain dot, or a ternary `?`/`:` branch.
+     */
+    private startsWithContinuationToken(content: string): boolean {
+        // `|`/`&` cover both the single (union/intersection, bitwise) and doubled (boolean) operators;
+        // `??` is nullish coalescing; `+`/`-` are arithmetic or string concatenation.
+        if (content.startsWith("|") || content.startsWith("&") || content.startsWith("??")) {
+            return true;
         }
 
-        return false;
-    }
-
-    private skipRegex(source: string, start: number): number {
-        let i = start + 1;
-        let inCharClass = false;
-
-        while (i < source.length) {
-            const char = source[i];
-            if (char === "\\") {
-                i += 2;
-                continue;
-            }
-
-            if (char === "[") {
-                inCharClass = true;
-            } else if (char === "]") {
-                inCharClass = false;
-            } else if (char === "/" && !inCharClass) {
-                // Skip flags
-                i++;
-
-                while (i < source.length && /[gimsuy]/.test(source[i])) {
-                    i++;
-                }
-
-                return i;
-            } else if (char === "\n") {
-                // Regex can't span lines without escaping
-                return i;
-            }
-
-            i++;
+        if (content.startsWith("+") || content.startsWith("-")) {
+            return true;
         }
 
-        return i;
+        // `.name` continues a method chain; a leading `.` before a non-identifier is a `...` spread.
+        if (content.startsWith(".") && this.isIdentifierStart(content[1])) {
+            return true;
+        }
+
+        return this.startsTernaryBranch(content);
     }
 
-    private getLineIndentLevel(line: string, indentWidth: number): number {
-        const leadingWhitespace = line.match(/^[\t ]*/)?.[0] || "";
-        const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
-        const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
-        return tabCount + Math.floor(spaceCount / indentWidth);
+    /** True when the previous line is a braceless `if`/`else if`/`for`/`while`/`else`/`do` header. */
+    private isBracelessControlHeader(prev: string): boolean {
+        if (prev === "else" || prev === "do") {
+            return true;
+        }
+
+        const isHeaderKeyword = /^(if|else if|for|while)\b/.test(prev);
+        return isHeaderKeyword && prev.endsWith(")");
     }
 
-    private startsWithClosingBracket(trimmedLine: string): boolean {
-        return /^[}\])]/.test(trimmedLine);
+    /** True when the previous line ends with a binary/arrow operator that needs a right-hand operand. */
+    private endsWithContinuationOperator(prev: string): boolean {
+        if (prev.endsWith("&&") || prev.endsWith("||") || prev.endsWith("??") || prev.endsWith("=>")) {
+            return true;
+        }
+
+        const last = prev[prev.length - 1];
+
+        // Arithmetic operators, or any trailing `=` (assignment, or a `==`/`<=`/`>=`/`!=` comparison).
+        return last === "+" || last === "-" || last === "*" || last === "/" || last === "%" || last === "=";
     }
 
-    private findBracketFixes(
-        source: string,
-        lines: string[],
-        indentWidth: number,
-        protectedRanges: ProtectedRange[],
-        protectedLines: Set<number>,
-    ): BracketFix[] {
-        const fixes: BracketFix[] = [];
-        const stack: BracketInfo[] = [];
+    /**
+     * True when a line syntactically continues the previous statement and so earns one extra indent
+     * level beyond its bracket nesting — a multi-line boolean/ternary expression, a method chain, a
+     * value split across an `=`/operator, or the single-statement body of a braceless `if`/`for`/etc.
+     * This restores the continuation indentation that a purely bracket-derived level would drop. It is
+     * a heuristic: unusual or nested continuations may be misjudged, which only shifts indentation.
+     */
+    private isContinuationLine(prevCode: string | null, content: string): boolean {
+        if (this.startsWithContinuationToken(content)) {
+            return true;
+        }
 
-        // Track corrected indentation for lines that have fixes
-        const lineIndentCorrections = new Map<number, number>();
+        if (prevCode === null) {
+            return false;
+        }
 
-        // Remember the most recent `)` that closed a parenthesized group opened on an earlier line
-        // (e.g. a multi-line `if (...)` condition). A `{` opening on that same line belongs to the
-        // statement that began at the `(`, so its block should align to the `(` line, not the deeper
-        // continuation line the `{` physically sits on.
-        let lastMultiLineParenClose: { line: number; lineIndent: number } | null = null;
+        // Drop a trailing line comment so the operator test looks at the code, not the comment.
+        const commentStart = prevCode.indexOf("//");
+        const prev = (commentStart === -1 ? prevCode : prevCode.slice(0, commentStart)).trimEnd();
+        return this.isBracelessControlHeader(prev) || this.endsWithContinuationOperator(prev);
+    }
+
+    /**
+     * The emitted indent level (in units of indentWidth) for each line, from a single forward pass over
+     * the source. Bracket bodies indent one past their opening line's emitted level, and continuation
+     * lines earn one extra level, so both compose correctly. Non-code lines (blank, comment, or those
+     * beginning inside a protected range) are assigned their enclosing bracket level and never act as a
+     * continuation antecedent; the apply pass handles how they are actually emitted.
+     */
+    private computeEmittedLevels(source: string, lines: string[], protectedRanges: ProtectedRange[], scanRanges: ProtectedRange[], jsxMarkers: Map<number, number>): number[] {
+        const emitted = new Array(lines.length).fill(0);
+        const lineStartOffset = new Array(lines.length).fill(0);
+
+        for (let k = 0, off = 0; k < lines.length; k++) {
+            lineStartOffset[k] = off;
+            off += lines[k].length + 1;
+        }
+
+        // Each open bracket carries the indent level its body sits at and its opening character. A
+        // bracket opened on the same line as the current top reuses that level instead of adding another.
+        const stack: Array<{ openLine: number; level: number; char: string }> = [];
+
+        // Trimmed content of the previous real code line, its line index, and whether it was itself a
+        // continuation (and specifically a ternary branch). A continuation line indents relative to the
+        // line it continues, so these carry the run's state forward.
+        let prevCode: string | null = null;
+        let prevCodeLine = -1;
+        let prevWasContinuation = false;
+        let prevWasTernary = false;
+
+        // The most recent `)` that closed a paren spanning multiple lines (e.g. a wrapped `if (...)`
+        // condition). A `{` opening on that same line is the statement's block, so its body aligns to
+        // the statement rather than to the deep continuation level the `{` physically sits at.
+        let multiLineParenClose: { line: number; level: number } | null = null;
+
+        // Compute the emitted level for a line at the moment the scan reaches its start, using the
+        // bracket stack accumulated from earlier lines. Must run before this line's brackets are pushed.
+        const enterLine = (lineIndex: number): void => {
+            const base = stack.length > 0 ? stack[stack.length - 1].level : 0;
+            const raw = lines[lineIndex] ?? "";
+            const leadingWs = (raw.match(/^\s*/)?.[0] ?? "").length;
+            const trimmed = raw.slice(leadingWs);
+            const firstCharOffset = lineStartOffset[lineIndex] + leadingWs;
+
+            // Non-code lines take their enclosing bracket level; the apply pass decides how they emit.
+            // A protected block (multi-line template/JSX) ends any statement it interrupts, so it clears
+            // the continuation antecedent — but a blank line or comment leaves it intact, so a statement
+            // split by a blank line (e.g. a `+`-concatenation) still reads as a continuation.
+            const isProtected = findRangeContaining(protectedRanges, firstCharOffset) !== undefined;
+            if (trimmed === "" || isProtected || trimmed.startsWith("//") || trimmed.startsWith("*")) {
+                emitted[lineIndex] = base;
+
+                if (isProtected) {
+                    prevCode = null;
+                    prevCodeLine = -1;
+                }
+
+                return;
+            }
+
+            // A `</`-led JSX closing tag dedents just like a closing bracket, aligning with its opening
+            // tag's line rather than sitting a level deeper with the element's children.
+            const startsWithCloser = /^(<\/|[}\])])/.test(trimmed);
+            const isContinuation = !startsWithCloser && prevCodeLine >= 0 && this.isContinuationLine(prevCode, trimmed);
+            const isTernary = this.startsTernaryBranch(trimmed);
+            const top = stack.length > 0 ? stack[stack.length - 1] : null;
+            if (isContinuation && top !== null && top.openLine >= prevCodeLine) {
+                // A continuation that is the first line inside a bracket opened on the line it continues
+                // (e.g. `a || (b` then `&& c)`) takes the bracket's indent — the bracket already stepped
+                // it one level in past the operator line.
+                emitted[lineIndex] = top.level;
+            } else if (isContinuation) {
+                // Otherwise a continuation indents relative to the line it continues, not to the
+                // enclosing bracket. The first line of a continuation run steps one level in; later lines
+                // of the same run stay flat with it, so `a || b || c` and `x.map().filter()` align rather
+                // than stair-stepping. A ternary `?`/`:` branch is the exception — it steps in from its
+                // condition even mid-run — but `?` and `:` align with each other.
+                const stepsIn = !prevWasContinuation || (isTernary && !prevWasTernary);
+                emitted[lineIndex] = Math.max(0, emitted[prevCodeLine] + (stepsIn ? 1 : 0));
+            } else {
+                emitted[lineIndex] = Math.max(0, base - (startsWithCloser ? 1 : 0));
+            }
+
+            // A `/*` opener is comment text, not a continuation antecedent for the following code line.
+            if (trimmed.startsWith("/*")) {
+                prevCode = null;
+                prevCodeLine = -1;
+                prevWasContinuation = false;
+                prevWasTernary = false;
+            } else {
+                prevCode = trimmed;
+                prevCodeLine = lineIndex;
+                prevWasContinuation = isContinuation;
+                prevWasTernary = isContinuation && isTernary;
+            }
+        };
+
+        enterLine(0);
+
         let i = 0;
         let line = 0;
-        let column = 0;
-        let lineStart = 0;
-        const openBrackets: Record<string, string> = {
-            "{": "}",
-            "[": "]",
-            "(": ")"
-        };
-
-        const closeBrackets: Record<string, string> = {
-            "}": "{",
-            "]": "[",
-            ")": "("
-        };
 
         while (i < source.length) {
-            // Skip protected AST ranges (JSX text/expressions, template literals) as opaque spans, so
-            // their content — e.g. an apostrophe inside JSX text — is never mistaken for a string or
-            // regex delimiter. This is the fix for the tokenizer bug this rule used to have on .tsx.
-            const activeRange = findRangeContaining(protectedRanges, i);
+            // Skip strings, template/regex literals, and JSX text/expressions opaquely, advancing the
+            // line counter but never touching the stack for `{}()[]` that appear inside them. These
+            // ranges come from the AST, so the scanner needs no string- or regex-tokenizing heuristics.
+            const activeRange = findRangeContaining(scanRanges, i);
             if (activeRange) {
                 while (i < activeRange.end) {
                     if (source[i] === "\n") {
                         line++;
-                        lineStart = i + 1;
+                        enterLine(line);
                     }
 
                     i++;
                 }
 
-                column = i - lineStart;
                 continue;
             }
 
-            const char = source[i];
-
-            // Handle newlines
-            if (char === "\n") {
-                line++;
-                column = 0;
-                lineStart = i + 1;
+            // A JSX opening/closing tag changes nesting depth exactly like a bracket, but `<`/`>` are
+            // not brackets — the AST-derived markers tell us where. An opening tag pushes a level so the
+            // element's children indent one deeper; a closing tag pops it.
+            const jsxDelta = jsxMarkers.get(i);
+            if (jsxDelta === 1) {
+                const sameLineAsTop = stack.length > 0 && stack[stack.length - 1].openLine === line;
+                const level = sameLineAsTop ? stack[stack.length - 1].level : emitted[line] + 1;
+                stack.push({openLine: line, level, char: "<"});
+                i++;
+                continue;
+            } else if (jsxDelta === -1) {
+                stack.pop();
                 i++;
                 continue;
             }
 
-            // Skip string literals
-            if (char === '"' || char === "'" || char === "`") {
-                const result = this.skipString(source, i, char);
-                i = result.pos;
-                line += result.newlines;
-
-                if (result.newlines > 0) {
-                    // Find the last newline position to update lineStart
-                    let lastNewline = i - 1;
-                    while (lastNewline >= 0 && source[lastNewline] !== "\n") {
-                        lastNewline--;
-                    }
-
-                    lineStart = lastNewline + 1;
-                }
-
-                column = i - lineStart;
+            const char = source[i];
+            if (char === "\n") {
+                line++;
+                enterLine(line);
+                i++;
                 continue;
             }
 
-            // Skip single-line comments
+            // Comments are trivia, not AST literal ranges, so they are still skipped lexically here.
+            // A `/` that opens a regex was already skipped as an AST range above, so any `/` reaching
+            // this point is a comment delimiter or a division operator — never a regex start.
             if (char === "/" && source[i + 1] === "/") {
                 while (i < source.length && source[i] !== "\n") {
                     i++;
@@ -261,113 +272,53 @@ export class StructuralIndentationRule extends BaseFormattingRule {
                 continue;
             }
 
-            // Skip multi-line comments
             if (char === "/" && source[i + 1] === "*") {
                 i += 2;
 
                 while (i < source.length - 1 && !(source[i] === "*" && source[i + 1] === "/")) {
                     if (source[i] === "\n") {
                         line++;
-                        lineStart = i + 1;
+                        enterLine(line);
                     }
 
                     i++;
                 }
 
                 i += 2;
-                column = i - lineStart;
                 continue;
             }
 
-            // Skip regex literals (basic detection) — never on a line that overlaps a protected range,
-            // since JSX markup (e.g. a self-closing tag's `/>` right after a `{expr}`) can otherwise be
-            // misread as the start of a regex literal by this heuristic.
-            if (char === "/" && !protectedLines.has(line) && this.isRegexStart(source, i)) {
-                i = this.skipRegex(source, i);
-                column = i - lineStart;
-                continue;
-            }
+            if (char === "{" || char === "[" || char === "(") {
+                // A bracket's body indents one past this line's emitted level; brackets sharing the line
+                // with an already-open one reuse its level rather than adding another. A `{` that opens
+                // right after a multi-line `)` closed on this line is the statement's block, so it takes
+                // the statement's level rather than the continuation level the line was emitted at.
+                const sameLineAsTop = stack.length > 0 && stack[stack.length - 1].openLine === line;
+                let level: number;
 
-            // Handle opening brackets
-            if (openBrackets[char]) {
-                // Use corrected indent if this line has a fix, otherwise use current indent
-                let lineIndent = lineIndentCorrections.has(line)
-                    ? lineIndentCorrections.get(line)!
-                    : this.getLineIndentLevel(lines[line], indentWidth);
-
-                // A `{` opening on the line where a multi-line `(...)` just closed inherits that
-                // condition's statement indent, so its closing `}` lines up with the `if`/`while`/etc.
-                if (char === "{" && lastMultiLineParenClose && lastMultiLineParenClose.line === line) {
-                    lineIndent = lastMultiLineParenClose.lineIndent;
+                if (char === "{" && multiLineParenClose && multiLineParenClose.line === line) {
+                    level = multiLineParenClose.level;
+                } else if (sameLineAsTop) {
+                    level = stack[stack.length - 1].level;
+                } else {
+                    level = emitted[line] + 1;
                 }
 
-                stack.push({
-                    char,
-                    position: i,
-                    line,
-                    lineIndent
-                });
-            }
+                stack.push({openLine: line, level, char});
+            } else if (char === "}" || char === "]" || char === ")") {
+                const popped = stack.pop();
 
-            // Handle closing brackets
-            if (closeBrackets[char]) {
-                const expectedOpen = closeBrackets[char];
-
-                // Find matching opening bracket
-                let matchIndex = -1;
-
-                for (let j = stack.length - 1; j >= 0; j--) {
-                    if (stack[j].char === expectedOpen) {
-                        matchIndex = j;
-                        break;
-                    }
-                }
-
-                if (matchIndex !== -1) {
-                    const openBracket = stack[matchIndex];
-
-                    stack.splice(matchIndex, 1);
-
-                    // Record a `)` that closes a paren group spanning multiple lines, so a `{` that
-                    // follows it on this line can align its block to the statement's opening line.
-                    if (char === ")" && line !== openBracket.line) {
-                        lastMultiLineParenClose = {line, lineIndent: openBracket.lineIndent};
-                    }
-
-                    // Only fix if the closing bracket is on a different line
-                    if (line !== openBracket.line) {
-                        const trimmedLine = lines[line].trimStart();
-
-                        // Only fix lines that start with a closing bracket, and let the leftmost such
-                        // bracket (processed first, left-to-right) own the line's indentation: it aligns
-                        // to its opener's line. Inner closers on the same line must not override it — a
-                        // line like `    ));`, whose two parens close openers at different indents, would
-                        // otherwise flip between them on every pass (a non-idempotent oscillation).
-                        if (this.startsWithClosingBracket(trimmedLine) && !lineIndentCorrections.has(line)) {
-                            const currentIndent = this.getLineIndentLevel(lines[line], indentWidth);
-                            if (currentIndent !== openBracket.lineIndent) {
-                                fixes.push({
-                                    position: i,
-                                    line,
-                                    column,
-                                    targetIndent: openBracket.lineIndent
-                                });
-                            }
-
-                            // Lock this line's target indent even when no fix is needed, so later
-                            // closers on the same line don't compute a competing fix. Opening brackets
-                            // on this line also read this corrected value.
-                            lineIndentCorrections.set(line, openBracket.lineIndent);
-                        }
-                    }
+                // Remember a `)` that closed a paren opened on an earlier line, so a `{` following it on
+                // this line can align its block to the statement that opened the paren.
+                if (popped && char === ")" && popped.openLine !== line) {
+                    multiLineParenClose = {line, level: popped.level};
                 }
             }
 
             i++;
-            column++;
         }
 
-        return fixes;
+        return emitted;
     }
 
     override applyToContext(context: FormatContext): void {
@@ -380,45 +331,69 @@ export class StructuralIndentationRule extends BaseFormattingRule {
         const indentUnit = config.indentStyle === "tab" ? "\t" : " ".repeat(indentWidth);
         const source = context.getText();
         const protectedRanges = context.getProtectedRanges();
-        const protectedLines = getProtectedLineIndices(source, protectedRanges);
+        const scanRanges = context.getLiteralScanRanges();
+        const jsxMarkers = new Map<number, number>();
+
+        for (const marker of context.getJsxDepthMarkers()) {
+            jsxMarkers.set(marker.pos, marker.delta);
+        }
+
         const lines = source.split("\n");
-        const fixes = this.findBracketFixes(source, lines, indentWidth, protectedRanges, protectedLines)
-
-            // Never re-indent a line that overlaps a protected range, even if a fix was computed for it.
-            .filter(fix => !protectedLines.has(fix.line));
-
-        if (fixes.length === 0) {
-            return;
-        }
-
-        // Group fixes by line number
-        const fixesByLine = new Map<number, BracketFix[]>();
-
-        for (const fix of fixes) {
-            if (!fixesByLine.has(fix.line)) {
-                fixesByLine.set(fix.line, []);
-            }
-
-            fixesByLine.get(fix.line)!.push(fix);
-        }
-
-        // Apply fixes line by line
+        const emitted = this.computeEmittedLevels(source, lines, protectedRanges, scanRanges, jsxMarkers);
         const result: string[] = [];
 
-        for (let i = 0; i < lines.length; i++) {
-            const lineFixes = fixesByLine.get(i);
-            if (lineFixes && lineFixes.length > 0) {
-                // For lines with closing brackets, use the indent of the first (outermost) bracket
-                // Sort by column to get the leftmost bracket first
-                lineFixes.sort((a, b) => a.column - b.column);
+        // Track whether we are inside a multi-line block comment (`/* ... */`) and the indentation
+        // applied to its opening line, so continuation lines align their `*` one space in from the
+        // opening `/*` (standard JSDoc/block-comment alignment) instead of being reindented as code.
+        let inBlockComment = false;
+        let commentBaseIndent = "";
+        let lineStart = 0;
 
-                const primaryFix = lineFixes[0];
-                const trimmedLine = lines[i].trimStart();
-                const newIndent = indentUnit.repeat(primaryFix.targetIndent);
-                result.push(newIndent + trimmedLine);
-            } else {
-                result.push(lines[i]);
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            const line = lines[lineIndex];
+            const currentLineStart = lineStart;
+
+            lineStart += line.length + 1;
+
+            const leadingWhitespace = line.match(/^\s*/)?.[0] || "";
+            const content = line.substring(leadingWhitespace.length);
+
+            // Skip empty lines, and any line whose own content begins inside a protected range — JSX
+            // text/expressions or a multi-line template literal — since reindenting those would rewrite
+            // whitespace that is semantically significant there. A line that merely *contains* a template
+            // literal further along (e.g. a single-line call passing one) is still real code and is
+            // reindented normally; only lines that start inside the protected span are frozen.
+            if (content === "" || findRangeContaining(protectedRanges, currentLineStart + leadingWhitespace.length)) {
+                result.push(line);
+                continue;
             }
+
+            // Continuation of a multi-line block comment: align each `*`-prefixed line one space in from
+            // the opening `/*`. Non-`*` body lines (e.g. code samples) are left untouched.
+            if (inBlockComment) {
+                if (content.startsWith("*")) {
+                    result.push(commentBaseIndent + " " + content);
+                } else {
+                    result.push(line);
+                }
+
+                if (content.includes("*/")) {
+                    inBlockComment = false;
+                }
+
+                continue;
+            }
+
+            const newIndent = indentUnit.repeat(emitted[lineIndex]);
+
+            // A line that opens a block comment without closing it on the same line starts a continuation
+            // run; record its normalized indent so following `*` lines align to it.
+            if (content.startsWith("/*") && !content.includes("*/")) {
+                inBlockComment = true;
+                commentBaseIndent = newIndent;
+            }
+
+            result.push(newIndent + content);
         }
 
         const after = result.join("\n");

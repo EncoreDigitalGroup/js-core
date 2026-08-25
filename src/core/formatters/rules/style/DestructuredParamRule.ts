@@ -32,6 +32,8 @@ interface RegionEdit {
  * so the indentation rules that ran earlier neither need to nor do touch its output on a re-run.
  */
 export class DestructuredParamRule extends BaseFormattingRule {
+    readonly name = "DestructuredParamRule";
+
     private readonly functionKinds = new Set<SyntaxKind>([
         SyntaxKind.FunctionDeclaration,
         SyntaxKind.FunctionExpression,
@@ -39,8 +41,6 @@ export class DestructuredParamRule extends BaseFormattingRule {
         SyntaxKind.MethodDeclaration,
         SyntaxKind.Constructor,
     ]);
-
-    readonly name = "DestructuredParamRule";
 
     /** Leading whitespace of the line containing character offset `pos`. */
     private lineIndent(source: string, pos: number): string {
@@ -105,7 +105,6 @@ export class DestructuredParamRule extends BaseFormattingRule {
         // Text between the pattern `}` and the body `{` (inclusive): `: Type): Return {`.
         const tail = source.slice(patternEnd, bodyBraceEnd);
         const rebuilt = "(\n"
-
             + oneIn + "{\n"
             + members.map(m => `${twoIn}${m},`).join("\n") + "\n"
             + oneIn + "}" + tail;

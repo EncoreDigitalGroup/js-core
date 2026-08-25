@@ -28,6 +28,7 @@ export class LogicalOperatorPlacementRule extends BaseFormattingRule {
     // line only when it has at most this many operands AND the collapsed line fits this width —
     // condition count alone is the wrong measure, so length is weighed alongside it.
     private static readonly MAX_INLINE_OPERANDS = 2;
+
     readonly name = "LogicalOperatorPlacementRule";
 
     /**

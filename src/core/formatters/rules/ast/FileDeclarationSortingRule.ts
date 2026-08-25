@@ -7,6 +7,7 @@ import {ASTAnalyzer, DependencyResolver} from "../../../ast";
 import {DeclarationType} from "../../../config/ConfigTypes";
 import {BaseFormattingRule} from "../../BaseFormattingRule";
 import {FormatContext} from "../../FormatContext";
+import {StatementSpacingRule} from "../style/StatementSpacingRule";
 
 /** Analyzed file declaration with metadata */
 export interface FileDeclaration {
@@ -162,6 +163,22 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
         return fullText.replace(/^\n+/, "");
     }
 
+    /**
+     * Join reordered declaration texts, inserting a blank line between a pair only when
+     * StatementSpacingRule would — so the reconstructed file already matches that rule's canonical
+     * spacing and the two rules do not fight across successive formats.
+     */
+    private joinWithPolicySpacing(declarationTexts: string[]): string {
+        return declarationTexts.reduce((body, text, index) => {
+            if (index === 0) {
+                return text;
+            }
+
+            const separator = StatementSpacingRule.wantsBlankBetweenBlocks(declarationTexts[index - 1], text) ? "\n\n" : "\n";
+            return body + separator + text;
+        }, "");
+    }
+
     override applyToContext(context: FormatContext): void {
         const config = this.getSortingConfig()?.fileDeclarations;
         if (!config?.enabled) {
@@ -239,7 +256,7 @@ export class FileDeclarationSortingRule extends BaseFormattingRule {
                 ? this.reanchorToEnclosingIndent(originalText.substring(contentStart, d.node.getEnd()))
                 : this.reanchorToEnclosingIndent(d.text));
 
-        const newDeclarations = declarationTexts.join("\n\n");
+        const newDeclarations = this.joinWithPolicySpacing(declarationTexts);
 
         // Emit the pinned header (if any), then the declarations. When imports precede the
         // declarations, keep them and separate them from the declarations with a blank line.

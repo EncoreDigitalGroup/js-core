@@ -237,4 +237,50 @@ describe("StatementSpacingRule", () => {
         // The blank inside the template is content and must survive; the two calls stay grouped.
         expect(run(input)).toBe(input);
     });
+
+    it("separates class field groups by visibility and readonly with a blank line", () => {
+        const input = [
+            "class C {",
+            "    readonly name = \"C\";",
+            "    private readonly a = 1;",
+            "    private readonly b = 2;",
+            "}"
+        ].join("\n");
+
+        // public readonly `name` is a different group from the private readonly fields, so a blank
+        // separates them; the two private readonly fields share a group and stay tight.
+        const expected = [
+            "class C {",
+            "    readonly name = \"C\";",
+            "",
+            "    private readonly a = 1;",
+            "    private readonly b = 2;",
+            "}"
+        ].join("\n");
+
+        expect(run(input)).toBe(expected);
+    });
+
+    it("keeps local const/let declarations tight (they carry no visibility to rank)", () => {
+        const input = [
+            "function f() {",
+            "    const a = 1;",
+            "    const b = 2;",
+            "    doThing();",
+            "}"
+        ].join("\n");
+
+        // The two locals stay grouped (no rank splits them); the expression that follows is a kind
+        // change and gets its blank as usual.
+        const expected = [
+            "function f() {",
+            "    const a = 1;",
+            "    const b = 2;",
+            "",
+            "    doThing();",
+            "}"
+        ].join("\n");
+
+        expect(run(input)).toBe(expected);
+    });
 });

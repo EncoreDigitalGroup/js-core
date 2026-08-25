@@ -12,7 +12,6 @@ import {
     FileDeclarationSortingRule,
     ImportOrganizationRule,
     ImportShorteningRule,
-    IndentationRule,
     IndexGenerationRule,
     JsxSelfClosingRule,
     LogicalOperatorPlacementRule,
@@ -34,7 +33,6 @@ export class ServiceRegistration {
         container.singleton(QuoteStyleRule);
         container.singleton(SemicolonRule);
         container.singleton(BracketSpacingRule);
-        container.singleton(IndentationRule);
         container.singleton(LogicalOperatorPlacementRule);
         container.singleton(StructuralIndentationRule);
         container.singleton(BlockSpacingRule);

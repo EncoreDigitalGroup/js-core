@@ -271,9 +271,8 @@ export class FormatterPipeline {
             this.addRuleByName("QuoteStyleRule", FormatterOrder.CodeStyle);
             this.addRuleByName("SemicolonRule", FormatterOrder.CodeStyle);
             this.addRuleByName("BracketSpacingRule", FormatterOrder.CodeStyle);
-            this.addRuleByName("IndentationRule", FormatterOrder.CodeStyle);
-            this.addRuleByName("LogicalOperatorPlacementRule", FormatterOrder.CodeStyle);
             this.addRuleByName("StructuralIndentationRule", FormatterOrder.CodeStyle);
+            this.addRuleByName("LogicalOperatorPlacementRule", FormatterOrder.CodeStyle);
             this.addRuleByName("BlockSpacingRule", FormatterOrder.CodeStyle);
             this.addRuleByName("DocBlockCommentRule", FormatterOrder.CodeStyle);
             this.addRuleByName("StatementSpacingRule", FormatterOrder.CodeStyle);

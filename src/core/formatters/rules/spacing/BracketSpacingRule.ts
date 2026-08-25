@@ -17,6 +17,7 @@ import {FormatContext} from "../../FormatContext";
  */
 export class BracketSpacingRule extends BaseFormattingRule {
     readonly name = "BracketSpacingRule";
+
     private collectBraceSpacingChanges(
         node: Node,
         bracketSpacing: boolean,

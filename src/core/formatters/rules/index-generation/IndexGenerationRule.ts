@@ -10,13 +10,13 @@ import {FormatContext} from "../../FormatContext";
 
 /** Rule that generates index.ts files for directories */
 export class IndexGenerationRule extends BaseFormattingRule {
+    readonly name = "IndexGenerationRule";
+
     private readonly defaultOptions: IndexGenerationOptions = {
         fileExtension: ".ts",
         indexFileName: "index.ts",
         recursive: true
     };
-
-    readonly name = "IndexGenerationRule";
 
     private findProjectRoot(filePath: string): string | null {
         let current = path.dirname(filePath);

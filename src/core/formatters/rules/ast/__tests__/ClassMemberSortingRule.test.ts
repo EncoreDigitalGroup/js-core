@@ -124,5 +124,26 @@ describe("ClassMemberSortingRule", () => {
             const result = run(input, "widget.ts", defaultConfig());
             expect(result).toBe(golden);
         });
+
+        it("orders fields by visibility then readonly: public, public readonly, protected, protected readonly, private, private readonly", () => {
+            const input = `class C {
+    private readonly barrelCache = new Map();
+    readonly name = "C";
+    protected count = 0;
+    public label = "x";
+    protected readonly tag = "t";
+    private id = 1;
+}
+`;
+
+            const result = run(input, "c.ts", defaultConfig());
+            const order = ["public label", "readonly name", "protected count", "protected readonly tag", "private id", "private readonly barrelCache"];
+            const positions = order.map(m => result.indexOf(m));
+            expect(positions.every(p => p >= 0)).toBe(true);
+
+            for (let i = 1; i < positions.length; i++) {
+                expect(positions[i - 1]).toBeLessThan(positions[i]);
+            }
+        });
     });
 });

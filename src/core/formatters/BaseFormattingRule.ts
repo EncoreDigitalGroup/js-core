@@ -12,9 +12,9 @@ import {IFormattingRule} from "./IFormattingRule";
  * Eliminates the need for each rule to implement the container constructor boilerplate
  */
 export abstract class BaseFormattingRule implements IFormattingRule {
-    protected readonly config: CoreConfig;
-
     abstract readonly name: string;
+
+    protected readonly config: CoreConfig;
 
     constructor(protected readonly container: Container, config?: CoreConfig) {
         // Use provided config or resolve from container

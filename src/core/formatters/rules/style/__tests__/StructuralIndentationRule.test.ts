@@ -36,6 +36,215 @@ describe("StructuralIndentationRule", () => {
         } as CoreConfig;
     });
 
+    // Reindentation from bracket/JSX nesting depth: converting a file to the configured width, the
+    // continuation heuristic, same-line bracket collapsing, and block-comment alignment. These cover
+    // the width-normalizing behavior of the single unified indentation pass.
+    describe("width and continuation reindentation", () => {
+        function runWith(source: string, filePath: string, cfg: CoreConfig): string {
+            const container = new Container();
+            container.singleton<CoreConfig>(cfg);
+
+            const rule = new StructuralIndentationRule(container);
+            const context = new FormatContext(source, filePath);
+            rule.applyToContext(context);
+
+            return context.getText();
+        }
+
+        it("reindents mixed/irregular indentation to the configured width from bracket nesting depth", () => {
+            // The rule derives each line's level from actual bracket nesting, so inconsistent source
+            // indentation (2, 6, 4, 2 spaces, a tab) all collapses to clean depth * indentWidth output.
+            const input = [
+                "function test() {",
+                "  const obj = {",
+                "      a: 1,",
+                "    b: 2",
+                "  };",
+                "\treturn obj;",
+                "}"
+            ].join("\n");
+
+            const golden = "function test() {\n    const obj = {\n        a: 1,\n        b: 2\n    };\n    return obj;\n}";
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(golden);
+        });
+
+        it("converts a 2-space source file to the configured 4-space width", () => {
+            const input = [
+                "export function run(): void {",
+                "  const a = 1;",
+                "  if (a) {",
+                "    doThing();",
+                "  }",
+                "}"
+            ].join("\n");
+
+            const golden = "export function run(): void {\n    const a = 1;\n    if (a) {\n        doThing();\n    }\n}";
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(golden);
+        });
+
+        it("reindents a 2-space source file to tabs", () => {
+            const input = [
+                "function test() {",
+                "  const obj = {",
+                "    a: 1",
+                "  };",
+                "  return obj;",
+                "}"
+            ].join("\n");
+
+            const golden = "function test() {\n\tconst obj = {\n\t\ta: 1\n\t};\n\treturn obj;\n}";
+            const cfg = {codeStyle: {enabled: true, indentStyle: "tab", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(golden);
+        });
+
+        it("indents a multi-line call's arguments one level in from the opening line", () => {
+            const input = [
+                "process.stdout.write(",
+                "message,",
+                ");"
+            ].join("\n");
+
+            const golden = "process.stdout.write(\n    message,\n);";
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(golden);
+        });
+
+        it("collapses brackets opened on the same line into a single indent level", () => {
+            // `describe("x", () => {` opens both `(` and `{` on one line; its body must indent one
+            // level, not two. This is the common test/callback shape and must not double-indent.
+            const input = [
+                "describe(\"x\", () => {",
+                "  it(\"y\", () => {",
+                "    expect(x).toBe(1);",
+                "  });",
+                "});"
+            ].join("\n");
+
+            const golden = "describe(\"x\", () => {\n    it(\"y\", () => {\n        expect(x).toBe(1);\n    });\n});";
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(golden);
+        });
+
+        it("leaves a single-line statement that contains a template literal reindentable", () => {
+            // The line *contains* a template literal but does not *start* inside one, so its leading
+            // indentation is normalized to the function-body level rather than being frozen.
+            const input = [
+                "export function run(): void {",
+                "  exec([`Set ${x}`]);",
+                "}"
+            ].join("\n");
+
+            const golden = "export function run(): void {\n    exec([`Set ${x}`]);\n}";
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(golden);
+        });
+
+        it("indents nested JSX elements one level per parent tag", () => {
+            // `<Tag>`/`</Tag>` are not brackets, so the depth is taken from AST-derived JSX markers;
+            // each nested element indents one level past its parent, exactly as brackets do for code.
+            const input = [
+                "export function C() {",
+                "return (",
+                "<div>",
+                "<section>",
+                "<p>hello</p>",
+                "</section>",
+                "</div>",
+                ");",
+                "}"
+            ].join("\n");
+
+            const golden = [
+                "export function C() {",
+                "    return (",
+                "        <div>",
+                "            <section>",
+                "                <p>hello</p>",
+                "            </section>",
+                "        </div>",
+                "    );",
+                "}"
+            ].join("\n");
+
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.tsx", cfg)).toBe(golden);
+        });
+
+        it("does nothing when indentStyle or indentWidth is not configured", () => {
+            const input = "function test() {\n  return 1;\n}";
+            const cfg = {codeStyle: {enabled: true}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(input);
+        });
+
+        it("aligns block-comment continuation lines one space in from the opening /*", () => {
+            const input = [
+                "/**",
+                "* Top-level doc",
+                "* second line",
+                "*/",
+                "export function foo() {",
+                "    /*",
+                "    * nested block",
+                "    */",
+                "    return 1;",
+                "}"
+            ].join("\n");
+
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            const result = runWith(input, "test.ts", cfg);
+
+            // Top-level comment: `*` sits one space in from the column-0 `/**`.
+            expect(result).toContain("/**\n * Top-level doc\n * second line\n */");
+
+            // A comment opened at indent 4 aligns its continuation `*` to five spaces.
+            expect(result).toContain("    /*\n     * nested block\n     */");
+        });
+
+        it("preserves already-aligned block-comment continuation lines", () => {
+            const input = [
+                "/**",
+                " * Already aligned",
+                " * second",
+                " */",
+                "export const x = 1;"
+            ].join("\n");
+
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            expect(runWith(input, "test.ts", cfg)).toBe(input);
+        });
+
+        it("leaves JSX text and a JSX expression container's whitespace byte-for-byte unchanged in a .tsx file", () => {
+            const input = [
+                "function Component() {",
+                "  return (",
+                "    <div>",
+                "        It's fine over here",
+                "      {",
+                "          value",
+                "      }",
+                "    </div>",
+                "  );",
+                "}"
+            ].join("\n");
+
+            const cfg = {codeStyle: {enabled: true, indentStyle: "space", indentWidth: 4}} as CoreConfig;
+            const result = runWith(input, "test.tsx", cfg);
+
+            // Real code is reindented from bracket/JSX nesting: the function body sits at one level,
+            // and the `<div>` inside the `return (` parenthesis sits one level deeper again.
+            expect(result).toContain("function Component() {\n    return (");
+            expect(result).toContain("        <div>");
+            expect(result).toContain("        </div>\n    );\n}");
+
+            // JSX text and the JSX expression container's internal whitespace are byte-for-byte
+            // untouched, even though their leading whitespace isn't a multiple of indentWidth.
+            expect(result).toContain("        It's fine over here");
+            expect(result).toContain("      {\n          value\n      }");
+        });
+    });
+
     describe("applyToContext", () => {
         it("should fix a single misaligned closing brace", () => {
             // Input has }; at column 0, should be at 4 spaces

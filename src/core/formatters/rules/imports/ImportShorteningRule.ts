@@ -27,8 +27,9 @@ interface PathsInfo {
  * ImportOrganizationRule so the shortened specifiers are then sorted, grouped, and merged.
  */
 export class ImportShorteningRule extends BaseFormattingRule {
-    private readonly barrelCache = new Map<string, Map<string, string>>();
     readonly name = "ImportShorteningRule";
+
+    private readonly barrelCache = new Map<string, Map<string, string>>();
     private readonly pathsCache = new Map<string, PathsInfo | null>();
 
     /** Real-filesystem ts-morph project per tsconfig, used purely to resolve barrel exports. */
@@ -229,6 +230,11 @@ export class ImportShorteningRule extends BaseFormattingRule {
         return map;
     }
 
+    /** Normalize a path to forward slashes so node `path` results compare equal to ts-morph paths. */
+    private toPosix(p: string): string {
+        return p.replace(/\\/g, "/");
+    }
+
     /** Rewrite one import declaration's module specifier to the best alias, when one is proven safe. */
     private tryShorten(
         declaration: ImportDeclaration,
@@ -265,7 +271,15 @@ export class ImportShorteningRule extends BaseFormattingRule {
             const barrel = this.findBarrel(dir);
             if (barrel && barrel !== target) {
                 const exportsMap = this.getBarrelExports(project, barrel);
-                const allMatch = symbols.every(s => exportsMap.get(s) === target);
+
+                // `exportsMap` values come from ts-morph (`getFilePath()`), which always uses forward
+                // slashes, while `target` comes from node's `path` and uses the platform separator —
+                // backslashes on Windows. Compare on a common separator so the match holds cross-platform.
+                const allMatch = symbols.every(s => {
+                    const exportPath = exportsMap.get(s);
+                    return exportPath !== undefined && this.toPosix(exportPath) === this.toPosix(target);
+                });
+
                 if (allMatch) {
                     const alias = this.aliasForDir(dir, pathsInfo);
                     if (alias && alias !== specifier && (best === null || alias.length < best.length)) {
