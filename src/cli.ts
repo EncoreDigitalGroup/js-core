@@ -65,10 +65,7 @@ function discoverTargetFiles(cwd: string, config: CoreConfig, cliPaths: string[]
 }
 
 /** Format files in a directory using the FormatterPipeline */
-async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: boolean, files: string[]): Promise<void> {
-    const container = new Container();
-    ServiceRegistration.registerServices(container, config);
-
+async function formatDirectory(targetDir: string, dryRun: boolean, files: string[], pipeline: FormatterPipeline): Promise<void> {
     if (files.length === 0) {
         console.info("No files found to format.");
 
@@ -77,10 +74,6 @@ async function formatDirectory(targetDir: string, config: CoreConfig, dryRun: bo
 
     console.info(`Formatting ${files.length} files...`);
 
-    // Resolve pipeline from DI container
-    const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
-
-    // Format each file
     let formattedCount = 0;
 
     for (const file of files) {
@@ -201,12 +194,27 @@ async function main(): Promise<void> {
             }
         }
 
-        // Format files using the pipeline
-        if (config.codeStyle?.enabled
-            || config.imports?.enabled
-            || config.sorting?.enabled
-            || config.spacing?.enabled) {
-            await formatDirectory(cwd, config, dryRun, files);
+        const shouldFormat = Boolean(
+            config.codeStyle?.enabled
+                || config.imports?.enabled
+                || config.sorting?.enabled
+                || config.spacing?.enabled
+        );
+
+        const shouldGenerateIndexes = Boolean(config.indexGeneration?.enabled);
+        if (shouldGenerateIndexes || shouldFormat) {
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+
+            const pipeline = container.resolve<FormatterPipeline>("FormatterPipeline");
+
+            if (shouldGenerateIndexes) {
+                pipeline.generateIndexFiles(cwd, dryRun);
+            }
+
+            if (shouldFormat) {
+                await formatDirectory(cwd, dryRun, files, pipeline);
+            }
         }
 
         if (dryRun) {

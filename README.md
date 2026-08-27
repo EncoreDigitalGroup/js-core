@@ -208,11 +208,11 @@ Every option has a sensible default — you only set what you want to change. De
 
 **Other keys:**
 
-- `indexGeneration` — generate barrel `index.ts` files for configured directories. **Disabled by default** (`indexGeneration.enabled: false`).
+- `indexGeneration` — generate barrel `index.ts` files for configured directories. **Disabled by default** (`indexGeneration.enabled: false`). This is a run-once pass
+  before per-file formatting, not a per-file formatter stage.
 - `skipReactFiles` (default `false`) — set `true` to exclude `.tsx`/`.jsx` files from formatting. tsfmt handles JSX safely, so this is an opt-out for projects that want
   it, not a safety requirement.
-- `formatterOrder` — override the order the formatter stages run in. The default is `IndexGeneration`, `CodeStyle`, `ImportOrganization`,
-  `ASTTransformation`, `Spacing`.
+- `formatterOrder` — override the order the per-file formatter stages run in. The default is `CodeStyle`, `ImportOrganization`, `ASTTransformation`, `Spacing`.
 
 ### The defaults: tsfmt's opinions
 

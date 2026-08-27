@@ -4,8 +4,8 @@
  */
 import {afterAll, describe, expect, it} from "bun:test";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
+import {createTempDirs, runCli} from "./cli-harness";
 
 function isFormatted(content: string): boolean {
     return content.includes('"x"');
@@ -15,39 +15,13 @@ function isUntouched(content: string): boolean {
     return content.includes("'x'");
 }
 
-const cliPath = path.join(__dirname, "..", "cli.ts");
-
-/** Run the CLI with its working directory set to `cwd`, returning exit code and captured output. */
-async function runCli(cwd: string, args: string[] = []): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-    const proc = Bun.spawn(["bun", cliPath, ...args], {
-        cwd,
-        stdout: "pipe",
-        stderr: "pipe",
-    });
-
-    const [stdout, stderr, exitCode] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited,
-    ]);
-
-    return {exitCode, stdout, stderr};
-}
-
 /** Mis-formatted source (single quotes) — becomes `"x"` once the default double-quote style is applied. */
 function src(): string {
     return "export const value = 'x';\n";
 }
 
 describe("paths config file discovery", () => {
-    const tempDirs: string[] = [];
-
-    function makeTempDir(prefix: string): string {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-        tempDirs.push(dir);
-
-        return dir;
-    }
+    const {makeTempDir, cleanup} = createTempDirs();
 
     function write(dir: string, rel: string, content: string): void {
         const full = path.join(dir, rel);
@@ -63,11 +37,7 @@ describe("paths config file discovery", () => {
         fs.writeFileSync(path.join(dir, "tsfmt.config.ts"), `import { tsfmt } from "tsfmt";\n\nexport default tsfmt(${configLiteral});\n`);
     }
 
-    afterAll(() => {
-        for (const dir of tempDirs) {
-            fs.rmSync(dir, {recursive: true, force: true});
-        }
-    });
+    afterAll(cleanup);
 
     it("bare run with no paths config formats the cwd tree but not node_modules", async () => {
         const dir = makeTempDir("paths-bare-");

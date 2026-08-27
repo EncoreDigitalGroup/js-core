@@ -270,7 +270,6 @@ export interface RestrictionsConfig {
 
 /** Represents the execution order of formatters in the pipeline */
 export enum FormatterOrder {
-    IndexGeneration = "IndexGeneration",
     CodeStyle = "CodeStyle",
     ImportOrganization = "ImportOrganization",
     ASTTransformation = "ASTTransformation",
@@ -318,7 +317,7 @@ export interface CoreConfig {
      */
     restrictions?: RestrictionsConfig;
 
-    /** Custom order for formatter execution (default: IndexGeneration, CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
+    /** Custom order for per-file formatter execution (default: CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];
 
     /**

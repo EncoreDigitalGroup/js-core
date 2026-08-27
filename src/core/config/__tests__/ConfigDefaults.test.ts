@@ -160,14 +160,13 @@ describe("ConfigDefaults", () => {
             it("should return correct default formatter order", () => {
                 const order = ConfigDefaults.getDefaultFormatterOrder();
                 expect(order).toEqual([
-                    FormatterOrder.IndexGeneration,
                     FormatterOrder.CodeStyle,
                     FormatterOrder.ImportOrganization,
                     FormatterOrder.ASTTransformation,
                     FormatterOrder.Spacing
                 ]);
 
-                expect(order).toHaveLength(5);
+                expect(order).toHaveLength(4);
             });
         });
     });

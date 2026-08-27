@@ -129,7 +129,6 @@ export class ConfigDefaults {
     /** Get default formatter order */
     static getDefaultFormatterOrder(): FormatterOrder[] {
         return [
-            FormatterOrder.IndexGeneration,
             FormatterOrder.CodeStyle,
             FormatterOrder.ImportOrganization,
             FormatterOrder.ASTTransformation,

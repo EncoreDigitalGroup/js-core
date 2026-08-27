@@ -6,7 +6,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import {CoreConfig, FormatterOrder} from "../config";
 import {Container} from "../di";
-import {FormatContext, IFormattingRule} from "../formatters";
+import {FormatContext, IFormattingRule, IndexGenerationRule} from "../formatters";
 
 /*
  * Tracks the state of a single formatter execution
@@ -49,7 +49,6 @@ export class FormatterPipeline {
         private readonly container: Container
     ) {
         this.formatterOrder = config.formatterOrder || [
-            FormatterOrder.IndexGeneration,
             FormatterOrder.CodeStyle,
             FormatterOrder.ImportOrganization,
             FormatterOrder.ASTTransformation,
@@ -94,6 +93,15 @@ export class FormatterPipeline {
         }
 
         return files;
+    }
+
+    generateIndexFiles(fromPath: string, dryRun = false): void {
+        if (!this.config.indexGeneration?.enabled) {
+            return;
+        }
+
+        const rule = this.container.resolve<IndexGenerationRule>("IndexGenerationRule");
+        rule.generate(fromPath, dryRun);
     }
 
     /** Check if source code contains a tsfmt-ignore directive */
@@ -224,6 +232,10 @@ export class FormatterPipeline {
      * @throws FormatterError if any formatter fails for any file
      */
     async formatFiles(filePaths: string[], dryRun = false): Promise<PipelineContext[]> {
+        if (filePaths.length > 0) {
+            this.generateIndexFiles(filePaths[0], dryRun);
+        }
+
         const results: PipelineContext[] = [];
 
         for (const filePath of filePaths) {
@@ -263,10 +275,6 @@ export class FormatterPipeline {
 
     /** Initialize rules based on configuration using clean DI pattern */
     private initializeRules(): void {
-        if (this.config.indexGeneration?.enabled) {
-            this.addRuleByName("IndexGenerationRule", FormatterOrder.IndexGeneration);
-        }
-
         if (this.config.codeStyle?.enabled) {
             this.addRuleByName("QuoteStyleRule", FormatterOrder.CodeStyle);
             this.addRuleByName("SemicolonRule", FormatterOrder.CodeStyle);

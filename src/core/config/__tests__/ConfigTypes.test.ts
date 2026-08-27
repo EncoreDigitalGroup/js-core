@@ -58,12 +58,11 @@ describe("ConfigTypes", () => {
         describe("getFormatterOrderOptions", () => {
             it("should return all formatter order options", () => {
                 const options = ConfigTypes.getFormatterOrderOptions();
-                expect(options).toContain(FormatterOrder.IndexGeneration);
                 expect(options).toContain(FormatterOrder.CodeStyle);
                 expect(options).toContain(FormatterOrder.ImportOrganization);
                 expect(options).toContain(FormatterOrder.ASTTransformation);
                 expect(options).toContain(FormatterOrder.Spacing);
-                expect(options).toHaveLength(5);
+                expect(options).toHaveLength(4);
             });
         });
     });

@@ -4,8 +4,8 @@
  */
 import {afterAll, describe, expect, it} from "bun:test";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
+import {createTempDirs, runCli} from "./cli-harness";
 
 const violatingSource = `import {Foo} from '@/internal/Foo'
 
@@ -18,25 +18,6 @@ function makeProject(dir: string, configContent: string): string {
     fs.writeFileSync(path.join(dir, "src", "Foo.ts"), violatingSource);
 
     return path.join(dir, "src", "Foo.ts");
-}
-
-const cliPath = path.join(__dirname, "..", "cli.ts");
-
-/** Run the CLI with its working directory set to the project dir, returning exit code and captured output. */
-async function runCli(targetDir: string, extraArgs: string[] = []): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-    const proc = Bun.spawn(["bun", cliPath, ...extraArgs], {
-        cwd: targetDir,
-        stdout: "pipe",
-        stderr: "pipe",
-    });
-
-    const [stdout, stderr, exitCode] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited,
-    ]);
-
-    return {exitCode, stdout, stderr};
 }
 
 const invalidRestrictionsConfig = `
@@ -70,20 +51,9 @@ export default tsfmt({
 `;
 
 describe("CLI restrictions gate", () => {
-    const tempDirs: string[] = [];
+    const {makeTempDir, cleanup} = createTempDirs();
 
-    function makeTempDir(prefix: string): string {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-        tempDirs.push(dir);
-
-        return dir;
-    }
-
-    afterAll(() => {
-        for (const dir of tempDirs) {
-            fs.rmSync(dir, {recursive: true, force: true});
-        }
-    });
+    afterAll(cleanup);
 
     it("exits non-zero, prints the violation, and leaves the violating file unchanged", async () => {
         const dir = makeTempDir("cli-restrictions-gate-");

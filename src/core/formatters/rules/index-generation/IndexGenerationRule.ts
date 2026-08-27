@@ -18,14 +18,26 @@ export class IndexGenerationRule extends BaseFormattingRule {
         recursive: true
     };
 
-    private findProjectRoot(filePath: string): string | null {
-        let current = path.dirname(filePath);
+    private findProjectRoot(fromPath: string): string | null {
+        let current = fromPath;
+        try {
+            if (fs.existsSync(fromPath) && fs.statSync(fromPath).isFile()) {
+                current = path.dirname(fromPath);
+            }
+        } catch {
+            current = path.dirname(fromPath);
+        }
+
         while (current !== path.dirname(current)) {
             if (fs.existsSync(path.join(current, "package.json"))) {
                 return current;
             }
 
             current = path.dirname(current);
+        }
+
+        if (fs.existsSync(path.join(current, "package.json"))) {
+            return current;
         }
 
         return null;
@@ -211,9 +223,9 @@ ${exports}
         }
     }
 
-    private generateIndexFiles(currentFilePath: string): void {
+    private generateIndexFiles(fromPath: string): void {
         try {
-            const projectRoot = this.findProjectRoot(currentFilePath);
+            const projectRoot = this.findProjectRoot(fromPath);
             if (!projectRoot) {
                 return;
             }
@@ -249,11 +261,16 @@ ${exports}
         }
     }
 
+    generate(fromPath: string, dryRun = false): void {
+        if (!this.getIndexGenerationConfig()?.enabled || dryRun) {
+            return;
+        }
+
+        this.generateIndexFiles(fromPath);
+    }
+
     override applyToContext(context: FormatContext): void {
-        if (!this.getIndexGenerationConfig()?.enabled) return;
-        // This rule operates on the file system, not on individual file content
-        // We'll trigger index generation when processing any file in the project
-        this.generateIndexFiles(context.filePath);
+        this.generate(context.filePath);
     }
 }
 

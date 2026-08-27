@@ -37,7 +37,6 @@ describe("FormatterPipeline", () => {
             const pipeline = new FormatterPipeline(config, container);
             const order = pipeline.getFormatterOrder();
             expect(order).toEqual([
-                FormatterOrder.IndexGeneration,
                 FormatterOrder.CodeStyle,
                 FormatterOrder.ImportOrganization,
                 FormatterOrder.ASTTransformation,
@@ -104,6 +103,23 @@ describe("FormatterPipeline", () => {
             const config: CoreConfig = {
                 ...ConfigDefaults.getDefaultConfig(),
                 indexGeneration: {enabled: false},
+                codeStyle: {enabled: false},
+                imports: {enabled: false},
+                sorting: {enabled: false},
+                spacing: {enabled: false},
+            };
+
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+
+            const pipeline = new FormatterPipeline(config, container);
+            expect(pipeline.hasRules()).toBe(false);
+        });
+
+        it("should not register IndexGenerationRule as a per-file rule when enabled", () => {
+            const config: CoreConfig = {
+                ...ConfigDefaults.getDefaultConfig(),
+                indexGeneration: {enabled: true},
                 codeStyle: {enabled: false},
                 imports: {enabled: false},
                 sorting: {enabled: false},
@@ -447,6 +463,110 @@ describe("FormatterPipeline", () => {
             const pipeline = new FormatterPipeline(config, container);
             const contexts = await pipeline.formatDirectory(tempDir, false);
             expect(contexts).toHaveLength(0);
+        });
+    });
+
+    describe("index generation", () => {
+        function indexConfig(): CoreConfig {
+            return {
+                ...ConfigDefaults.getDefaultConfig(),
+                indexGeneration: {
+                    enabled: true,
+                    directories: ["src"],
+                    updateMainIndex: false,
+                    options: {
+                        fileExtension: ".ts",
+                        indexFileName: "index.ts",
+                        recursive: true,
+                    },
+                },
+                codeStyle: {enabled: false},
+                imports: {enabled: false},
+                sorting: {enabled: false},
+                spacing: {enabled: false},
+                packageJson: {enabled: false},
+                tsConfig: {enabled: false},
+            };
+        }
+
+        async function setupSrcFiles(): Promise<{ file1: string; file2: string; indexPath: string }> {
+            await fs.writeFile(path.join(tempDir, "package.json"), "{}", "utf-8");
+
+            const srcDir = path.join(tempDir, "src");
+            await fs.mkdir(srcDir);
+
+            const file1 = path.join(srcDir, "a.ts");
+            const file2 = path.join(srcDir, "b.ts");
+
+            await fs.writeFile(file1, "export const a = 1;\n", "utf-8");
+            await fs.writeFile(file2, "export const b = 2;\n", "utf-8");
+
+            return {file1, file2, indexPath: path.join(srcDir, "index.ts")};
+        }
+
+        async function exists(filePath: string): Promise<boolean> {
+            try {
+                await fs.access(filePath);
+
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        it("does not generate indexes from formatFile", async () => {
+            const {file1, indexPath} = await setupSrcFiles();
+            const config = indexConfig();
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+
+            const pipeline = new FormatterPipeline(config, container);
+
+            await pipeline.formatFile(file1, false);
+            expect(await exists(indexPath)).toBe(false);
+        });
+
+        it("generates indexes once from formatFiles", async () => {
+            const {file1, file2, indexPath} = await setupSrcFiles();
+            const config = indexConfig();
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+
+            const pipeline = new FormatterPipeline(config, container);
+
+            await pipeline.formatFiles([file1, file2], false);
+
+            const content = await fs.readFile(indexPath, "utf-8");
+            expect(content).toContain('export * from "./a";');
+            expect(content).toContain('export * from "./b";');
+        });
+
+        it("generates indexes from a directory path", async () => {
+            const {indexPath} = await setupSrcFiles();
+            const config = indexConfig();
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+
+            const pipeline = new FormatterPipeline(config, container);
+
+            pipeline.generateIndexFiles(tempDir, false);
+
+            const content = await fs.readFile(indexPath, "utf-8");
+            expect(content).toContain('export * from "./a";');
+            expect(content).toContain('export * from "./b";');
+        });
+
+        it("does not write indexes under dry-run", async () => {
+            const {file1, file2, indexPath} = await setupSrcFiles();
+            const config = indexConfig();
+            const container = new Container();
+            ServiceRegistration.registerServices(container, config);
+
+            const pipeline = new FormatterPipeline(config, container);
+
+            await pipeline.formatFiles([file1, file2], true);
+            pipeline.generateIndexFiles(tempDir, true);
+            expect(await exists(indexPath)).toBe(false);
         });
     });
 
