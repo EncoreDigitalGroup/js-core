@@ -3,6 +3,7 @@ import * as glob from "glob";
 import * as path from "path";
 import "reflect-metadata";
 import {ConfigDefaults, ConfigLoader, ConfigValidator, Container, CoreConfig, FormatterPipeline, RestrictionChecker, ServiceRegistration, sortPackageFile, sortTsConfigFile} from "./core";
+import {formatFilesInParallel, ParallelFormatResult} from "./format-pool";
 
 /** Check if a path is a supported file type */
 function isSupportedFile(filePath: string): boolean {
@@ -64,8 +65,34 @@ function discoverTargetFiles(cwd: string, config: CoreConfig, cliPaths: string[]
     return dedupeSupported(results);
 }
 
+async function formatFilesSerially(
+    files: string[],
+    pipeline: FormatterPipeline,
+    dryRun: boolean,
+): Promise<ParallelFormatResult[]> {
+    const results: ParallelFormatResult[] = [];
+
+    for (const file of files) {
+        try {
+            const context = await pipeline.formatFile(file, dryRun);
+            results.push({filePath: file, changed: context.changed});
+        } catch (error) {
+            results.push({filePath: file, changed: false, error: (error as Error).message});
+        }
+    }
+
+    return results;
+}
+
 /** Format files in a directory using the FormatterPipeline */
-async function formatDirectory(targetDir: string, dryRun: boolean, files: string[], pipeline: FormatterPipeline): Promise<void> {
+async function formatDirectory(
+    targetDir: string,
+    dryRun: boolean,
+    files: string[],
+    pipeline: FormatterPipeline,
+    config: CoreConfig,
+    parallel: boolean,
+): Promise<void> {
     if (files.length === 0) {
         console.info("No files found to format.");
 
@@ -74,20 +101,24 @@ async function formatDirectory(targetDir: string, dryRun: boolean, files: string
 
     console.info(`Formatting ${files.length} files...`);
 
+    const results = parallel && files.length > 1
+        ? await formatFilesInParallel(files, config, dryRun)
+        : await formatFilesSerially(files, pipeline, dryRun);
+
     let formattedCount = 0;
 
-    for (const file of files) {
-        try {
-            const context = await pipeline.formatFile(file, dryRun);
-            if (context.changed) {
-                formattedCount++;
+    for (const result of results) {
+        if (result.error) {
+            console.error(`Error formatting file ${result.filePath}:`, result.error);
+            continue;
+        }
 
-                if (!dryRun) {
-                    console.log(`📊  Formatted: ${path.relative(targetDir, file)}`);
-                }
+        if (result.changed) {
+            formattedCount++;
+
+            if (!dryRun) {
+                console.log(`📊  Formatted: ${path.relative(targetDir, result.filePath)}`);
             }
-        } catch (error) {
-            console.error(`Error formatting file ${file}:`, (error as Error).message);
         }
     }
 
@@ -137,16 +168,19 @@ async function main(): Promise<void> {
     const cliPaths: string[] = [];
     let dryRun = false;
     let noGate = false;
+    let parallel = false;
 
     for (const arg of args) {
         if (arg === "--dry") {
             dryRun = true;
         } else if (arg === "--no-gate") {
             noGate = true;
+        } else if (arg === "--parallel") {
+            parallel = true;
         } else if (!arg.startsWith("-")) {
             cliPaths.push(arg);
         } else {
-            console.error(`Error: Unsupported option "${arg}". Only --dry and --no-gate are supported.`);
+            console.error(`Error: Unsupported option "${arg}". Only --dry, --no-gate, and --parallel are supported.`);
             process.exit(1);
         }
     }
@@ -213,7 +247,7 @@ async function main(): Promise<void> {
             }
 
             if (shouldFormat) {
-                await formatDirectory(cwd, dryRun, files, pipeline);
+                await formatDirectory(cwd, dryRun, files, pipeline, config, parallel);
             }
         }
 

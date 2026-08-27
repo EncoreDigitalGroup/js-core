@@ -146,6 +146,7 @@ export async function compileStandaloneBinary(spec: PlatformSpec): Promise<void>
         "--compile",
         `--target=${spec.bunTarget}`,
         `${rootDir}/src/cli.ts`,
+        `${rootDir}/src/format-worker.ts`,
         `--outfile=${outfile}`,
     ], {
         cwd: rootDir,

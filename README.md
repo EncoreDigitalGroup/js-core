@@ -67,6 +67,7 @@ That's it — no config file needed. Add it to your `package.json` scripts to ma
 tsfmt                          # format the current project (config-driven)
 tsfmt --dry                    # report what would change, write nothing
 tsfmt --no-gate                # skip the restrictions gate (see below)
+tsfmt --parallel               # format files on worker threads
 tsfmt path/to/file.ts          # format one file
 tsfmt path/to/project          # format one directory
 tsfmt src/a.ts src/b.ts lib/   # format several paths at once
@@ -84,7 +85,9 @@ your config would normally skip it. The always-on critical excludes (`node_modul
 pass. A file you name must be `.ts`, `.tsx`, `.js`, or `.jsx`.
 
 **`--dry`** reports what would change and writes nothing. **`--no-gate`** skips the restrictions gate and formats normally even when a rule would otherwise block the run.
-Any other flag is an error — only `--dry` and `--no-gate` are recognized.
+**`--parallel`** formats discovered files on worker threads. The default is still one file at a time. Discovery, the restrictions gate, config-file sorting, and index
+generation stay on the main thread. A single file still runs serially even with the flag. Any other flag is an error — only `--dry`, `--no-gate`, and `--parallel` are
+recognized.
 
 ## Configuration
 
