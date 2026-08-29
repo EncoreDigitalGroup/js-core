@@ -3,7 +3,6 @@
  * All Rights Reserved.
  */
 import * as os from "os";
-import * as path from "path";
 import type {CoreConfig} from "./core";
 
 export interface ParallelFormatResult {
@@ -59,8 +58,6 @@ async function initWorker(worker: Worker, config: CoreConfig): Promise<void> {
     }
 }
 
-const workerPath = path.join(__dirname, "format-worker.ts");
-
 export async function formatFilesInParallel(
     files: string[],
     config: CoreConfig,
@@ -72,7 +69,7 @@ export async function formatFilesInParallel(
     const results: ParallelFormatResult[] = [];
     try {
         for (let i = 0; i < workerCount; i++) {
-            workers.push(new Worker(workerPath));
+            workers.push(new Worker(new URL("./format-worker.js", import.meta.url).href));
         }
 
         await Promise.all(workers.map(worker => initWorker(worker, config)));

@@ -10,7 +10,7 @@
         "esModuleInterop": true,
         "experimentalDecorators": true,
         "forceConsistentCasingInFileNames": true,
-        "module": "CommonJS",
+        "module": "ESNext",
         "moduleResolution": "Bundler",
         "noImplicitAny": true,
         "noImplicitOverride": true,
