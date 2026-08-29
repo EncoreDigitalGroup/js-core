@@ -11,7 +11,12 @@ export function sortExportsKeys(exports: Record<string, any>): Record<string, an
     const exportKeyOrder = ["types", "import", "require"];
 
     for (const [key, value] of Object.entries(exports)) {
-        if (typeof value === "object" && value !== null) {
+        if (Array.isArray(value)) {
+            // A subpath target can be a fallback array (e.g. "./*": ["./x.ts", "./x.tsx", "./x"]).
+            // It is an ordered list, not a conditions object — copy it through untouched. Treating it
+            // as an object would reserialize it into {"0":…,"1":…}, corrupting the exports map.
+            sortedExports[key] = value;
+        } else if (typeof value === "object" && value !== null) {
             const sortedSubObject: Record<string, any> = {};
 
             exportKeyOrder.forEach(subKey => {
