@@ -268,6 +268,11 @@ export interface RestrictionsConfig {
     imports?: ImportRestrictionRule[];
 }
 
+export interface ParallelConfig {
+    /** Maximum number of formatter workers to start (default: 3). */
+    workers?: number;
+}
+
 /** Represents the execution order of formatters in the pipeline */
 export enum FormatterOrder {
     CodeStyle = "CodeStyle",
@@ -317,6 +322,9 @@ export interface CoreConfig {
      */
     restrictions?: RestrictionsConfig;
 
+    /** Configuration for the `--parallel` worker pool. */
+    parallel?: ParallelConfig;
+
     /** Custom order for per-file formatter execution (default: CodeStyle, ImportOrganization, ASTTransformation, Spacing) */
     formatterOrder?: FormatterOrder[];
 
@@ -329,6 +337,9 @@ export interface CoreConfig {
      */
     skipReactFiles?: boolean;
 }
+
+/** Default maximum number of formatter workers. */
+export const DEFAULT_PARALLEL_WORKERS = 3;
 
 /** Configuration type definitions and utilities */
 export class ConfigTypes {

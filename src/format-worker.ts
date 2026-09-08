@@ -26,6 +26,8 @@ self.onmessage = async (event: MessageEvent) => {
             return;
         }
         try {
+            postMessage({type: "start", filePath: data.filePath});
+
             const context = await pipeline.formatFile(data.filePath, data.dryRun);
             postMessage({type: "result", filePath: data.filePath, changed: context.changed});
         } catch (error) {

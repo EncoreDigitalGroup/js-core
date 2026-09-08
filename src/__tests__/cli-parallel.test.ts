@@ -19,14 +19,46 @@ describe("CLI --parallel", () => {
         return filePath;
     }
 
-    it("formats multiple files on worker threads", async () => {
+    it("formats four files on worker threads", async () => {
         const dir = makeTempDir("cli-parallel-");
         const file1 = writeSource(dir, "a.ts", "export const a = 'x';\n");
         const file2 = writeSource(dir, "b.ts", "export const b = 'y';\n");
+        const file3 = writeSource(dir, "c.ts", "export const c = 'z';\n");
+        const file4 = writeSource(dir, "d.ts", "export const d = 'w';\n");
         const result = await runCli(dir, ["--parallel"]);
         expect(result.exitCode).toBe(0);
         expect(fs.readFileSync(file1, "utf-8")).toContain('"x"');
         expect(fs.readFileSync(file2, "utf-8")).toContain('"y"');
+        expect(fs.readFileSync(file3, "utf-8")).toContain('"z"');
+        expect(fs.readFileSync(file4, "utf-8")).toContain('"w"');
+    });
+
+    it("reports each file when its worker starts formatting it", async () => {
+        const dir = makeTempDir("cli-parallel-progress-");
+        writeSource(dir, "a.ts", "export const a = 'x';\n");
+        writeSource(dir, "b.ts", "export const b = 'y';\n");
+
+        const result = await runCli(dir, ["--parallel"]);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stdout).toContain("Formatting: a.ts");
+        expect(result.stdout).toContain("Formatting: b.ts");
+        expect(result.stdout.indexOf("Formatting: a.ts")).toBeLessThan(result.stdout.indexOf("Formatted 2 of 2 files."));
+        expect(result.stdout.indexOf("Formatting: b.ts")).toBeLessThan(result.stdout.indexOf("Formatted 2 of 2 files."));
+    });
+
+    it("reports each file before serial formatting finishes", async () => {
+        const dir = makeTempDir("cli-serial-progress-");
+        writeSource(dir, "a.ts", "export const a = 'x';\n");
+        writeSource(dir, "b.ts", "export const b = 'y';\n");
+
+        const result = await runCli(dir);
+
+        expect(result.exitCode).toBe(0);
+        expect(result.stdout).toContain("Formatting: a.ts");
+        expect(result.stdout).toContain("Formatting: b.ts");
+        expect(result.stdout.indexOf("Formatting: a.ts")).toBeLessThan(result.stdout.indexOf("Formatted 2 of 2 files."));
+        expect(result.stdout.indexOf("Formatting: b.ts")).toBeLessThan(result.stdout.indexOf("Formatted 2 of 2 files."));
     });
 
     it("still formats a single file without spawning a pool", async () => {

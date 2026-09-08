@@ -85,9 +85,9 @@ your config would normally skip it. The always-on critical excludes (`node_modul
 pass. A file you name must be `.ts`, `.tsx`, `.js`, or `.jsx`.
 
 **`--dry`** reports what would change and writes nothing. **`--no-gate`** skips the restrictions gate and formats normally even when a rule would otherwise block the run.
-**`--parallel`** formats discovered files on worker threads. The default is still one file at a time. Discovery, the restrictions gate, config-file sorting, and index
-generation stay on the main thread. A single file still runs serially even with the flag. Any other flag is an error — only `--dry`, `--no-gate`, and `--parallel` are
-recognized.
+**`--parallel`** formats batches of four or more discovered files on worker threads. The default is still one file at a time. Discovery, the restrictions gate,
+config-file sorting, and index generation stay on the main thread. tsfmt starts at most three workers by default; configure `parallel.workers` for a different limit.
+Smaller batches run serially to avoid worker startup costs. Any other flag is an error — only `--dry`, `--no-gate`, and `--parallel` are recognized.
 
 ## Configuration
 
@@ -211,6 +211,7 @@ Every option has a sensible default — you only set what you want to change. De
 
 **Other keys:**
 
+- `parallel.workers` — maximum worker threads for `--parallel` (default `3`).
 - `indexGeneration` — generate barrel `index.ts` files for configured directories. **Disabled by default** (`indexGeneration.enabled: false`). This is a run-once pass
   before per-file formatting, not a per-file formatter stage.
 - `skipReactFiles` (default `false`) — set `true` to exclude `.tsx`/`.jsx` files from formatting. tsfmt handles JSX safely, so this is an opt-out for projects that want

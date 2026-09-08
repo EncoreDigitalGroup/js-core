@@ -88,6 +88,17 @@ describe("ConfigValidator", () => {
             expect(result.valid).toBe(false);
             expect(result.errors[0]).toContain("Invalid group in groupOrder: invalid");
         });
+
+        it("should detect an invalid parallel worker count", () => {
+            const config: CoreConfig = {
+                parallel: {workers: 0},
+            };
+
+            const result = ConfigValidator.validate(config);
+
+            expect(result.valid).toBe(false);
+            expect(result.errors).toContain("Invalid parallel.workers: must be a positive integer.");
+        });
     });
 
     describe("validateOrThrow", () => {

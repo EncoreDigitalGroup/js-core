@@ -16,4 +16,10 @@ describe("tsfmt helper", () => {
         const config = tsfmt({preset: "laravel", codeStyle: {quoteStyle: "double"}});
         expect(config.codeStyle?.quoteStyle).toBe("double");
     });
+
+    it("should honor a parallel worker override", () => {
+        const config = tsfmt({parallel: {workers: 2}});
+
+        expect(config.parallel).toEqual({workers: 2});
+    });
 });

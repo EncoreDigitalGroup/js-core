@@ -4,7 +4,7 @@
  */
 import {DEFAULT_CLASS_ORDER, DEFAULT_FILE_ORDER} from "../";
 import {DefaultSortOptions} from "../../shared";
-import {ConfigTypes, CoreConfig, FormatterOrder} from "./ConfigTypes";
+import {ConfigTypes, CoreConfig, DEFAULT_PARALLEL_WORKERS, FormatterOrder} from "./ConfigTypes";
 
 /** Provides default configuration values for tsfmt */
 export class ConfigDefaults {
@@ -126,6 +126,11 @@ export class ConfigDefaults {
         return {include: [] as string[], exclude: [] as string[]};
     }
 
+    /** Get default parallel formatting configuration. */
+    static getDefaultParallelConfig() {
+        return {workers: DEFAULT_PARALLEL_WORKERS};
+    }
+
     /** Get default formatter order */
     static getDefaultFormatterOrder(): FormatterOrder[] {
         return [
@@ -147,6 +152,7 @@ export class ConfigDefaults {
             packageJson: this.getDefaultPackageJsonConfig(),
             tsConfig: this.getDefaultTsConfigConfig(),
             paths: this.getDefaultPathsConfig(),
+            parallel: this.getDefaultParallelConfig(),
             formatterOrder: this.getDefaultFormatterOrder(),
         };
     }

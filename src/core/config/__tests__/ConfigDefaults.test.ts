@@ -123,6 +123,12 @@ describe("ConfigDefaults", () => {
             });
         });
 
+        describe("getDefaultParallelConfig", () => {
+            it("should limit parallel formatting to three workers", () => {
+                expect(ConfigDefaults.getDefaultParallelConfig()).toEqual({workers: 3});
+            });
+        });
+
         describe("getCriticalExcludePatterns", () => {
             it("should include the critical build directory", () => {
                 expect(ConfigDefaults.getCriticalExcludePatterns()).toContain("build/**");
@@ -183,6 +189,7 @@ describe("ConfigDefaults", () => {
             expect(config.packageJson).toBeDefined();
             expect(config.tsConfig).toBeDefined();
             expect(config.paths).toEqual({include: [], exclude: []});
+            expect(config.parallel).toEqual({workers: 3});
             expect(config.formatterOrder).toBeDefined();
         });
 

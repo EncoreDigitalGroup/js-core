@@ -3,7 +3,7 @@ import * as glob from "glob";
 import * as path from "path";
 import "reflect-metadata";
 import {ConfigDefaults, ConfigLoader, ConfigValidator, Container, CoreConfig, FormatterPipeline, RestrictionChecker, ServiceRegistration, sortPackageFile, sortTsConfigFile} from "./core";
-import {formatFilesInParallel, ParallelFormatResult} from "./format-pool";
+import {formatFilesInParallel, MINIMUM_PARALLEL_FILES, ParallelFormatResult} from "./format-pool";
 
 /** Check if a path is a supported file type */
 function isSupportedFile(filePath: string): boolean {
@@ -69,11 +69,14 @@ async function formatFilesSerially(
     files: string[],
     pipeline: FormatterPipeline,
     dryRun: boolean,
+    onFileStart: (filePath: string) => void,
 ): Promise<ParallelFormatResult[]> {
     const results: ParallelFormatResult[] = [];
 
     for (const file of files) {
         try {
+            onFileStart(file);
+
             const context = await pipeline.formatFile(file, dryRun);
             results.push({filePath: file, changed: context.changed});
         } catch (error) {
@@ -101,9 +104,9 @@ async function formatDirectory(
 
     console.info(`Formatting ${files.length} files...`);
 
-    const results = parallel && files.length > 1
-        ? await formatFilesInParallel(files, config, dryRun)
-        : await formatFilesSerially(files, pipeline, dryRun);
+    const results = parallel && files.length >= MINIMUM_PARALLEL_FILES
+        ? await formatFilesInParallel(files, config, dryRun, file => console.log(`Formatting: ${path.relative(targetDir, file)}`))
+        : await formatFilesSerially(files, pipeline, dryRun, file => console.log(`Formatting: ${path.relative(targetDir, file)}`));
 
     let formattedCount = 0;
 
@@ -115,10 +118,6 @@ async function formatDirectory(
 
         if (result.changed) {
             formattedCount++;
-
-            if (!dryRun) {
-                console.log(`📊  Formatted: ${path.relative(targetDir, result.filePath)}`);
-            }
         }
     }
 

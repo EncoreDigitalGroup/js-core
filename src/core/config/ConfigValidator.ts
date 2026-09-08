@@ -84,6 +84,10 @@ export class ConfigValidator {
             this.validatePathsArray(config.paths, "exclude", errors);
         }
 
+        if (config.parallel?.workers !== undefined && (!Number.isInteger(config.parallel.workers) || config.parallel.workers < 1)) {
+            errors.push("Invalid parallel.workers: must be a positive integer.");
+        }
+
         // Validate spacing config (no specific validations needed currently)
         return {
             valid: errors.length === 0,
